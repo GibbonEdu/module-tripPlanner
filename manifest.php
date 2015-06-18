@@ -1,7 +1,7 @@
 <?php
 /*
 Gibbon, Flexible & Open School System
-Copyright (C) 2010, Ross Parker
+Copyright (C) 2$actionCount1$actionCount, Ross Parker
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,40 +17,39 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-//This file describes the module, including database tables
-
 //Basic variables
-$name="" ; //The name of the variable as it appears to users. Needs to be unique to installation. Also the name of the folder that holds the unit.
-$description="" ; //Short text description
-$entryURL="index.php" ; //The landing page for the unit, used in the main menu
-$type="Additional" ; //Do not change.
-$category="" ; //The main menu area to place the module in
-$version="" ; //Verson number
-$author="" ; //Your name
-$url="" ; //Your URL
+$name="Trip Planner" ;
+$description="A trip planner module for Gibbon." ;
+$entryURL="trip_view.php" ;
+$type="Additional" ;
+$category="Other" ; 
+$version="$actionCount.$actionCount.$actionCount1" ; 
+$author="Ray Clark" ; 
+$url="https://github.com/raynichc/Trip-Planner" ;
 
-//Module tables & gibbonSettings entries
-$moduleTables[0]="" ; //One array entry for every database table you need to create. Might be nice to preface the table name with the module name, to keep the db neat. 
-$moduleTables[1]="" ; //Also can be used to put data into gibbonSettings. Other sql can be run, but resulting data will not be cleaned up on uninstall.
+//Tables
+$moduleTables[0]="" ;
+$moduleTables[1]="" ;
 
+//Actions
+$actionCount = 0;
 
-//Action rows 
-//One array per action
-$actionRows[0]["name"]="" ; //The name of the action (appears to user in the right hand side module menu)
-$actionRows[0]["precedence"]="0"; //If it is a grouped action, the precedence controls which is highest action in group
-$actionRows[0]["category"]="" ; //Optional: subgroups for the right hand side module menu
-$actionRows[0]["description"]="" ; //Text description
-$actionRows[0]["URLList"]="" ; //List of pages included in this action
-$actionRows[0]["entryURL"]="" ; //The landing action for the page.
-$actionRows[0]["defaultPermissionAdmin"]="Y" ; //Default permission for built in role Admin
-$actionRows[0]["defaultPermissionTeacher"]="Y" ; //Default permission for built in role Teacher
-$actionRows[0]["defaultPermissionStudent"]="N" ; //Default permission for built in role Student
-$actionRows[0]["defaultPermissionParent"]="N" ; //Default permission for built in role Parent
-$actionRows[0]["defaultPermissionSupport"]="N" ; //Default permission for built in role Support
-$actionRows[0]["categoryPermissionStaff"]="Y" ; //Should this action be available to user roles in the Staff category?
-$actionRows[0]["categoryPermissionStudent"]="N" ; //Should this action be available to user roles in the Student category?
-$actionRows[0]["categoryPermissionParent"]="N" ; //Should this action be available to user roles in the Parent category?
-$actionRows[0]["categoryPermissionOther"]="N" ; //Should this action be available to user roles in the Other category?
+$actionRows[$actionCount]["name"]="" ; 
+$actionRows[$actionCount]["precedence"]="0"; 
+$actionRows[$actionCount]["category"]="" ;
+$actionRows[$actionCount]["description"]="" ;
+$actionRows[$actionCount]["URLList"]="" ; 
+$actionRows[$actionCount]["entryURL"]="" ; 
+$actionRows[$actionCount]["defaultPermissionAdmin"]="Y" ;
+$actionRows[$actionCount]["defaultPermissionTeacher"]="Y" ;
+$actionRows[$actionCount]["defaultPermissionStudent"]="N" ; 
+$actionRows[$actionCount]["defaultPermissionParent"]="N" ;
+$actionRows[$actionCount]["defaultPermissionSupport"]="N" ; 
+$actionRows[$actionCount]["categoryPermissionStaff"]="Y" ; 
+$actionRows[$actionCount]["categoryPermissionStudent"]="N" ; 
+$actionRows[$actionCount]["categoryPermissionParent"]="N" ; 
+$actionRows[$actionCount]["categoryPermissionOther"]="N" ; 
+$actionCount++;
 
 //Hooks
 $hooks[0]="" ; //Serialised array to create hook and set options. See Hooks documentation online.

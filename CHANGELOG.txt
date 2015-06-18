@@ -3,4 +3,7 @@ CHANGELOG
 
 v0.0.00
 -------
-Version details here...
+Set up
+
+v0.0.01
+-------
