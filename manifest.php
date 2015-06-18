@@ -23,23 +23,23 @@ $description="A trip planner module for Gibbon." ;
 $entryURL="trip_view.php" ;
 $type="Additional" ;
 $category="Other" ; 
-$version="$actionCount.$actionCount.$actionCount1" ; 
+$version="0.0.01" ; 
 $author="Ray Clark" ; 
 $url="https://github.com/raynichc/Trip-Planner" ;
 
 //Tables
-$moduleTables[0]="" ;
-$moduleTables[1]="" ;
+//$moduleTables[0]="" ;
+//$moduleTables[1]="" ;
 
 //Actions
 $actionCount = 0;
 
-$actionRows[$actionCount]["name"]="" ; 
+$actionRows[$actionCount]["name"]="Trips" ; 
 $actionRows[$actionCount]["precedence"]="0"; 
 $actionRows[$actionCount]["category"]="" ;
-$actionRows[$actionCount]["description"]="" ;
-$actionRows[$actionCount]["URLList"]="" ; 
-$actionRows[$actionCount]["entryURL"]="" ; 
+$actionRows[$actionCount]["description"]="View of all the Trips" ;
+$actionRows[$actionCount]["URLList"]="trip_view.php" ; 
+$actionRows[$actionCount]["entryURL"]="trip_view.php" ; 
 $actionRows[$actionCount]["defaultPermissionAdmin"]="Y" ;
 $actionRows[$actionCount]["defaultPermissionTeacher"]="Y" ;
 $actionRows[$actionCount]["defaultPermissionStudent"]="N" ; 
@@ -52,5 +52,5 @@ $actionRows[$actionCount]["categoryPermissionOther"]="N" ;
 $actionCount++;
 
 //Hooks
-$hooks[0]="" ; //Serialised array to create hook and set options. See Hooks documentation online.
+//$hooks[0]="" ; //Serialised array to create hook and set options. See Hooks documentation online.
 ?>
