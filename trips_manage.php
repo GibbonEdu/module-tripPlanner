@@ -39,5 +39,14 @@ else {
 	catch(PDOException $e) {
 		echo $e->getMessage();
 	}
+
+	print "<h3>";
+	print "Filter";
+	print "</h3>";
+
+	print "<h3>";
+	print "Trip Requests";
+	print "</h3>";
+
 }	
 ?>

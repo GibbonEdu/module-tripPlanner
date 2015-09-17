@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //Basic variables
 $name="Trip Planner" ;
 $description="A trip planner module for Gibbon." ;
-$entryURL="trip_view.php" ;
+$entryURL="trips_manage.php" ;
 $type="Additional" ;
 $category="Learn" ; 
 $version="0.0.01" ; 
@@ -34,12 +34,12 @@ $url="https://github.com/raynichc/Trip-Planner" ;
 //Actions
 $actionCount = 0;
 
-$actionRows[$actionCount]["name"]="Trips" ; 
+$actionRows[$actionCount]["name"]="Manage Trips" ; 
 $actionRows[$actionCount]["precedence"]="0"; 
 $actionRows[$actionCount]["category"]="" ;
-$actionRows[$actionCount]["description"]="View of all the Trips" ;
-$actionRows[$actionCount]["URLList"]="trip_view.php" ; 
-$actionRows[$actionCount]["entryURL"]="trip_view.php" ; 
+$actionRows[$actionCount]["description"]="Manage trips." ;
+$actionRows[$actionCount]["URLList"]="trips_manage.php" ; 
+$actionRows[$actionCount]["entryURL"]="trips_manage.php" ; 
 $actionRows[$actionCount]["defaultPermissionAdmin"]="Y" ;
 $actionRows[$actionCount]["defaultPermissionTeacher"]="Y" ;
 $actionRows[$actionCount]["defaultPermissionStudent"]="N" ; 
@@ -51,6 +51,38 @@ $actionRows[$actionCount]["categoryPermissionParent"]="N" ;
 $actionRows[$actionCount]["categoryPermissionOther"]="N" ; 
 $actionCount++;
 
+$actionRows[$actionCount]["name"]="Submit Trip Request" ; 
+$actionRows[$actionCount]["precedence"]="0"; 
+$actionRows[$actionCount]["category"]="" ;
+$actionRows[$actionCount]["description"]="Submit a trip request." ;
+$actionRows[$actionCount]["URLList"]="trips_submitRequest.php" ; 
+$actionRows[$actionCount]["entryURL"]="trips_submitRequest.php" ; 
+$actionRows[$actionCount]["defaultPermissionAdmin"]="Y" ;
+$actionRows[$actionCount]["defaultPermissionTeacher"]="Y" ;
+$actionRows[$actionCount]["defaultPermissionStudent"]="N" ; 
+$actionRows[$actionCount]["defaultPermissionParent"]="N" ;
+$actionRows[$actionCount]["defaultPermissionSupport"]="N" ; 
+$actionRows[$actionCount]["categoryPermissionStaff"]="Y" ; 
+$actionRows[$actionCount]["categoryPermissionStudent"]="N" ; 
+$actionRows[$actionCount]["categoryPermissionParent"]="N" ; 
+$actionRows[$actionCount]["categoryPermissionOther"]="N" ; 
+$actionCount++;
+
+$actionRows[$actionCount]["name"]="Manage Trip Approvers" ; 
+$actionRows[$actionCount]["precedence"]="0"; 
+$actionRows[$actionCount]["category"]="" ;
+$actionRows[$actionCount]["description"]="Manage trip approvers." ;
+$actionRows[$actionCount]["URLList"]="trips_manageApprovers.php" ; 
+$actionRows[$actionCount]["entryURL"]="trips_manageApprovers.php" ; 
+$actionRows[$actionCount]["defaultPermissionAdmin"]="Y" ;
+$actionRows[$actionCount]["defaultPermissionTeacher"]="Y" ;
+$actionRows[$actionCount]["defaultPermissionStudent"]="N" ; 
+$actionRows[$actionCount]["defaultPermissionParent"]="N" ;
+$actionRows[$actionCount]["defaultPermissionSupport"]="N" ; 
+$actionRows[$actionCount]["categoryPermissionStaff"]="Y" ; 
+$actionRows[$actionCount]["categoryPermissionStudent"]="N" ; 
+$actionRows[$actionCount]["categoryPermissionParent"]="N" ; 
+$actionRows[$actionCount]["categoryPermissionOther"]="N" ; 
 //Hooks
 //$hooks[0]="" ; //Serialised array to create hook and set options. See Hooks documentation online.
 ?>

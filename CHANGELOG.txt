@@ -1,9 +1,9 @@
 CHANGELOG
 =========
 
-v0.0.00
--------
-Set up
-
 v0.0.01
 -------
+Added trips_manage.php.
+Added trips_submitRequest.php.
+Added Manage Trips Action.
+Added Submite Trip Request Action.
