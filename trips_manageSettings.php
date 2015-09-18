@@ -41,8 +41,7 @@ else {
 	}
 
 	print "<h3>";
-	print "Request";
+	print "Settings";
 	print "</h3>";
-
 }	
 ?>

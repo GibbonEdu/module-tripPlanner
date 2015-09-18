@@ -51,7 +51,7 @@ $actionRows[$actionCount]["categoryPermissionParent"]="N" ;
 $actionRows[$actionCount]["categoryPermissionOther"]="N" ; 
 $actionCount++;
 
-$actionRows[$actionCount]["name"]="Submit Trip Request" ; 
+$actionRows[$actionCount]["name"]="Submit Request" ; 
 $actionRows[$actionCount]["precedence"]="0"; 
 $actionRows[$actionCount]["category"]="" ;
 $actionRows[$actionCount]["description"]="Submit a trip request." ;
@@ -68,7 +68,7 @@ $actionRows[$actionCount]["categoryPermissionParent"]="N" ;
 $actionRows[$actionCount]["categoryPermissionOther"]="N" ; 
 $actionCount++;
 
-$actionRows[$actionCount]["name"]="Manage Trip Approvers" ; 
+$actionRows[$actionCount]["name"]="Manage Approvers" ; 
 $actionRows[$actionCount]["precedence"]="0"; 
 $actionRows[$actionCount]["category"]="" ;
 $actionRows[$actionCount]["description"]="Manage trip approvers." ;
@@ -82,7 +82,25 @@ $actionRows[$actionCount]["defaultPermissionSupport"]="N" ;
 $actionRows[$actionCount]["categoryPermissionStaff"]="Y" ; 
 $actionRows[$actionCount]["categoryPermissionStudent"]="N" ; 
 $actionRows[$actionCount]["categoryPermissionParent"]="N" ; 
-$actionRows[$actionCount]["categoryPermissionOther"]="N" ; 
+$actionRows[$actionCount]["categoryPermissionOther"]="N" ;
+$actionCount++; 
+
+$actionRows[$actionCount]["name"]="Manage Trip Planner Settings" ; 
+$actionRows[$actionCount]["precedence"]="0"; 
+$actionRows[$actionCount]["category"]="" ;
+$actionRows[$actionCount]["description"]="Manage Trip Planner Settings." ;
+$actionRows[$actionCount]["URLList"]="trips_manageSettings.php" ; 
+$actionRows[$actionCount]["entryURL"]="trips_manageSettings.php" ; 
+$actionRows[$actionCount]["defaultPermissionAdmin"]="Y" ;
+$actionRows[$actionCount]["defaultPermissionTeacher"]="Y" ;
+$actionRows[$actionCount]["defaultPermissionStudent"]="N" ; 
+$actionRows[$actionCount]["defaultPermissionParent"]="N" ;
+$actionRows[$actionCount]["defaultPermissionSupport"]="N" ; 
+$actionRows[$actionCount]["categoryPermissionStaff"]="Y" ; 
+$actionRows[$actionCount]["categoryPermissionStudent"]="N" ; 
+$actionRows[$actionCount]["categoryPermissionParent"]="N" ; 
+$actionRows[$actionCount]["categoryPermissionOther"]="N" ;
+$actionCount++; 
 //Hooks
 //$hooks[0]="" ; //Serialised array to create hook and set options. See Hooks documentation online.
 ?>

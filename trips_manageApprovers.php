@@ -39,5 +39,9 @@ else {
 	catch(PDOException $e) {
 		echo $e->getMessage();
 	}
+
+	print "<h3>";
+	print "Approvers";
+	print "</h3>";
 }	
 ?>

@@ -45,7 +45,7 @@ else {
 	print "</h3>";
 
 	print "<h3>";
-	print "Trip Requests";
+	print "Requests";
 	print "</h3>";
 
 }	
