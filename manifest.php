@@ -28,8 +28,44 @@ $author="Ray Clark" ;
 $url="https://github.com/raynichc/Trip-Planner" ;
 
 //Tables
-//$moduleTables[0]="" ;
-//$moduleTables[1]="" ;
+$moduleTables[0]="CREATE TABLE `tripPlannerApprovers` (
+  `tripPlannerApproverID` int(4) unsigned zerofill NOT NULL AUTO_INCREMENT,
+  `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
+  `sequenceNumber` int(4) NULL,
+  `gibbonPersonIDCreator` int(10) unsigned zerofill NOT NULL,
+  `timestampCreator` timestamp NULL,
+  `gibbonPersonIDUpdate` int(10) unsigned zerofill NULL,
+  `timestampUpdate` timestamp NULL,
+  PRIMARY KEY (`tripPlannerApproverID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 ;" ;
+
+$moduleTables[1]="CREATE TABLE `tripPlannerRequests` (
+  `tripPlannerRequestID` int(7) unsigned zerofill NOT NULL AUTO_INCREMENT,
+  `creatorPersonID` int(10) unsigned zerofill NOT NULL,
+  `creationDate` date,
+  `title` varchar(60) NOT NULL,
+  `description` text NOT NULL,
+  `teacherPersonIDs` text NOT NULL,
+  `studentPersonIDs` text NOT NULL,
+  `location` text NOT NULL,
+  `date` date NOT NULL,
+  `startTime` timestamp NOT NULL,
+  `endTime` timestamp NOT NULL,
+  `riskAssessment` text NOT NULL,
+  `status` ENUM('Requested', 'Approved', 'Rejected', 'Cancelled') NOT NULL,
+  `gibbonPersonIDUpdate` int(10) unsigned zerofill NULL,
+  `timestampUpdate` timestamp NULL,
+  PRIMARY KEY (`tripPlannerRequestID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 ;" ;
+
+$moduleTables[2]="CREATE TABLE `tripPlannerCostBreakdown` (
+  `costBreakdownID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
+  `tripPlannerRequestID` int(7) unsigned zerofill NOT NULL,
+  `title` varchar(60) NOT NULL,
+  `description` text NOT NULL,
+  `cost` decimal(12, 2) NOT NULL,
+  PRIMARY KEY (`costBreakdownID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 ;" ;
 
 //Actions
 $actionCount = 0;
@@ -101,6 +137,7 @@ $actionRows[$actionCount]["categoryPermissionStudent"]="N" ;
 $actionRows[$actionCount]["categoryPermissionParent"]="N" ; 
 $actionRows[$actionCount]["categoryPermissionOther"]="N" ;
 $actionCount++; 
+
 //Hooks
 //$hooks[0]="" ; //Serialised array to create hook and set options. See Hooks documentation online.
 ?>
