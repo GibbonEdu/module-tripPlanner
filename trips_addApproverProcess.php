@@ -21,27 +21,27 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 //Module includes
 include "./modules/" . $_SESSION[$guid]["module"] . "/moduleFunctions.php" ;
+$URL = "/modules/" . $_SESSION[$guid]["module"];
 
 if (isModuleAccessible($guid, $connection2)==FALSE) {
 	//Acess denied
-	print "<div class='error'>" ;
-		print "You do not have access to this action." ;
-	print "</div>" ;
+	header("Location: $URL" . "trips_manageApprovers.php");
 }
 else {
-	//New PDO DB connection. 
-	//Gibbon uses PDO to connect to databases, rather than the PHP mysql classes, as they provide paramaterised connections, which are more secure.
 	try {
 		$connection2=new PDO("mysql:host=$databaseServer;dbname=$databaseName;charset=utf8", $databaseUsername, $databasePassword);
 		$connection2->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 		$connection2->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 	}
 	catch(PDOException $e) {
-		echo $e->getMessage();
+		header("Location: $URL" . "trips_addApprover.php");
 	}
 
-	print "<h3>";
-	print "Approvers";
-	print "</h3>";
+	if(isset($_POST["gibbonPersonID"])) {
+		if($_POST["gibbonPersonID"] != null && $_POST["gibbonPersonID"] != "") {
+			$gibbonPersonID = $_POST["gibbonPersonID"];
+		}
+	}
+
 }	
 ?>

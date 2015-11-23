@@ -43,5 +43,35 @@ else {
 	print "<h3>";
 	print "Approvers";
 	print "</h3>";
+
+	$approvers = getApprovers($connection2);
+
+	print "<div class='linkTop'>" ;
+	print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . $_SESSION[$guid]["module"] . "/trips_addApprover.php'>" .  _('Add') . "<img style='margin-left: 5px' title='" . _('Add') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/page_new.png'/></a>" ;
+	print "</div>" ;
+
+	print "<table cellspacing='0' style='width: 100%'>" ;
+    print "<tr class='head'>" ;
+      print "<th>" ;
+        print _("Name") ;
+      print "</th>" ;
+      print "<th>" ;
+        print _("Action") ;
+      print "</th>" ;
+  	print "</tr>" ;
+  	foreach($approvers as $approver) {
+  		print "<tr>";
+  			print "<td>";
+  				$name = getNameFromID($connection2, $approver['gibbonPersonID']);
+  				print $name['preferredName'] . " " . $name['lastName'];
+  			print "</td>";
+  			print "<td>";
+  				print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . $_SESSION[$guid]["module"] . "/trips_editApprover.php&tripPlannerApproverID=" . $approver["tripPlannerApproverID"] . "'><img title='" . _('Edit') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/config.png'/></a> " ;
+				print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/modules/" . $_SESSION[$guid]["module"] . "/trips_deleteApproverProcess.php&tripPlannerApproverID=" . $approver["tripPlannerApproverID"] . "'><img title='" . _('Delete') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/garbage.png'/></a> " ;
+  			print "</td>";
+  		print "</tr>";
+  	}
+  	print "</table>";
+
 }	
 ?>
