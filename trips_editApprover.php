@@ -1,4 +1,4 @@
-<?php
+ <?php
 /*
 Gibbon, Flexible & Open School System
 Copyright (C) 2010, Ross Parker
@@ -40,8 +40,63 @@ else {
 		echo $e->getMessage();
 	}
 
+	if(isset($_GET["tripPlannerApproverID"])) {
+		if($_GET["tripPlannerApproverID"] != null && $_GET["tripPlannerApproverID"] != "") {
+			$tripPlannerApproverID = $_GET["tripPlannerApproverID"];
+		}
+	}
+
+	$approver = getApprover($connection2, $tripPlannerApproverID);
+
 	print "<h3>";
-	print "Approvers";
+	print "Edit Approver";
 	print "</h3>";
+
+	?>
+	<form method="post" action="<?php print $_SESSION[$guid]["absoluteURL"] . "/modules/" . $_SESSION[$guid]["module"] . "/trips_editApproverProcess.php?tripPlannerApproverID=$tripPlannerApproverID" ?>">
+		<table class='smallIntBorder' cellspacing='0' style="width: 100%">	
+			<tr>
+				<td> 
+					<b><?php print _('Staff') ?> *</b><br/>
+				</td>
+				<td class="right">
+					<select name="gibbonPersonID" id="gibbonPersonID" style="width: 302px">
+						<option value="Please select..."><?php print _('Please select...') ?></option>
+						<?php
+						try {
+							$dataSelect=array(); 
+							$sqlSelect="SELECT * FROM gibbonPerson JOIN gibbonStaff ON (gibbonPerson.gibbonPersonID=gibbonStaff.gibbonPersonID) WHERE status='Full' ORDER BY surname, preferredName" ;
+							$resultSelect=$connection2->prepare($sqlSelect);
+							$resultSelect->execute($dataSelect);
+						}
+						catch(PDOException $e) { }
+						while ($rowSelect=$resultSelect->fetch()) {
+							$selected = "";
+							if($rowSelect["gibbonPersonID"] == $approver["gibbonPersonID"]) {
+								$selected = "selected";
+							}
+							print "<option value='" . $rowSelect["gibbonPersonID"] . "' $selected>" . formatName("", htmlPrep($rowSelect["preferredName"]), htmlPrep($rowSelect["surname"]), "Staff", true, true) . "</option>" ;
+						}
+						?>
+					</select>
+					<script type="text/javascript">
+						var gibbonPersonID=new LiveValidation('gibbonPersonID');
+						gibbonPersonID.add(Validate.Exclusion, { within: ['Please select...'], failureMessage: "<?php print _('Select something!') ?>"});
+					</script>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<span style="font-size: 90%"><i>* <?php print _("denotes a required field") ; ?></i></span>
+				</td>
+				<td class="right">
+					<input type="hidden" name="address" value="<?php print $_SESSION[$guid]["address"] ?>">
+					<input type="submit" value="<?php print _("Submit") ; ?>">
+				</td>
+			</tr>
+		</table>
+	</form>
+	<?php
+
 }	
 ?>

@@ -59,18 +59,34 @@ else {
         print _("Action") ;
       print "</th>" ;
   	print "</tr>" ;
-  	foreach($approvers as $approver) {
-  		print "<tr>";
-  			print "<td>";
-  				$name = getNameFromID($connection2, $approver['gibbonPersonID']);
-  				print $name['preferredName'] . " " . $name['lastName'];
-  			print "</td>";
-  			print "<td>";
-  				print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . $_SESSION[$guid]["module"] . "/trips_editApprover.php&tripPlannerApproverID=" . $approver["tripPlannerApproverID"] . "'><img title='" . _('Edit') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/config.png'/></a> " ;
-				print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/modules/" . $_SESSION[$guid]["module"] . "/trips_deleteApproverProcess.php&tripPlannerApproverID=" . $approver["tripPlannerApproverID"] . "'><img title='" . _('Delete') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/garbage.png'/></a> " ;
-  			print "</td>";
-  		print "</tr>";
-  	}
+  	if(count($approvers) > 0) {
+  		$rowCount=0;
+  	  	foreach($approvers as $approver) {
+  	  		if($rowCount%2 == 0) {
+		 		print "<tr class='even'>";
+		 	}
+		  	else {
+		 		print "<tr class='odd'>";
+		  	}
+	  			print "<td>";
+	  				$name = getNameFromID($connection2, $approver['gibbonPersonID']);
+	  				print $name['preferredName'] . " " . $name['surname'];
+	  			print "</td>";
+	  			print "<td>";
+	  				print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . $_SESSION[$guid]["module"] . "/trips_editApprover.php&tripPlannerApproverID=" . $approver["tripPlannerApproverID"] . "'><img title='" . _('Edit') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/config.png'/></a> " ;
+					print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/modules/" . $_SESSION[$guid]["module"] . "/trips_deleteApproverProcess.php?tripPlannerApproverID=" . $approver["tripPlannerApproverID"] . "'><img title='" . _('Delete') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/garbage.png'/></a> " ;
+	  			print "</td>";
+	  		print "</tr>";
+	  		$rowCount++;
+	  	}
+	}
+	else {
+		print "<tr>";
+      		print "<td colspan= 4>";
+       			print _("There are no records to display.");
+      		print "</td>";
+    	print "</tr>";
+	}
   	print "</table>";
 
 }	

@@ -29,6 +29,12 @@ if (isModuleAccessible($guid, $connection2)==FALSE) {
 }
 else {	
 
+	if(isset($_GET["tripPlannerApproverID"])) {
+		if($_GET["tripPlannerApproverID"] != null && $_GET["tripPlannerApproverID"] != "") {
+			$tripPlannerApproverID = $_GET["tripPlannerApproverID"];
+		}
+	}
+
 	if(isset($_POST["gibbonPersonID"])) {
 		if($_POST["gibbonPersonID"] != null && $_POST["gibbonPersonID"] != "") {
 			$gibbonPersonID = $_POST["gibbonPersonID"];
@@ -58,15 +64,15 @@ else {
 		break ;
 	}
 		
-	if ($result->rowCount()>0) {
+	if ($result->rowCount()>0 && approverExists($connection2, $tripPlannerApproverID)) {
 		//Fail 4
 		$URL = $URL . "trips_addApprovers.php&addReturn=fail4";
 		header("Location: {$URL}");
 	}
 	else {	
 		try {
-			$data=array("gibbonPersonID"=> $gibbonPersonID, "sequenceNumber"=> 0, "gibbonPersonIDCreator"=> $_SESSION[$guid]["gibbonPersonID"], "timestampCreator"=>date('Y-m-d H:i:s', time()));
-			$sql="INSERT INTO tripPlannerApprovers SET gibbonPersonID=:gibbonPersonID, sequenceNumber=:sequenceNumber, gibbonPersonIDCreator=:gibbonPersonIDCreator, timestampCreator=:timestampCreator" ;
+			$data=array("gibbonPersonID"=> $gibbonPersonID, "sequenceNumber"=> 0, "gibbonPersonIDUpdate"=> $_SESSION[$guid]["gibbonPersonID"], "timestampUpdate"=>date('Y-m-d H:i:s', time()), "tripPlannerApproverID"=>$tripPlannerApproverID);
+			$sql="UPDATE tripPlannerApprovers SET gibbonPersonID=:gibbonPersonID, sequenceNumber=:sequenceNumber, gibbonPersonIDUpdate=:gibbonPersonIDUpdate, timestampUpdate=:timestampUpdate WHERE tripPlannerApproverID=:tripPlannerApproverID" ;
 			$result=$connection2->prepare($sql);
 			$result->execute($data);
 		}
