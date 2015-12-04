@@ -43,5 +43,56 @@ else {
 	print "<h3>";
 	print "Settings";
 	print "</h3>";
+
+	?>
+
+	<form method="post" action="<?php print $_SESSION[$guid]["absoluteURL"] . "/modules/" . $_SESSION[$guid]["module"] . "/trips_manageSettingsProcess.php" ?>">
+		<table class='smallIntBorder' cellspacing='0' style="width: 100%">	
+			<tr>
+				<?php
+				try {
+					$data=array(); 
+					$sql="SELECT * FROM gibbonSetting WHERE scope='Trip Planner' AND name='requestApprovalType'" ;
+					$result=$connection2->prepare($sql);
+					$result->execute($data);
+				}
+				catch(PDOException $e) { 
+					print "<div class='error'>" . $e->getMessage() . "</div>" ; 
+				}
+				$row=$result->fetch() ;
+				?>
+				<td> 
+					<b><?php print _($row["nameDisplay"]) ?> *</b><br/>
+					<span style="font-size: 90%"><i><?php if ($row["description"]!="") { print _($row["description"]) ; } ?></i></span>
+				</td>
+				<td class="right">
+					<select name="<?php print $row["name"] ?>" id="<?php print $row["name"] ?>" style="width: 302px">
+						<?php
+						$selected="" ;
+						if ($row["value"]=="One Of" ) { $selected="selected" ; }
+						print "<option $selected value='One Of'>One Of</option>" ;
+						$selected="" ;
+						if ($row["value"]=="Two Of" ) { $selected="selected" ; }
+						print "<option $selected value='Two Of'>Two Of</option>" ;
+						$selected="" ;
+						if ($row["value"]=="Chain Of All" ) { $selected="selected" ; }
+						print "<option $selected value='Chain Of All'>Chain Of All</option>" ;
+						?>			
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<span style="font-size: 90%"><i>* <?php print _("denotes a required field") ; ?></i></span>
+				</td>
+				<td class="right">
+					<input type="hidden" name="address" value="<?php print $_SESSION[$guid]["address"] ?>">
+					<input type="submit" value="<?php print _("Submit") ; ?>">
+				</td>
+			</tr>
+		</table>
+	</form>
+
+	<?php
 }	
 ?>

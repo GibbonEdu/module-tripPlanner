@@ -67,6 +67,10 @@ $moduleTables[2]="CREATE TABLE `tripPlannerCostBreakdown` (
   PRIMARY KEY (`costBreakdownID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 ;" ;
 
+$moduleTables[3] = "INSERT INTO `gibbonSetting` (`gibbonSystemSettingsID`, `scope`, `name`, `nameDisplay`, `description`, `value`)
+VALUES
+(NULL, 'Trip Planner', 'requestApprovalType', 'Request Approval Type', 'The type of approval that a trip request has to go through.', 'One of'),";
+
 //Actions
 $actionCount = 0;
 

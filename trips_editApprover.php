@@ -85,6 +85,27 @@ else {
 					</script>
 				</td>
 			</tr>
+			<?php
+			$expenseApprovalType=getSettingByScope($connection2, "Trip Planner", "requestApprovalType") ;
+			if ($expenseApprovalType=="Chain Of All") {
+				?>
+				<tr>
+					<td> 
+						<b><?php print _('Sequence Number') ?> *</b><br/>
+						<span style="font-size: 90%"><i><?php print _('Must be unique.') ?></i></span>
+					</td>
+					<td class="right">
+						<input name="sequenceNumber" ID="sequenceNumber" value="<?php print $approver['sequenceNumber']; ?> " type="text" style="width: 300px">
+						<script type="text/javascript">
+							var sequenceNumber=new LiveValidation('sequenceNumber');
+							sequenceNumber.add(Validate.Numericality);
+							sequenceNumber.add(Validate.Presence);
+						</script>
+					</td>
+				</tr>
+				<?php
+			}
+			?>
 			<tr>
 				<td>
 					<span style="font-size: 90%"><i>* <?php print _("denotes a required field") ; ?></i></span>

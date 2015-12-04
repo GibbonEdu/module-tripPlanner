@@ -52,12 +52,18 @@ else {
 
 	print "<table cellspacing='0' style='width: 100%'>" ;
     print "<tr class='head'>" ;
-      print "<th>" ;
-        print _("Name") ;
-      print "</th>" ;
-      print "<th>" ;
-        print _("Action") ;
-      print "</th>" ;
+    	print "<th>" ;
+        	print _("Name") ;
+      	print "</th>" ;
+      	$expenseApprovalType=getSettingByScope($connection2, "Trip Planner", "requestApprovalType") ;
+	  	if ($expenseApprovalType=="Chain Of All") {
+	  		print "<th>" ;
+      			print _("Sequence Number") ;
+      		print "</th>" ;
+	  	}
+      	print "<th>" ;
+      		print _("Action") ;
+      	print "</th>" ;
   	print "</tr>" ;
   	if(count($approvers) > 0) {
   		$rowCount=0;
@@ -72,6 +78,12 @@ else {
 	  				$name = getNameFromID($connection2, $approver['gibbonPersonID']);
 	  				print $name['preferredName'] . " " . $name['surname'];
 	  			print "</td>";
+	  			$expenseApprovalType=getSettingByScope($connection2, "Trip Planner", "requestApprovalType") ;
+				if ($expenseApprovalType=="Chain Of All") {
+					print "<td>";
+	  					print $approver['sequenceNumber'];
+	  				print "</td>";
+				}
 	  			print "<td>";
 	  				print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . $_SESSION[$guid]["module"] . "/trips_editApprover.php&tripPlannerApproverID=" . $approver["tripPlannerApproverID"] . "'><img title='" . _('Edit') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/config.png'/></a> " ;
 					print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/modules/" . $_SESSION[$guid]["module"] . "/trips_deleteApproverProcess.php?tripPlannerApproverID=" . $approver["tripPlannerApproverID"] . "'><img title='" . _('Delete') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/garbage.png'/></a> " ;

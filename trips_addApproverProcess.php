@@ -18,13 +18,13 @@ try {
 	$connection2->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 }
 catch(PDOException $e) {
-	$URL = $URL . "trips_addApprovers.php&addReturn=fail1";
+	$URL = $URL . "trips_addApprover.php&addReturn=fail1";
 	header("Location: {$URL}");
 }
 
 if (isModuleAccessible($guid, $connection2)==FALSE) {
 	//Acess denied
-	$URL = $URL . "trips_manageApprovers.php&addReturn=fail0";
+	$URL = $URL . "trips_manageApprover.php&addReturn=fail0";
 	header("Location: {$URL}");
 }
 else {	
@@ -35,43 +35,59 @@ else {
 		}
 	}
 	else {
-		$URL = $URL . "trips_addApprovers.php&addReturn=fail2";
+		$URL = $URL . "trips_addApprover.php&addReturn=fail2";
 		header("Location: {$URL}");
 	}
 
+	$expenseApprovalType=getSettingByScope($connection2, "Trip Planner", "requestApprovalType") ;
+	if ($expenseApprovalType=="Chain Of All") {
+		if(isset($_POST["sequenceNumber"])) {
+			if($_POST["sequenceNumber"] != null && $_POST["sequenceNumber"] != "") {
+				$sequenceNumber = abs($_POST["sequenceNumber"]);
+			}
+		}
+		else {
+			$URL = $URL . "trips_addApprover.php&addReturn=fail2";
+			header("Location: {$URL}");
+		}
+	}
+	else {
+		$sequenceNumber = 0;
+	}
+
 	try {
-		// if ($expenseApprovalType=="Chain Of All") {
-		// 	$data=array("gibbonPersonID"=>$gibbonPersonID, "sequenceNumber"=>$sequenceNumber); 
-		// 	$sql="SELECT * FROM gibbonFinanceExpenseApprover WHERE gibbonPersonID=:gibbonPersonID OR sequenceNumber=:sequenceNumber" ;
-		// }
-		// else {
+		if ($expenseApprovalType=="Chain Of All") {
+			$data=array("gibbonPersonID"=>$gibbonPersonID, "sequenceNumber"=>$sequenceNumber); 
+			$sql="SELECT * FROM tripPlannerApprovers WHERE gibbonPersonID=:gibbonPersonID OR sequenceNumber=:sequenceNumber" ;
+		}
+		else {
 			$data=array("gibbonPersonID"=>$gibbonPersonID); 
 			$sql="SELECT * FROM tripPlannerApprovers WHERE gibbonPersonID=:gibbonPersonID" ;
-		// }
+		}
 		$result=$connection2->prepare($sql);
 		$result->execute($data);
 	}
 	catch(PDOException $e) { 
 		//Fail 2
-		$URL = $URL . "trips_addApprovers.php&addReturn=fail3";
+		$URL = $URL . "trips_addApprover.php&addReturn=fail3";
 		header("Location: {$URL}");
 		break ;
 	}
 		
 	if ($result->rowCount()>0) {
 		//Fail 4
-		$URL = $URL . "trips_addApprovers.php&addReturn=fail4";
+		$URL = $URL . "trips_addApprover.php&addReturn=fail4";
 		header("Location: {$URL}");
 	}
 	else {	
 		try {
-			$data=array("gibbonPersonID"=> $gibbonPersonID, "sequenceNumber"=> 0, "gibbonPersonIDCreator"=> $_SESSION[$guid]["gibbonPersonID"], "timestampCreator"=>date('Y-m-d H:i:s', time()));
+			$data=array("gibbonPersonID"=> $gibbonPersonID, "sequenceNumber"=> $sequenceNumber, "gibbonPersonIDCreator"=> $_SESSION[$guid]["gibbonPersonID"], "timestampCreator"=>date('Y-m-d H:i:s', time()));
 			$sql="INSERT INTO tripPlannerApprovers SET gibbonPersonID=:gibbonPersonID, sequenceNumber=:sequenceNumber, gibbonPersonIDCreator=:gibbonPersonIDCreator, timestampCreator=:timestampCreator" ;
 			$result=$connection2->prepare($sql);
 			$result->execute($data);
 		}
 		catch(PDOException $e) {
-			$URL = $URL . "trips_addApprovers.php&addReturn=fail5";
+			$URL = $URL . "trips_addApprover.php&addReturn=fail5";
 			header("Location: {$URL}");
 			exit();
 		}
