@@ -40,13 +40,59 @@ else {
 		echo $e->getMessage();
 	}
 
-	print "<h3>";
-	print "Filter";
-	print "</h3>";
+	print "<div class='trail'>" ;
+	print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . _("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . _(getModuleName($_GET["q"])) . "</a> > </div><div class='trailEnd'>" . _('Manage Trip Requests') . "</div>" ;
+	print "</div>" ;
 
-	print "<h3>";
-	print "Requests";
-	print "</h3>";
+	?>
+	<h3>
+		Filter
+	</h3>
+	<?php
+
+	print "<form method='post' action='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=" . $_GET["q"] . "'>" ; ?>
+		<table class='noIntBorder' cellspacing='0' style='width: 100%'>
+			<tr>
+				<td class='right' colspan=2>
+					<input type='submit' value='<?php print _('Go') ?>'>
+				</td>
+			</tr>
+		</table>
+	</form>
+
+	<h3>
+		Requests
+	</h3>
+	<table cellspacing = '0' style = 'width: 100% !important'>
+   		<tr>
+    		<th>
+    			Title<br/>
+   				<span style='font-size: 85%; font-style: italic'><?php print _('Description'); ?></span>
+			</th>
+    		<th>
+    			Owner
+		  	</th>
+		  	<th>
+    			Status<br/>
+   				<span style='font-size: 85%; font-style: italic'><?php print _('Date'); ?></span>
+			</th>
+   			<th>
+   				Action
+   			</th> 
+   		</tr>
+    <?php
+	if (true) {
+    	print "<tr>";
+    	$colspan = 4;
+    	print "<td colspan=$colspan>";
+    	print _("There are no records to display.");
+		print "</td>";
+		print "</tr>";
+    }
+    else {
+    	
+	}
+    print "</table>";
 
 }	
 ?>

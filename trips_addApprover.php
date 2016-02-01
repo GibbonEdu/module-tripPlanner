@@ -40,6 +40,10 @@ else {
 		echo $e->getMessage();
 	}
 
+	print "<div class='trail'>" ;
+ 	print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . _("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . _(getModuleName($_GET["q"])) . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . $_SESSION[$guid]["module"] . "/trips_manageApprovers.php'>" . _("Manage Approver") . "</a> > </div><div class='trailEnd'>" . _('Add Approver') . "</div>" ;
+	print "</div>" ;
+
 	print "<h3>";
 	print "Add Approver";
 	print "</h3>";
@@ -86,7 +90,7 @@ else {
 						<input name="sequenceNumber" ID="sequenceNumber" value="" type="text" style="width: 300px">
 						<script type="text/javascript">
 							var sequenceNumber=new LiveValidation('sequenceNumber');
-							sequenceNumber.add(Validate.Numericality);
+							sequenceNumber.add(Validate.Numericality, { minimum: 0 } );
 							sequenceNumber.add(Validate.Presence);
 						</script>
 					</td>

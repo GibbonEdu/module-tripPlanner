@@ -69,7 +69,7 @@ $moduleTables[2]="CREATE TABLE `tripPlannerCostBreakdown` (
 
 $moduleTables[3] = "INSERT INTO `gibbonSetting` (`gibbonSystemSettingsID`, `scope`, `name`, `nameDisplay`, `description`, `value`)
 VALUES
-(NULL, 'Trip Planner', 'requestApprovalType', 'Request Approval Type', 'The type of approval that a trip request has to go through.', 'One of'),";
+(NULL, 'Trip Planner', 'requestApprovalType', 'Request Approval Type', 'The type of approval that a trip request has to go through.', 'One of');";
 
 //Actions
 $actionCount = 0;
@@ -113,7 +113,8 @@ $actionRows[$actionCount]["precedence"]="0";
 $actionRows[$actionCount]["category"]="" ;
 $actionRows[$actionCount]["description"]="Manage trip approvers." ;
 $actionRows[$actionCount]["URLList"]="trips_manageApprovers.php" ; 
-$actionRows[$actionCount]["entryURL"]="trips_manageApprovers.php" ; 
+$actionRows[$actionCount]["entryURL"]="trips_manageApprovers.php" ;
+$actionRows[$actionCount]["entrySidebar"]="N" ; 
 $actionRows[$actionCount]["defaultPermissionAdmin"]="Y" ;
 $actionRows[$actionCount]["defaultPermissionTeacher"]="Y" ;
 $actionRows[$actionCount]["defaultPermissionStudent"]="N" ; 
