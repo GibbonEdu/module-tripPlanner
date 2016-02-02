@@ -60,14 +60,28 @@ else {
 		</table>
 	</form>
 
+	<?php
+		try {
+	    	$data=array();
+	    	$sql="SELECT creatorPersonID, creationDate, title, description, status FROM tripPlannerRequests";
+	    	$result=$connection2->prepare($sql);
+	    	$result->execute($data);
+	  	}
+	 	catch(PDOException $e) {
+			print $e;
+	 	}
+	?>
+
 	<h3>
 		Requests
 	</h3>
 	<table cellspacing = '0' style = 'width: 100% !important'>
    		<tr>
     		<th>
-    			Title<br/>
-   				<span style='font-size: 85%; font-style: italic'><?php print _('Description'); ?></span>
+    			Title
+			</th>
+			<th>
+    			Description
 			</th>
     		<th>
     			Owner
@@ -81,16 +95,38 @@ else {
    			</th> 
    		</tr>
     <?php
-	if (true) {
-    	print "<tr>";
-    	$colspan = 4;
-    	print "<td colspan=$colspan>";
-    	print _("There are no records to display.");
-		print "</td>";
-		print "</tr>";
+	if ($result->rowCount() == 0) {?>
+    	<tr>
+    		<?php
+    		$colspan = 5;
+    		print "<td colspan=$colspan>";
+    		?>
+    			There are no records to display
+			</td>
+		</tr>
+	<?php
     }
     else {
-    	
+    	$rowCount=0;
+    	while($row = $result->fetch()) {
+    		if($rowCount % 2 == 0) {
+    			print "<tr class='even'>";
+    		}
+    		else {
+    			print "<tr clas='odd'>";
+    		}
+
+	    		print "<td>" . $row['title'] . "</td>";
+	    		print "<td>" . $row['description'] . "</td>";
+	    		print "<td>" . $row['creatorPersonID'] . "</td>";
+	    		print "<td>";
+	    			print $row['Status'];
+	    			print "<span style='font-size: 85%; font-style: italic'>" . $row['creationDate'] . "</span>";    		
+	    		print "</td>";
+	    		print "<td>";
+	    		print "</td>";
+    		print "</tr>";
+    	}
 	}
     print "</table>";
 
