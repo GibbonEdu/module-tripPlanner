@@ -63,7 +63,7 @@ else {
 	<?php
 		try {
 	    	$data=array();
-	    	$sql="SELECT creatorPersonID, creationDate, title, description, status FROM tripPlannerRequests";
+	    	$sql="SELECT creatorPersonID, timestampCreation, title, description, status FROM tripPlannerRequests";
 	    	$result=$connection2->prepare($sql);
 	    	$result->execute($data);
 	  	}
