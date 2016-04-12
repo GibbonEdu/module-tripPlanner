@@ -49,7 +49,7 @@ else {
 	print "</h3>";
 	?>
 
-	<form method="post" action="<?php print $_SESSION[$guid]["absoluteURL"] . "/modules/" . $_SESSION[$guid]["module"] . "/trips_submitRequestProcess.php" ?>">
+	<form method="post" name="requestForm" action="<?php print $_SESSION[$guid]["absoluteURL"] . "/modules/" . $_SESSION[$guid]["module"] . "/trips_submitRequestProcess.php" ?>" onsubmit="submitForm()">
 		<table class='smallIntBorder' cellspacing='0' style="width: 100%">
 			<tr>
 				<td style='width: 275px'>
@@ -68,7 +68,7 @@ else {
 					<b><?php print _('Description') ?> *</b><br/>
 				</td>
 				<td colspan=2>
-					<textarea name='description' id='description' maxlength=1000 rows=5 style='width: 300px'></textarea>
+					<textarea name='description' id='description' maxlength=1000 rows=5 style='width: 300px; max-width: 300px;'></textarea>
 					<script type="text/javascript">
 						var description=new LiveValidation('description');
 						description.add(Validate.Presence);
@@ -127,7 +127,7 @@ else {
 				<td style='width: 275px'>
 					<b><?php print _('Location') ?> *</b><br/>
 				</td>
-				<td colspan=2>
+				<td>
 					<input name="location" id="location" maxlength=60 value="" type="text" style="width: 300px">
 					<script type="text/javascript">
 						var loc=new LiveValidation('location');
@@ -137,9 +137,423 @@ else {
 				</td>
 			</tr>
 			<tr>
+				<td> 
+					<b><?php print __($guid, 'Total Cost') ?> *</b><br/>
+					<span style="font-size: 90%">
+						<i>
+						<?php
+						if ($_SESSION[$guid]["currency"]!="") {
+							print sprintf(__($guid, 'Numeric value of the fee in %1$s.'), $_SESSION[$guid]["currency"]) ;
+						}
+						else {
+							print __($guid, "Numeric value of the fee.") ;
+						}
+						?>
+						</i>
+					</span>
+				</td>
+				<td class="right">
+					<input name="totalCost" id="totalCost" maxlength=15 value="" type="text" style="width: 300px">
+					<script type="text/javascript">
+						var totalCost=new LiveValidation('totalCost');
+						totalCost.add(Validate.Presence);
+						totalCost.add( Validate.Format, { pattern: /^(?:\d*\.\d{1,2}|\d+)$/, failureMessage: "Invalid number format!" } );
+					</script>
+				</td>
+			</tr>
+			<tr class='break'>
+				<td colspan=2> 
+					<h3><?php print __($guid, 'Costs') ?></h3>
+				</td>
+			</tr>
+			<?php 
+			$type="cost" ; 
+			?> 
+			<style>
+				#<?php print $type ?> { list-style-type: none; margin: 0; padding: 0; width: 100%; }
+				#<?php print $type ?> div.ui-state-default { margin: 0 0px 5px 0px; padding: 5px; font-size: 100%; min-height: 58px; }
+				div.ui-state-default_dud { margin: 5px 0px 5px 0px; padding: 5px; font-size: 100%; min-height: 58px; }
+				html>body #<?php print $type ?> li { min-height: 58px; line-height: 1.2em; }
+				.<?php print $type ?>-ui-state-highlight { margin-bottom: 5px; min-height: 58px; line-height: 1.2em; width: 100%; }
+				.<?php print $type ?>-ui-state-highlight {border: 1px solid #fcd3a1; background: #fbf8ee url(images/ui-bg_glass_55_fbf8ee_1x400.png) 50% 50% repeat-x; color: #444444; }
+			</style>
+			<tr>
+				<td colspan=2> 
+					<div class="cost" id="cost" style='width: 100%; padding: 5px 0px 0px 0px; min-height: 66px'>
+						<div id="costOuter0">
+							<div style='color: #ddd; font-size: 230%; margin: 15px 0 0 6px'><?php print __($guid, 'Costs will be listed here...') ?></div>
+						</div>
+					</div>
+					<div style='width: 100%; padding: 0px 0px 0px 0px'>
+						<div class="ui-state-default_dud" style='padding: 0px; height: 40px'>
+							<table class='blank' cellspacing='0' style='width: 100%'>
+								<tr>
+									<td style='width: 50%'>
+										<script type="text/javascript">
+											var costCount=1 ;
+										</script>
+										<input type="button" value="New Cost" style='float: none; margin-left: 3px; margin-top: 0px; width: 350px' onclick="addCost()" />
+										<?php
+											$costBlock="$('#cost').append('<div id=\"costOuter' + costCount + '\"><img style=\"margin: 10px 0 5px 0\" src=\"" . $_SESSION[$guid]["absoluteURL"] . "/themes/Default/img/loading.gif\" alt=\"Loading\" onclick=\"return false;\" /><br/>Loading</div>');" ;
+											$costBlock.="$(\"#costOuter\" + costCount).load(\"" . $_SESSION[$guid]["absoluteURL"] . "/modules/Trip%20Planner/trips_submitRequestAddBlockCostAjax.php\",\"mode=add&id=\" + costCount) ;" ;
+											$costBlock.="costCount++";
+											//$costBlock.="$('#newCost').val('0');" ;
+										?>
+										<script type='text/javascript'>
+											function addCost() {
+												$("#<?php print $type ?>Outer0").css("display", "none") ;
+												<?php print $costBlock ?>
+											}
+										</script>
+										
+									</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+				</td>
+			</tr>
+			<!-- <tr>
+				<td style='width: 275px'>
+					<b><?php print _('Costs') ?> *</b><br/>
+				</td>
+				<td>
+					<select id="costs" style="width:302px" onchange="costSelect()">
+						<option value='addNew' selected>Add New</option>
+					</select>
+					<input name="costTitle" id="costTitle" maxlength=60 value="" type="text" style="width: 300px; margin-top:10px">
+					<textarea name='costDescription' id='costDescription' maxlength=1000 rows=5 style='width: 300px; max-width: 300px;  margin-top:10px'></textarea>
+					<input name="costCost" id="costCost" maxlength=15 value="" type="text" style="width: 300px;  margin-top:10px">
+					<input type="button" value="Done" style="width: 300px; margin-top:10px; float: right;" onclick="addCost()" />
+					<input type="button" id="costRemove" value="Remove" style="width: 300px; margin-top:10px; float: right; display:none;" onclick="removeCost()" />
+					<input type="hidden" id="costList" value="" />
+					<script type="text/javascript">
+						var costID = 0;
+						function addCost() {
+							var costs = document.getElementById('costs');
+							var costTitle = document.getElementById('costTitle');
+							var costDescription = document.getElementById('costDescription');
+							var costCost = document.getElementById('costCost');
+							var costList = document.getElementById('costList');
+							
+							var prefix = "cost" + costID++;
+
+							var cTData = document.createElement("input");
+							cTData.setAttribute("type", "hidden");
+							cTData.setAttribute("id", prefix + "costTitle");
+							cTData.setAttribute("value", costTitle.value);
+
+							var cDData = document.createElement("input");
+							cDData.setAttribute("type", "hidden");
+							cDData.setAttribute("id", prefix + "costDescription");
+							cDData.setAttribute("value", costDescription.value);
+
+							var cCData = document.createElement("input");
+							cCData.setAttribute("type", "hidden");
+							cCData.setAttribute("id", prefix + "costCost");
+							cCData.setAttribute("value", costCost.value);
+
+							document.getElementById("costList").appendChild(cTData);
+							document.getElementById("costList").appendChild(cDData);
+							document.getElementById("costList").appendChild(cCData);
+
+							var option = document.createElement("option");
+							option.text = costTitle.value;
+							option.value = prefix;
+							try {
+							    costs.add(option, null);
+							}
+							catch(ex) {
+							    costs.add(option);
+							}
+
+							costTitle.value = "";
+							costDescription.value = "";
+							costCost.value = "";
+
+							var tempList = costList.value;
+							if(tempList == "" || tempList == null) {
+								templist = prefix;
+							}
+							else {
+								tempList = tempList + "," + prefix;
+							}
+							costList.setAttribute("value", tempList);
+						}
+
+						function removeCost() {
+							var costs = document.getElementById('costs');
+
+							if (costs.selectedIndex == -1)
+						        return;
+
+						    var selectedPrefix = costs.options[costs.selectedIndex].value;
+						    if(selectedPrefix != "addNew") {
+						    	var costTitle = document.getElementById('costTitle');
+								var costDescription = document.getElementById('costDescription');
+								var costCost = document.getElementById('costCost');
+								var costList = document.getElementById('costList');
+								var remove = document.getElementById('costRemove');
+								remove.style.display = "none";
+
+							    costTitle.value = "";
+								costDescription.value = "";
+								costCost.value = "";
+
+								var cTData = document.getElementById(selectedPrefix + "costTitle");
+								var cDData = document.getElementById(selectedPrefix + "costDescription");
+								var cCData = document.getElementById(selectedPrefix + "costCost");
+
+								costList.removeChild(cTData);
+								costList.removeChild(cDData);
+								costList.removeChild(cCData);
+
+								var tempList = costList.value;
+								var explodedList = tempList.split(",");
+								var newList = "";
+								for(var i = 0; i < explodedList.length; i++) {
+									var listItem = explodedList[i];
+									if(listItem != selectedPrefix) {
+										if(i > 0) {
+											newList = newList + "," + listItem;
+										}
+										else {
+											newList = listItem;										
+										}
+									}
+								}
+								costList.value = newList;
+
+								costs.options[costs.selectedIndex] = null;
+								for (var i = 0; i < costs.length; i++) {
+									var option = costs.options[i];
+									if(option.value=="addNew") {
+										option.selected = true;
+									}
+									else {
+										option.selected = false;
+									}
+								}
+							}
+						}
+
+						function costSelect() {
+							var costs = document.getElementById('costs');
+							var remove = document.getElementById('costRemove');
+
+						    if (costs.selectedIndex == -1)
+						        return;
+
+						    var selectedPrefix = costs.options[costs.selectedIndex].value;
+					    	var costTitle = "";
+					    	var costDescription = "";
+					    	var costCost = "";
+
+					    	if(selectedPrefix != "addNew") {
+						    	costTitle = document.getElementById(selectedPrefix + "costTitle").value;
+						    	costDescription = document.getElementById(selectedPrefix + "costDescription").value;
+						    	costCost = document.getElementById(selectedPrefix + "costCost").value;
+						    	remove.style.display = "block";
+							}
+							else {
+								remove.style.display = "none";
+							}
+
+							document.getElementById("costTitle").value = costTitle;
+						   	document.getElementById("costDescription").value = costDescription;
+						   	document.getElementById("costCost").value = costCost;
+						}
+					</script>
+				</td>
+			</tr> -->
+			<tr>
+				<?php
+					try {
+						$data=array(); 
+						$sql="SELECT value FROM gibbonSetting WHERE scope='Trip Planner' AND name='riskAssessmentTemplate'" ;
+						$result=$connection2->prepare($sql);
+						$result->execute($data);
+					}
+					catch(PDOException $e) { 
+						print "<div class='error'>" . $e->getMessage() . "</div>" ; 
+					}
+					$row=$result->fetch() ;
+				?>
 				<td colspan=2>
 					<b><?php print _('Risk Assessment') ?> *</b><br/>
-					<?php print getEditor($guid, TRUE, "riskAssessment", "", 5, true, true, false); ?>				
+					<?php print getEditor($guid, TRUE, "riskAssessment", $row["value"], 5, true, true, false); ?>				
+				</td>
+			</tr>
+			<tr>
+			</tr>
+			<tr>
+				<td colspan=2>
+					<b><?php print _('Teachers') ?> *</b></br>
+					<select name='teachers' id='teachers' multiple style="width: 302px; height: 150px; margin-left: 0px !important; float: left;">
+						<?php
+							try {
+						    	$data=array();
+						    	$sql="SELECT gibbonPersonID, preferredName, surname FROM gibbonPerson WHERE gibbonRoleIDPrimary=002 AND status='Full' ORDER BY preferredName, surname ASC";
+						    	$result=$connection2->prepare($sql);
+						    	$result->execute($data);
+						  	}
+						 	catch(PDOException $e) {
+								print $e;
+						 	}
+						 	while(($row = $result->fetch()) != null) {
+						 		print "<option value='" . $row["gibbonPersonID"] . "'>" . $row["preferredName"] . " " . $row["surname"] . "</option>";
+						 	}
+						?>
+					</select>
+					<div style="float: left; width: 136px; height: 148px; display: table;">
+						<div style="display: table-cell; vertical-align: middle; text-align:center;">
+							<!-- <input id="teacherFilter" align="absmiddle" maxlength=60 value="" type="text" style="width: 73%; margin-right: 12.5%" onchange="filterTeachers()" /></br> -->
+							<input type="button" value="Add" style="width: 75%;" onclick="addTeachers()" /></br>
+							<input type="button" value="Remove" style="width: 75%;" onclick="removeTeachers()" />
+						</div>
+					</div>
+					<select name='teachers2[]' id='teachers2[]' multiple style="float: right; margin-left: 0px !important; width: 302px; height: 150px;">
+
+					</select>
+					<script type="text/javascript">
+						function addTeachers() {
+							var teachers = document.getElementById('teachers');
+							var teachers2 = document.getElementById('teachers2[]');
+							var i;
+							for (i = teachers.length - 1; i>=0; i--) {
+								var option = teachers.options[i];
+								if (option.selected) {
+									teachers.remove(i);
+									try {
+									    teachers2.add(option, null);
+									}
+									catch(ex) {
+									    teachers2.add(option);
+									}
+								}
+							}
+							sortSelect(teachers);
+							sortSelect(teachers2);
+						}
+
+						function removeTeachers() {
+							var teachers = document.getElementById('teachers');
+							var teachers2 = document.getElementById('teachers2[]');
+							for (i = teachers2.length - 1; i>=0; i--) {
+								var option = teachers2.options[i];
+								if (option.selected) {
+									teachers2.remove(i);
+									try {
+									    teachers.add(option, null);
+									}
+									catch(ex) {
+									    teachers.add(option);
+									}
+								}
+							}
+							sortSelect(teachers);
+							sortSelect(teachers2);
+						}
+
+						function sortSelect(list) {
+						    var tempArray = new Array();
+						    for (var i=0;i<list.options.length;i++) {
+						        tempArray[i] = new Array();
+						        tempArray[i][0] = list.options[i].text;
+						        tempArray[i][1] = list.options[i].value;
+						    }
+						    tempArray.sort();
+						    while (list.options.length > 0) {
+						        list.options[0] = null;
+						    }
+						    for (var i=0;i<tempArray.length;i++) {
+						        var op = new Option(tempArray[i][0], tempArray[i][1]);
+						        list.options[i] = op;
+						    }
+						    return;
+						}
+
+						function submitForm() {
+							var teachers2 = document.getElementById('teachers2[]');
+							var students2 = document.getElementById('students2[]');
+							for(var i = 0; i < teachers2.length; i++) {
+								teachers2.options[i].selected = true;
+							}
+							for(var i = 0; i < students2.length; i++) {
+								students2.options[i].selected = true;
+							}
+						}
+					</script>
+				</td>
+			</tr>
+			<tr>
+				<td colspan=2>
+					<b><?php print _('Students') ?> *</b></br>
+					<select name='students' id='students' multiple style="width: 302px; height: 150px; margin-left: 0px !important; float: left;">
+						<?php
+							try {
+						    	$data=array();
+						    	$sql="SELECT gibbonPersonID, preferredName, surname FROM gibbonPerson WHERE gibbonRoleIDPrimary=003 AND status='Full' ORDER BY preferredName, surname ASC";
+						    	$result=$connection2->prepare($sql);
+						    	$result->execute($data);
+						  	}
+						 	catch(PDOException $e) {
+								print $e;
+						 	}
+						 	while(($row = $result->fetch()) != null) {
+						 		print "<option value='" . $row["gibbonPersonID"] . "'>" . $row["preferredName"] . " " . $row["surname"] . "</option>";
+						 	}
+						?>
+					</select>
+					<div style="float: left; width: 136px; height: 148px; display: table; text-align:center;">
+						<div style="display: table-cell; vertical-align: middle;">
+							<input type="button" value="Add" style="width: 75%;" onclick="addStudents()" /></br>
+							<input type="button" value="Remove" style="width: 75%;" onclick="removeStudents()" />
+						</div>
+					</div>
+					<select name='students2[]' id='students2[]' multiple style="float: right; margin-left: 0px !important; width: 302px; height: 150px;">
+
+					</select>
+					<script type="text/javascript">
+						function addStudents() {
+							var students = document.getElementById('students');
+							var students2 = document.getElementById('students2[]');
+							var i;
+							for (i = students.length - 1; i>=0; i--) {
+								var option = students.options[i];
+								if (option.selected) {
+									students.remove(i);
+									try {
+									    students2.add(option, null);
+									}
+									catch(ex) {
+									    students2.add(option);
+									}
+								}
+							}
+							sortSelect(students);
+							sortSelect(students2);
+						}
+
+						function removeStudents() {
+							var students = document.getElementById('students');
+							var students2 = document.getElementById('students2[]');
+							for (i = students2.length - 1; i>=0; i--) {
+								var option = students2.options[i];
+								if (option.selected) {
+									students2.remove(i);
+									try {
+									    students.add(option, null);
+									}
+									catch(ex) {
+									    students.add(option);
+									}
+								}
+							}
+							sortSelect(students);
+							sortSelect(students2);
+						}
+					</script>
 				</td>
 			</tr>
 			<tr>

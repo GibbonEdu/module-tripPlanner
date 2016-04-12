@@ -28,18 +28,28 @@ if (isModuleAccessible($guid, $connection2)==FALSE) {
 	header("Location: {$URL}");
 }
 else {	
-
-	$items = array("title", "description", "date", "startTime", "startTime", "location", "riskAssessment");
+	$items = array("title", "description", "date", "startTime", "startTime", "location", "riskAssessment", "teachers2", "students2", "totalCost");
 	$data = array("creatorPersonID"=>$_SESSION[$guid]["gibbonPersonID"], "timestampCreation"=>date('Y-m-d H:i:s', time()));
 
 	foreach($items as $item) {
 		if(isset($_POST[$item])) {
 			if($_POST[$item] != null && $_POST[$item] != "") {
-				${$item} = $_POST[$item];
-				$data[$item] = ${$item};
+				if($item == "teachers2" || $item == "students2") {
+					$arrayString = "";
+					foreach($_POST[$item] as $person) {
+						$arrayString .= $person . ",";
+					}
+					$dataName = "teacherPersonIDs";
+					if($item == "students2") { $dataName = "studentPersonIDs"; } 
+					$data[$dataName] = substr($arrayString, 0, -1);
+					print substr($arrayString, 0, -1);
+				}
+				else {
+					$data[$item] = $_POST[$item];
+				}
 			}
 		}
-		else {
+		else {	
 			$URL = $URL . "trips_submitRequest.php&addReturn=fail2";
 			header("Location: {$URL}");
 		}
@@ -62,6 +72,9 @@ else {
 		header("Location: {$URL}");
 		exit();
 	}
+	$tripPlannerRequestID = $connection2->lastInsertId();
+
+	logEvent($connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"], "Request");
 	$URL = $URL . "trips_manage.php&addReturn=success0";
 	header("Location: {$URL}");
 }	

@@ -49,7 +49,6 @@ else {
 		Filter
 	</h3>
 	<?php
-
 	print "<form method='post' action='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=" . $_GET["q"] . "'>" ; ?>
 		<table class='noIntBorder' cellspacing='0' style='width: 100%'>
 			<tr>
@@ -63,7 +62,7 @@ else {
 	<?php
 		try {
 	    	$data=array();
-	    	$sql="SELECT creatorPersonID, timestampCreation, title, description, status FROM tripPlannerRequests";
+	    	$sql="SELECT tripPlannerRequests.tripPlannerRequestID, tripPlannerRequests.timestampCreation, tripPlannerRequests.title, tripPlannerRequests.description, tripPlannerRequests.status, gibbonPerson.preferredName, gibbonPerson.surname FROM tripPlannerRequests JOIN gibbonPerson ON tripPlannerRequests.creatorPersonID = gibbonPerson.gibbonPersonID";
 	    	$result=$connection2->prepare($sql);
 	    	$result->execute($data);
 	  	}
@@ -97,10 +96,7 @@ else {
     <?php
 	if ($result->rowCount() == 0) {?>
     	<tr>
-    		<?php
-    		$colspan = 5;
-    		print "<td colspan=$colspan>";
-    		?>
+    		<td colspan=5>
     			There are no records to display
 			</td>
 		</tr>
@@ -113,22 +109,30 @@ else {
     			print "<tr class='even'>";
     		}
     		else {
-    			print "<tr clas='odd'>";
+    			print "<tr class='odd'>";
     		}
 
-	    		print "<td>" . $row['title'] . "</td>";
+	    		print "<td style='width:20%'>" . $row['title'] . "</td>";
 	    		print "<td>" . $row['description'] . "</td>";
-	    		print "<td>" . $row['creatorPersonID'] . "</td>";
-	    		print "<td>";
-	    			print $row['Status'];
-	    			print "<span style='font-size: 85%; font-style: italic'>" . $row['creationDate'] . "</span>";    		
+	    		print "<td style='width:20%'>" . $row['preferredName'] . " " . $row["surname"] . "</td>";
+	    		print "<td style='width:12%'>";
+	    			print $row['status'] . "</br>";
+	    			print "<span style='font-size: 85%; font-style: italic'>" . dateConvertBack($guid, $row['timestampCreation']) . "</span>";    		
 	    		print "</td>";
-	    		print "<td>";
+	    		print "<td style='width:11%'>";
+	    			print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . $_SESSION[$guid]["module"] . "/trips_requestView.php&tripPlannerRequestID=" . $row["tripPlannerRequestID"] . "'><img title='" . _('View') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/plus.png'/></a> " ;
+	    			print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . $_SESSION[$guid]["module"] . "/trips_requestEdit.php&tripPlannerRequestID=" . $row["tripPlannerRequestID"] . "'><img title='" . _('Edit') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/config.png'/></a> " ;
+		    		if($row["status"] == "Requested") {
+		    			if(needsApproval($connection2, $row["tripPlannerRequestID"], $_SESSION[$guid]["gibbonPersonID"])) {
+		    				print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . $_SESSION[$guid]["module"] . "/trips_requestApprove.php&tripPlannerRequestID=" . $row["tripPlannerRequestID"] . "'><img title='" . __($guid, 'Approve/Reject') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/iconTick.png'/></a> " ;
+		    			}
+		    		}
 	    		print "</td>";
     		print "</tr>";
     	}
 	}
-    print "</table>";
-
+	?>
+    </table>
+    <?php
 }	
 ?>

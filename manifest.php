@@ -52,6 +52,7 @@ $moduleTables[1]="CREATE TABLE `tripPlannerRequests` (
   `startTime` time NOT NULL,
   `endTime` time NOT NULL,
   `riskAssessment` text NOT NULL,
+  `totalCost` decimal(12, 2) NOT NULL,
   `status` ENUM('Requested', 'Approved', 'Rejected', 'Cancelled') DEFAULT 'Requested' NOT NULL,
   `gibbonPersonIDUpdate` int(10) unsigned zerofill NULL,
   `timestampUpdate` timestamp NULL,
@@ -59,7 +60,7 @@ $moduleTables[1]="CREATE TABLE `tripPlannerRequests` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 ;" ;
 
 $moduleTables[2]="CREATE TABLE `tripPlannerCostBreakdown` (
-  `costBreakdownID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
+  `tripPlannerCostBreakdownID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
   `tripPlannerRequestID` int(7) unsigned zerofill NOT NULL,
   `title` varchar(60) NOT NULL,
   `description` text NOT NULL,
@@ -67,9 +68,19 @@ $moduleTables[2]="CREATE TABLE `tripPlannerCostBreakdown` (
   PRIMARY KEY (`costBreakdownID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 ;" ;
 
-$moduleTables[3] = "INSERT INTO `gibbonSetting` (`gibbonSystemSettingsID`, `scope`, `name`, `nameDisplay`, `description`, `value`)
+$moduleTables[3]="CREATE TABLE `tripPlannerRequestLog` (
+  `tripPlannerRequestLogID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
+  `tripPlannerRequestID` int(7) unsigned zerofill NOT NULL,
+  `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
+  `action` ENUM('Request', 'Cancellation', 'Approval - Partial', 'Approval - Final', 'Rejection', 'Comment') NOT NULL,
+  `comment` text NULL,
+  PRIMARY KEY (`tripPlannerRequestLogID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 ;" ;
+
+$moduleTables[4] = "INSERT INTO `gibbonSetting` (`gibbonSystemSettingsID`, `scope`, `name`, `nameDisplay`, `description`, `value`)
 VALUES
-(NULL, 'Trip Planner', 'requestApprovalType', 'Request Approval Type', 'The type of approval that a trip request has to go through.', 'One of');";
+(NULL, 'Trip Planner', 'requestApprovalType', 'Request Approval Type', 'The type of approval that a trip request has to go through.', 'One of'),
+(NULL, 'Trip Planner', 'riskAssessmentTemplate', 'Risk Assessment Template', 'The template for the Risk Assessment.', '');";
 
 //Actions
 $actionCount = 0;
@@ -114,7 +125,6 @@ $actionRows[$actionCount]["category"]="" ;
 $actionRows[$actionCount]["description"]="Manage trip approvers." ;
 $actionRows[$actionCount]["URLList"]="trips_manageApprovers.php" ; 
 $actionRows[$actionCount]["entryURL"]="trips_manageApprovers.php" ;
-$actionRows[$actionCount]["entrySidebar"]="N" ; 
 $actionRows[$actionCount]["defaultPermissionAdmin"]="Y" ;
 $actionRows[$actionCount]["defaultPermissionTeacher"]="Y" ;
 $actionRows[$actionCount]["defaultPermissionStudent"]="N" ; 

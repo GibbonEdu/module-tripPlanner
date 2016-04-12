@@ -86,6 +86,25 @@ else {
 				</td>
 			</tr>
 			<tr>
+				<?php
+					try {
+						$data=array(); 
+						$sql="SELECT * FROM gibbonSetting WHERE scope='Trip Planner' AND name='riskAssessmentTemplate'" ;
+						$result=$connection2->prepare($sql);
+						$result->execute($data);
+					}
+					catch(PDOException $e) { 
+						print "<div class='error'>" . $e->getMessage() . "</div>" ; 
+					}
+					$row=$result->fetch() ;
+				?>
+				<td colspan=2>
+					<b><?php print _($row["nameDisplay"]) ?> *</b><br/>
+					<span style="font-size: 90%"><i><?php if ($row["description"]!="") { print _($row["description"]) ; } ?></i></span>
+					<?php print getEditor($guid, TRUE, $row["name"], $row["value"], 5, true, false, false); ?>	
+				</td>
+			</tr>
+			<tr>
 				<td>
 					<span style="font-size: 90%"><i>* <?php print _("denotes a required field") ; ?></i></span>
 				</td>

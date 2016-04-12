@@ -51,6 +51,31 @@ else {
 		header("Location: {$URL}");
 		exit();
 	}
+
+	if(isset($_POST["riskAssessmentTemplate"])) {
+		if($_POST["riskAssessmentTemplate"] != null && $_POST["riskAssessmentTemplate"] != "") {
+			$riskAssessmentTemplate = $_POST["riskAssessmentTemplate"];
+		}
+	}
+	else {
+		$URL = $URL . "&addReturn=fail3";
+		header("Location: {$URL}");
+	}
+
+	try {
+		$data=array("riskAssessmentTemplate"=> $riskAssessmentTemplate);
+		$sql="UPDATE gibbonSetting SET value=:riskAssessmentTemplate WHERE scope='Trip Planner' AND name='riskAssessmentTemplate';" ;
+		$result=$connection2->prepare($sql);
+		$result->execute($data);
+	}
+	catch(PDOException $e) {
+		print $e;
+		$URL = $URL . "&addReturn=fail6";
+		header("Location: {$URL}");
+		exit();
+	}
+
+	
 	$URL = $URL . "&addReturn=success0";
 	header("Location: {$URL}");
 }	
