@@ -65,7 +65,7 @@ $moduleTables[2]="CREATE TABLE `tripPlannerCostBreakdown` (
   `title` varchar(60) NOT NULL,
   `description` text NOT NULL,
   `cost` decimal(12, 2) NOT NULL,
-  PRIMARY KEY (`costBreakdownID`)
+  PRIMARY KEY (`tripPlannerCostBreakdownID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 ;" ;
 
 $moduleTables[3]="CREATE TABLE `tripPlannerRequestLog` (
