@@ -18,13 +18,13 @@ try {
 	$connection2->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 }
 catch(PDOException $e) {
-	$URL = $URL . "&addReturn=fail1";
+	$URL = $URL . "&return=fail1";
 	header("Location: {$URL}");
 }
 
 if (isModuleAccessible($guid, $connection2)==FALSE) {
 	//Acess denied
-	$URL = $URL . "&addReturn=fail0";
+	$URL = $URL . "&return=fail0";
 	header("Location: {$URL}");
 }
 else {	
@@ -35,7 +35,7 @@ else {
 		}
 	}
 	else {
-		$URL = $URL . "&addReturn=fail2";
+		$URL = $URL . "&return=fail2";
 		header("Location: {$URL}");
 	}
 
@@ -47,7 +47,7 @@ else {
 	}
 	catch(PDOException $e) {
 		print $e;
-		$URL = $URL . "&addReturn=fail5";
+		$URL = $URL . "&return=fail5";
 		header("Location: {$URL}");
 		exit();
 	}
@@ -58,7 +58,7 @@ else {
 		}
 	}
 	else {
-		$URL = $URL . "&addReturn=fail3";
+		$URL = $URL . "&return=fail3";
 		header("Location: {$URL}");
 	}
 
@@ -70,13 +70,13 @@ else {
 	}
 	catch(PDOException $e) {
 		print $e;
-		$URL = $URL . "&addReturn=fail6";
+		$URL = $URL . "&return=fail6";
 		header("Location: {$URL}");
 		exit();
 	}
 
 	
-	$URL = $URL . "&addReturn=success0";
+	$URL = $URL . "&return=success0";
 	header("Location: {$URL}");
 }	
 ?>

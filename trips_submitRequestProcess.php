@@ -10,72 +10,90 @@ include "./moduleFunctions.php" ;
 
 date_default_timezone_set($_SESSION[$guid]["timezone"]);
 
-$URL = $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . $_SESSION[$guid]["module"] . "/";
+$URL = $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_submitRequest.php";
 
-try {
-	$connection2=new PDO("mysql:host=$databaseServer;dbname=$databaseName;charset=utf8", $databaseUsername, $databasePassword);
-	$connection2->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-	$connection2->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-}
-catch(PDOException $e) {
-	$URL = $URL . "trips_submitRequest.php&addReturn=fail1";
-	header("Location: {$URL}");
-}
+$pdo = new Gibbon\sqlConnection();
+$connection2 = $pdo->getConnection();
 
-if (isModuleAccessible($guid, $connection2)==FALSE) {
+if (isModuleAccessible($guid, $connection2) == FALSE) {
 	//Acess denied
-	$URL = $URL . "trips_submitRequest.php&addReturn=fail0";
+	$URL .= "&return=error0";
 	header("Location: {$URL}");
-}
-else {	
-	$items = array("title", "description", "date", "startTime", "startTime", "location", "riskAssessment", "teachers2", "students2", "totalCost");
-	$data = array("creatorPersonID"=>$_SESSION[$guid]["gibbonPersonID"], "timestampCreation"=>date('Y-m-d H:i:s', time()));
+} else {	
+	$date = new DateTime();
+	$items = array("title", "description", "date", "startTime", "endTime", "location", "riskAssessment", "teachers2", "students2", "totalCost", "order");
+	$data = array("creatorPersonID" => $_SESSION[$guid]["gibbonPersonID"], "timestampCreation" => $date->format('Y-m-d H:i:s'));
+	$sql = "INSERT INTO tripPlannerRequests SET creatorPersonID=:creatorPersonID, timestampCreation=:timestampCreation, " ;
 
-	foreach($items as $item) {
-		if(isset($_POST[$item])) {
-			if($_POST[$item] != null && $_POST[$item] != "") {
-				if($item == "teachers2" || $item == "students2") {
+	foreach ($items as $item) {
+		if (isset($_POST[$item])) {
+			if ($_POST[$item] != null && $_POST[$item] != "") {
+				$key = $item;
+				if ($item == "date") {
+					$date = DateTime::createFromFormat("d/m/Y", $_POST[$item]);
+					$data[$item] = $date->format("Y-m-d H:i:s");
+				} elseif ($item == "teachers2" || $item == "students2") {
 					$arrayString = "";
-					foreach($_POST[$item] as $person) {
+					foreach ($_POST[$item] as $person) {
 						$arrayString .= $person . ",";
 					}
 					$dataName = "teacherPersonIDs";
-					if($item == "students2") { $dataName = "studentPersonIDs"; } 
+					if ($item == "students2") {
+						$dataName = "studentPersonIDs";
+					} 
 					$data[$dataName] = substr($arrayString, 0, -1);
-					print substr($arrayString, 0, -1);
-				}
-				else {
+					$key = $dataName;
+				} elseif ($item == "order") {
+					$key = null;
+		            $costs = array();
+		            $order = $_POST['order'];
+		            foreach ($order as $cost) {
+		                $costs[$cost]['name'] = $_POST['name'.$cost];
+		                $costs[$cost]['cost'] = $_POST['cost'.$cost];
+		                $costs[$cost]['description'] = $_POST['description'.$cost];
+
+		                if ($costs[$cost]['name'] == '' || $costs[$cost]['cost'] == '' || is_numeric($costs[$cost]['cost']) == false) {
+		                    $URL .= "&return=error1";
+							header("Location: {$URL}");
+							exit();
+		                }
+		            }
+				} else {
 					$data[$item] = $_POST[$item];
 				}
+
+				if($key != null) {
+					$sql .= $key . "=:" . $key . ", ";
+				}
 			}
-		}
-		else {	
-			$URL = $URL . "trips_submitRequest.php&addReturn=fail2";
+		} else {	
+			$URL .= "&return=error1";
 			header("Location: {$URL}");
+			exit();
 		}
 	}
 
+	$sql = substr($sql, 0, -2);
+
 	try {
-		$sql="INSERT INTO tripPlannerRequests SET " ;
-		for($i = 0; $i < count($data); $i++) {
-			$key = array_keys($data)[$i];
-			$sql.=$key . "=:" . $key . ", ";
-		}
-		$sql = substr($sql, 0, -2);
-		// print $sql;
-		$result=$connection2->prepare($sql);
+		$result = $connection2->prepare($sql);
 		$result->execute($data);
-	}
-	catch(PDOException $e) {
-		print $e;
-		$URL = $URL . "trips_submitRequest.php&addReturn=fail3";
+		$tripPlannerRequestID = $connection2->lastInsertId();
+		logEvent($connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"], "Request");
+		$sql1 = "INSERT INTO tripPlannerCostBreakdown SET tripPlannerRequestID=:tripPlannerRequestID, title=:name, cost=:cost, description=:description";
+		foreach ($costs as $cost) {
+			$cost['tripPlannerRequestID'] = $tripPlannerRequestID;
+			$result1 = $connection2->prepare($sql1);
+			$result1->execute($cost);
+		}
+
+	} catch (PDOException $e) {
+		$URL .= "&return=error2";
 		header("Location: {$URL}");
 		exit();
 	}
-	$tripPlannerRequestID = $connection2->lastInsertId();
 
-	logEvent($connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"], "Request");
-	$URL = $URL . "trips_manage.php&addReturn=success0";
+	$URL .= "&return=success0&tripPlannerRequestID=$tripPlannerRequestID";
 	header("Location: {$URL}");
 }	
 ?>

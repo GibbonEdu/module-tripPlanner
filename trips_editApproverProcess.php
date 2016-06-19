@@ -17,12 +17,12 @@ if(isset($_GET["tripPlannerApproverID"])) {
 		$tripPlannerApproverID = $_GET["tripPlannerApproverID"];
 	}
 	else {
-		$URL = $URL . "trips_manageApprovers.php&addReturn=fail1";
+		$URL = $URL . "trips_manageApprovers.php&return=fail1";
 		header("Location: {$URL}");
 	}
 }
 else {
-	$URL = $URL . "trips_manageApprovers.php&addReturn=fail1";
+	$URL = $URL . "trips_manageApprovers.php&return=fail1";
 	header("Location: {$URL}");
 }
 
@@ -32,13 +32,13 @@ try {
 	$connection2->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 }
 catch(PDOException $e) {
-	$URL = $URL . "trips_editApprover.php&tripPlannerApproverID=$tripPlannerApproverID&addReturn=fail1";
+	$URL = $URL . "trips_editApprover.php&tripPlannerApproverID=$tripPlannerApproverID&return=fail1";
 	header("Location: {$URL}");
 }
 
 if (isModuleAccessible($guid, $connection2)==FALSE) {
 	//Acess denied
-	$URL = $URL . "trips_manageApprovers.php&addReturn=fail0";
+	$URL = $URL . "trips_manageApprovers.php&return=fail0";
 	header("Location: {$URL}");
 }
 else {	
@@ -49,7 +49,7 @@ else {
 		}
 	}
 	else {
-		$URL = $URL . "trips_editApprover.php&tripPlannerApproverID=$tripPlannerApproverID&addReturn=fail2";
+		$URL = $URL . "trips_editApprover.php&tripPlannerApproverID=$tripPlannerApproverID&return=fail2";
 		header("Location: {$URL}");
 	}
 
@@ -61,7 +61,7 @@ else {
 			}
 		}
 		else {
-			$URL = $URL . "trips_editApprover.php&tripPlannerApproverID=$tripPlannerApproverID&addReturn=fail2";
+			$URL = $URL . "trips_editApprover.php&tripPlannerApproverID=$tripPlannerApproverID&return=fail2";
 			header("Location: {$URL}");
 		}
 	}
@@ -94,14 +94,14 @@ else {
 	}
 	catch(PDOException $e) { 
 		//Fail 2
-		$URL = $URL . "trips_editApprover.php&tripPlannerApproverID=$tripPlannerApproverID&addReturn=fail3";
+		$URL = $URL . "trips_editApprover.php&tripPlannerApproverID=$tripPlannerApproverID&return=fail3";
 		header("Location: {$URL}");
 		break ;
 	}
 		
 	if ($result->rowCount()>0 && approverExists($connection2, $tripPlannerApproverID)) {
 		//Fail 4
-		$URL = $URL . "trips_editApprover.php&tripPlannerApproverID=$tripPlannerApproverID&addReturn=fail4";
+		$URL = $URL . "trips_editApprover.php&tripPlannerApproverID=$tripPlannerApproverID&return=fail4";
 		header("Location: {$URL}");
 	}
 	else {	
@@ -112,11 +112,11 @@ else {
 			$result->execute($data);
 		}
 		catch(PDOException $e) {
-			$URL = $URL . "trips_editApprover.php&tripPlannerApproverID=$tripPlannerApproverID&addReturn=fail5";
+			$URL = $URL . "trips_editApprover.php&tripPlannerApproverID=$tripPlannerApproverID&return=fail5";
 			header("Location: {$URL}");
 			exit();
 		}
-		$URL = $URL . "trips_manageApprovers.php&addReturn=success0";
+		$URL = $URL . "trips_manageApprovers.php&return=success0";
 		header("Location: {$URL}");
 	}
 }	

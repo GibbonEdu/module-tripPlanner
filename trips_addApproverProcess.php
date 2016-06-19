@@ -18,13 +18,13 @@ try {
 	$connection2->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 }
 catch(PDOException $e) {
-	$URL = $URL . "trips_addApprover.php&addReturn=fail1";
+	$URL = $URL . "trips_addApprover.php&return=fail1";
 	header("Location: {$URL}");
 }
 
 if (isModuleAccessible($guid, $connection2)==FALSE) {
 	//Acess denied
-	$URL = $URL . "trips_manageApprover.php&addReturn=fail0";
+	$URL = $URL . "trips_manageApprover.php&return=fail0";
 	header("Location: {$URL}");
 }
 else {	
@@ -35,7 +35,7 @@ else {
 		}
 	}
 	else {
-		$URL = $URL . "trips_addApprover.php&addReturn=fail2";
+		$URL = $URL . "trips_addApprover.php&return=fail2";
 		header("Location: {$URL}");
 	}
 
@@ -47,7 +47,7 @@ else {
 			}
 		}
 		else {
-			$URL = $URL . "trips_addApprover.php&addReturn=fail2";
+			$URL = $URL . "trips_addApprover.php&return=fail2";
 			header("Location: {$URL}");
 		}
 	}
@@ -69,14 +69,14 @@ else {
 	}
 	catch(PDOException $e) { 
 		//Fail 2
-		$URL = $URL . "trips_addApprover.php&addReturn=fail3";
+		$URL = $URL . "trips_addApprover.php&return=fail3";
 		header("Location: {$URL}");
 		break ;
 	}
 		
 	if ($result->rowCount()>0) {
 		//Fail 4
-		$URL = $URL . "trips_addApprover.php&addReturn=fail4";
+		$URL = $URL . "trips_addApprover.php&return=fail4";
 		header("Location: {$URL}");
 	}
 	else {	
@@ -87,11 +87,11 @@ else {
 			$result->execute($data);
 		}
 		catch(PDOException $e) {
-			$URL = $URL . "trips_addApprover.php&addReturn=fail5";
+			$URL = $URL . "trips_addApprover.php&return=fail5";
 			header("Location: {$URL}");
 			exit();
 		}
-		$URL = $URL . "trips_manageApprovers.php&addReturn=success0";
+		$URL = $URL . "trips_manageApprovers.php&return=success0";
 		header("Location: {$URL}");
 	}
 }	

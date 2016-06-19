@@ -20,32 +20,25 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 @session_start() ;
 
 //Module includes
-include "./modules/" . $_SESSION[$guid]["module"] . "/moduleFunctions.php" ;
+include "./modules/Trip Planner/moduleFunctions.php" ;
 
 if (isModuleAccessible($guid, $connection2)==FALSE) {
 	//Acess denied
 	print "<div class='error'>" ;
 		print "You do not have access to this action." ;
 	print "</div>" ;
-}
-else {
-	//New PDO DB connection. 
-	//Gibbon uses PDO to connect to databases, rather than the PHP mysql classes, as they provide paramaterised connections, which are more secure.
-	try {
-		$connection2=new PDO("mysql:host=$databaseServer;dbname=$databaseName;charset=utf8", $databaseUsername, $databasePassword);
-		$connection2->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-		$connection2->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-	}
-	catch(PDOException $e) {
-		echo $e->getMessage();
-	}
+} else {
 
 	print "<div class='trail'>" ;
-	print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . _("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . _(getModuleName($_GET["q"])) . "</a> > </div><div class='trailEnd'>" . _('Submit Trip Request') . "</div>" ;
+		print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . _("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . _(getModuleName($_GET["q"])) . "</a> > </div><div class='trailEnd'>" . _('Submit Trip Request') . "</div>" ;
 	print "</div>" ;
 
+	if (isset($_GET['return'])) {
+        returnProcess($guid, $_GET['return'], $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_viewRequest.php", null);
+    }
+
 	print "<h3>";
-	print "Request";
+		print "Request";
 	print "</h3>";
 	?>
 
@@ -167,7 +160,7 @@ else {
 				</td>
 			</tr>
 			<?php 
-			$type="cost" ; 
+				$type="cost" ; 
 			?> 
 			<style>
 				#<?php print $type ?> { list-style-type: none; margin: 0; padding: 0; width: 100%; }
@@ -195,13 +188,13 @@ else {
 										<input type="button" value="New Cost" style='float: none; margin-left: 3px; margin-top: 0px; width: 350px' onclick="addCost()" />
 										<?php
 											$costBlock="$('#cost').append('<div id=\"costOuter' + costCount + '\"><img style=\"margin: 10px 0 5px 0\" src=\"" . $_SESSION[$guid]["absoluteURL"] . "/themes/Default/img/loading.gif\" alt=\"Loading\" onclick=\"return false;\" /><br/>Loading</div>');" ;
-											$costBlock.="$(\"#costOuter\" + costCount).load(\"" . $_SESSION[$guid]["absoluteURL"] . "/modules/Trip%20Planner/trips_submitRequestAddBlockCostAjax.php\",\"mode=add&id=\" + costCount) ;" ;
-											$costBlock.="costCount++";
+											$costBlock.="$(\"#costOuter\" + costCount).load(\"" . $_SESSION[$guid]["absoluteURL"] . "/modules/Trip%20Planner/trips_submitRequestAddBlockCostAjax.php\",\"id=\" + costCount) ;" ;
+											$costBlock.="costCount++;";
 											//$costBlock.="$('#newCost').val('0');" ;
 										?>
 										<script type='text/javascript'>
 											function addCost() {
-												$("#<?php print $type ?>Outer0").css("display", "none") ;
+												$("#costOuter0").css("display", "none") ;
 												<?php print $costBlock ?>
 											}
 										</script>
@@ -213,159 +206,6 @@ else {
 					</div>
 				</td>
 			</tr>
-			<!-- <tr>
-				<td style='width: 275px'>
-					<b><?php print _('Costs') ?> *</b><br/>
-				</td>
-				<td>
-					<select id="costs" style="width:302px" onchange="costSelect()">
-						<option value='addNew' selected>Add New</option>
-					</select>
-					<input name="costTitle" id="costTitle" maxlength=60 value="" type="text" style="width: 300px; margin-top:10px">
-					<textarea name='costDescription' id='costDescription' maxlength=1000 rows=5 style='width: 300px; max-width: 300px;  margin-top:10px'></textarea>
-					<input name="costCost" id="costCost" maxlength=15 value="" type="text" style="width: 300px;  margin-top:10px">
-					<input type="button" value="Done" style="width: 300px; margin-top:10px; float: right;" onclick="addCost()" />
-					<input type="button" id="costRemove" value="Remove" style="width: 300px; margin-top:10px; float: right; display:none;" onclick="removeCost()" />
-					<input type="hidden" id="costList" value="" />
-					<script type="text/javascript">
-						var costID = 0;
-						function addCost() {
-							var costs = document.getElementById('costs');
-							var costTitle = document.getElementById('costTitle');
-							var costDescription = document.getElementById('costDescription');
-							var costCost = document.getElementById('costCost');
-							var costList = document.getElementById('costList');
-							
-							var prefix = "cost" + costID++;
-
-							var cTData = document.createElement("input");
-							cTData.setAttribute("type", "hidden");
-							cTData.setAttribute("id", prefix + "costTitle");
-							cTData.setAttribute("value", costTitle.value);
-
-							var cDData = document.createElement("input");
-							cDData.setAttribute("type", "hidden");
-							cDData.setAttribute("id", prefix + "costDescription");
-							cDData.setAttribute("value", costDescription.value);
-
-							var cCData = document.createElement("input");
-							cCData.setAttribute("type", "hidden");
-							cCData.setAttribute("id", prefix + "costCost");
-							cCData.setAttribute("value", costCost.value);
-
-							document.getElementById("costList").appendChild(cTData);
-							document.getElementById("costList").appendChild(cDData);
-							document.getElementById("costList").appendChild(cCData);
-
-							var option = document.createElement("option");
-							option.text = costTitle.value;
-							option.value = prefix;
-							try {
-							    costs.add(option, null);
-							}
-							catch(ex) {
-							    costs.add(option);
-							}
-
-							costTitle.value = "";
-							costDescription.value = "";
-							costCost.value = "";
-
-							var tempList = costList.value;
-							if(tempList == "" || tempList == null) {
-								templist = prefix;
-							}
-							else {
-								tempList = tempList + "," + prefix;
-							}
-							costList.setAttribute("value", tempList);
-						}
-
-						function removeCost() {
-							var costs = document.getElementById('costs');
-
-							if (costs.selectedIndex == -1)
-						        return;
-
-						    var selectedPrefix = costs.options[costs.selectedIndex].value;
-						    if(selectedPrefix != "addNew") {
-						    	var costTitle = document.getElementById('costTitle');
-								var costDescription = document.getElementById('costDescription');
-								var costCost = document.getElementById('costCost');
-								var costList = document.getElementById('costList');
-								var remove = document.getElementById('costRemove');
-								remove.style.display = "none";
-
-							    costTitle.value = "";
-								costDescription.value = "";
-								costCost.value = "";
-
-								var cTData = document.getElementById(selectedPrefix + "costTitle");
-								var cDData = document.getElementById(selectedPrefix + "costDescription");
-								var cCData = document.getElementById(selectedPrefix + "costCost");
-
-								costList.removeChild(cTData);
-								costList.removeChild(cDData);
-								costList.removeChild(cCData);
-
-								var tempList = costList.value;
-								var explodedList = tempList.split(",");
-								var newList = "";
-								for(var i = 0; i < explodedList.length; i++) {
-									var listItem = explodedList[i];
-									if(listItem != selectedPrefix) {
-										if(i > 0) {
-											newList = newList + "," + listItem;
-										}
-										else {
-											newList = listItem;										
-										}
-									}
-								}
-								costList.value = newList;
-
-								costs.options[costs.selectedIndex] = null;
-								for (var i = 0; i < costs.length; i++) {
-									var option = costs.options[i];
-									if(option.value=="addNew") {
-										option.selected = true;
-									}
-									else {
-										option.selected = false;
-									}
-								}
-							}
-						}
-
-						function costSelect() {
-							var costs = document.getElementById('costs');
-							var remove = document.getElementById('costRemove');
-
-						    if (costs.selectedIndex == -1)
-						        return;
-
-						    var selectedPrefix = costs.options[costs.selectedIndex].value;
-					    	var costTitle = "";
-					    	var costDescription = "";
-					    	var costCost = "";
-
-					    	if(selectedPrefix != "addNew") {
-						    	costTitle = document.getElementById(selectedPrefix + "costTitle").value;
-						    	costDescription = document.getElementById(selectedPrefix + "costDescription").value;
-						    	costCost = document.getElementById(selectedPrefix + "costCost").value;
-						    	remove.style.display = "block";
-							}
-							else {
-								remove.style.display = "none";
-							}
-
-							document.getElementById("costTitle").value = costTitle;
-						   	document.getElementById("costDescription").value = costDescription;
-						   	document.getElementById("costCost").value = costCost;
-						}
-					</script>
-				</td>
-			</tr> -->
 			<tr>
 				<?php
 					try {

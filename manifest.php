@@ -74,6 +74,7 @@ $moduleTables[3]="CREATE TABLE `tripPlannerRequestLog` (
   `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
   `action` ENUM('Request', 'Cancellation', 'Approval - Partial', 'Approval - Final', 'Rejection', 'Comment') NOT NULL,
   `comment` text NULL,
+  `timestamp` timestamp NULL,
   PRIMARY KEY (`tripPlannerRequestLogID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 ;" ;
 

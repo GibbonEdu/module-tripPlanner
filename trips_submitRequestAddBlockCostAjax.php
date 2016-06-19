@@ -38,7 +38,6 @@ catch(PDOException $e) {
 date_default_timezone_set($_SESSION[$guid]["timezone"]);
 
 $id=$_GET["id"] ;
-$mode=$_GET["mode"] ;
 
-makeCostBlock($guid, $connection2, $id, $mode, true) ;
+makeCostBlock($guid, $connection2, $id, true) ;
 ?>
