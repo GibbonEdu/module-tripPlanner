@@ -20,7 +20,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 @session_start() ;
 
 //Module includes
-include "./modules/" . $_SESSION[$guid]["module"] . "/moduleFunctions.php" ;
+include "./modules/Trip Planner/moduleFunctions.php" ;
 
 if (isModuleAccessible($guid, $connection2)==FALSE) {
 	//Acess denied
@@ -55,7 +55,6 @@ if (isModuleAccessible($guid, $connection2)==FALSE) {
 	    	$result->execute($data);
 	  	}
 	 	catch(PDOException $e) {
-			print $e;
 	 	}
 	?>
 
@@ -99,7 +98,6 @@ if (isModuleAccessible($guid, $connection2)==FALSE) {
     		else {
     			print "<tr class='odd'>";
     		}
-
 	    		print "<td style='width:20%'>" . $row['title'] . "</td>";
 	    		print "<td>" . $row['description'] . "</td>";
 	    		print "<td style='width:20%'>" . $row['preferredName'] . " " . $row["surname"] . "</td>";

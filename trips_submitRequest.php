@@ -37,6 +37,8 @@ if (isModuleAccessible($guid, $connection2)==FALSE) {
         returnProcess($guid, $_GET['return'], $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_viewRequest.php", null);
     }
 
+    $events = getEvents($connection2, 1, array("Request", "Approval - Partial"));
+
 	print "<h3>";
 		print "Request";
 	print "</h3>";

@@ -60,26 +60,59 @@ function isApprover($connection2, $gibbonPersonID)
 function needsApproval($connection2, $tripPlannerRequestID, $gibbonPersonID)
 {  
     if (isApprover($connection2, $gibbonPersonID)) {
-        $requestApprovalType = getSettingByScope($connection2, "Trip Planner", "requestApprovalType") ;
-         try {
+        try {
             $data = array("tripPlannerRequestID" => $tripPlannerRequestID);
-            $sql = "SELECT tripPlannerRequestID FROM tripPlannerRequests WHERE tripPlannerRequestID=:tripPlannerRequestID";
+            $sql = "SELECT status FROM tripPlannerRequests WHERE tripPlannerRequestID=:tripPlannerRequestID";
             $result = $connection2->prepare($sql);
             $result->execute($data);
-
-            $sql1 = "SELECT gibbonPersonID, action, comment, FROM tripPlannerRequestLog WHERE tripPlannerRequestID=:tripPlannerRequestID";
-            $result1 = $connection2->prepare($sql);
-            $result1->execute($data);
-        } catch(PDOException $e) {
+        } catch (PDOException $e) {
             return false;
         }
         $request = $result->fetch();
-        if ($requestApprovalType == "One Of") {
-            return ($request["status"] == "Requested");
-        } else if ($requestApprovalType == "Two Of") {
+        if ($request["status"] == "Requested") {
+            $requestApprovalType = getSettingByScope($connection2, "Trip Planner", "requestApprovalType") ;
+            if ($requestApprovalType == "One Of") {
+                return true;
+            } elseif ($requestApprovalType == "Two Of") {
+                $events = getEvents($connection2, $tripPlannerRequestID, array("Approval - Partial"));
+                while ($event = $events->fetch()) {
+                    if ($event["gibbonPersonID"] == $gibbonPersonID) {
+                        return false;
+                    }
+                }
+                return $events->rowCount() < 2;
+            } elseif ($requestApprovalType == "Chain Of All") {
+                //Get notifiers in sequence
+                try {
+                    $dataApprovers = array('tripPlannerRequestID' => $tripPlannerRequestID);
+                    $sqlApprovers = "SELECT gibbonPerson.gibbonPersonID AS g1, tripPlannerRequestLog.gibbonPersonID AS g2 FROM tripPlannerApprovers JOIN gibbonPerson ON (tripPlannerApprovers.gibbonPersonID=gibbonPerson.gibbonPersonID) LEFT JOIN tripPlannerRequestLog ON (tripPlannerRequestLog.gibbonPersonID=tripPlannerApprovers.gibbonPersonID AND tripPlannerRequestLog.action='Approval - Partial' AND tripPlannerRequestLog.tripPlannerRequestID=:tripPlannerRequestID) WHERE gibbonPerson.status='Full' ORDER BY sequenceNumber, surname, preferredName";
+                    $resultApprovers = $connection2->prepare($sqlApprovers);
+                    $resultApprovers->execute($dataApprovers);
+                } catch (PDOException $e) {
+                    return false;
+                }
+                if ($resultApprovers->rowCount() < 1) {
+                    return false;
+                } else {
+                    $approvers = $resultApprovers->fetchAll();
+                    $gibbonPersonIDNext = null;
+                    foreach ($approvers as $approver) {
+                        if ($approver['g1'] != $approver['g2']) {
+                            if (is_null($gibbonPersonIDNext)) {
+                                $gibbonPersonIDNext = $approver['g1'];
+                                break;
+                            }
+                        }
+                    }
 
-        } else if ($requestApprovalType == "Chain Of All") {
-
+                    if (is_null($gibbonPersonIDNext)) {
+                        return false;
+                    } else {
+                        print $gibbonPersonIDNext;
+                        return $gibbonPersonIDNext == $gibbonPersonID;
+                    }
+                }
+            }
         }
     }
     return false;
@@ -94,8 +127,34 @@ function logEvent($connection2, $tripPlannerRequestID, $gibbonPersonID, $action,
             $sql = "INSERT INTO tripPlannerRequestLog SET tripPlannerRequestID=:tripPlannerRequestID, gibbonPersonID=:gibbonPersonID, action=:action, comment=:comment, timestamp=:timestamp";
             $result = $connection2->prepare($sql);
             $result->execute($data);
-        } catch(PDOException $e) {
+        } catch (PDOException $e) {
         }
+    }
+}
+
+function getEvents($connection2, $tripPlannerRequestID, $actions=array())
+{
+    if ($connection2 != null && $tripPlannerRequestID != null) {
+        try {
+            $data = array("tripPlannerRequestID" => $tripPlannerRequestID);
+            $sql = "SELECT tripPlannerRequestLogID, gibbonPersonID, action, comment, timestamp FROM tripPlannerRequestLog WHERE tripPlannerRequestID=:tripPlannerRequestID";
+            if (count($actions) > 0 && is_array($actions) == true) {
+                $sql .= " AND (";
+                for ($i = 0; $i < count($actions); $i++) {
+                    $action = $actions[$i];
+                    if($i > 0) {
+                        $sql .= " OR ";
+                    }
+                    $data["action$i"] = $action;
+                    $sql .= "action=:action" . $i;
+                }
+                $sql .= ")";
+            }
+            $result = $connection2->prepare($sql);
+            $result->execute($data);
+        } catch (PDOException $e) {
+        }
+        return $result;
     }
 }
 
