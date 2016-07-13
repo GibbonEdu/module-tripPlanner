@@ -1,28 +1,27 @@
 <?php
 
-@session_start() ;
+@session_start();
 
 //Module includes
-include "../../functions.php" ;
-include "../../config.php" ;
+include "../../functions.php";
+include "../../config.php";
 
-include "./moduleFunctions.php" ;
+include "./moduleFunctions.php";
 
 date_default_timezone_set($_SESSION[$guid]["timezone"]);
 
-$URL = $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . $_SESSION[$guid]["module"] . "/";
+$URL = $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/";
 
 $pdo = new Gibbon\sqlConnection();
 $connection2 = $pdo->getConnection();
 
-if (isModuleAccessible($guid, $connection2)==FALSE) {
+if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_addApprover.php')) {
     //Acess denied
-    $URL = $URL . "trips_manageApprover.php&return=error0";
+    $URL .= "trips_manageApprover.php&return=error0";
     header("Location: {$URL}");
 } else {    
-
-    if(isset($_POST["gibbonPersonID"])) {
-        if($_POST["gibbonPersonID"] != null && $_POST["gibbonPersonID"] != "") {
+    if (isset($_POST["gibbonPersonID"])) {
+        if ($_POST["gibbonPersonID"] != null && $_POST["gibbonPersonID"] != "") {
             $gibbonPersonID = $_POST["gibbonPersonID"];
         }
     } else {
@@ -30,7 +29,7 @@ if (isModuleAccessible($guid, $connection2)==FALSE) {
         header("Location: {$URL}");
     }
 
-    $expenseApprovalType = getSettingByScope($connection2, "Trip Planner", "requestApprovalType") ;
+    $expenseApprovalType = getSettingByScope($connection2, "Trip Planner", "requestApprovalType");
     if ($expenseApprovalType == "Chain Of All") {
         if (isset($_POST["sequenceNumber"])) {
             if ($_POST["sequenceNumber"] != null && $_POST["sequenceNumber"] != "") {
@@ -46,10 +45,10 @@ if (isModuleAccessible($guid, $connection2)==FALSE) {
 
     try {
         $data = array("gibbonPersonID"=>$gibbonPersonID); 
-        $sql = "SELECT * FROM tripPlannerApprovers WHERE gibbonPersonID=:gibbonPersonID" ;
+        $sql = "SELECT * FROM tripPlannerApprovers WHERE gibbonPersonID=:gibbonPersonID";
         if ($expenseApprovalType == "Chain Of All") {
-            $data["sequenceNumber"] = $sequenceNumber ;
-            $sql .= " OR sequenceNumber=:sequenceNumber" ;
+            $data["sequenceNumber"] = $sequenceNumber;
+            $sql .= " OR sequenceNumber=:sequenceNumber";
         }
         $result=$connection2->prepare($sql);
         $result->execute($data);
@@ -60,24 +59,23 @@ if (isModuleAccessible($guid, $connection2)==FALSE) {
         exit();
     }
         
-    if ($result->rowCount()>0) {
+    if ($result->rowCount() > 0) {
         //Fail 4
-        $URL = $URL . "trips_addApprover.php&return=error5";
+        $URL .= "trips_addApprover.php&return=error5";
         header("Location: {$URL}");
-    }
-    else {  
+    } else {  
         try {
-            $data=array("gibbonPersonID"=> $gibbonPersonID, "sequenceNumber"=> $sequenceNumber, "gibbonPersonIDCreator"=> $_SESSION[$guid]["gibbonPersonID"], "timestampCreator"=>date('Y-m-d H:i:s', time()));
-            $sql="INSERT INTO tripPlannerApprovers SET gibbonPersonID=:gibbonPersonID, sequenceNumber=:sequenceNumber, gibbonPersonIDCreator=:gibbonPersonIDCreator, timestampCreator=:timestampCreator" ;
-            $result=$connection2->prepare($sql);
+            $data = array("gibbonPersonID"=> $gibbonPersonID, "sequenceNumber"=> $sequenceNumber, "gibbonPersonIDCreator"=> $_SESSION[$guid]["gibbonPersonID"], "timestampCreator"=>date('Y-m-d H:i:s', time()));
+            $sql = "INSERT INTO tripPlannerApprovers SET gibbonPersonID=:gibbonPersonID, sequenceNumber=:sequenceNumber, gibbonPersonIDCreator=:gibbonPersonIDCreator, timestampCreator=:timestampCreator";
+            $result = $connection2->prepare($sql);
             $result->execute($data);
-        }
-        catch(PDOException $e) {
-            $URL = $URL . "trips_addApprover.php&return=error2";
+        } catch (PDOException $e) {
+            $URL .= "trips_addApprover.php&return=error2";
             header("Location: {$URL}");
             exit();
         }
-        $URL = $URL . "trips_manageApprovers.php&return=success0";
+
+        $URL .= "trips_manageApprovers.php&return=success0";
         header("Location: {$URL}");
     }
 }   

@@ -1,82 +1,67 @@
 <?php
 
-@session_start() ;
+@session_start();
 
 //Module includes
-include "../../functions.php" ;
-include "../../config.php" ;
+include "../../functions.php";
+include "../../config.php";
 
-include "./moduleFunctions.php" ;
+include "./moduleFunctions.php";
 
 date_default_timezone_set($_SESSION[$guid]["timezone"]);
 
-$URL = $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . $_SESSION[$guid]["module"] . "/trips_manageSettings.php";
+$URL = $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_manageSettings.php";
 
-try {
-	$connection2=new PDO("mysql:host=$databaseServer;dbname=$databaseName;charset=utf8", $databaseUsername, $databasePassword);
-	$connection2->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-	$connection2->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-}
-catch(PDOException $e) {
-	$URL = $URL . "&return=fail1";
-	header("Location: {$URL}");
-}
+$pdo = new Gibbon\sqlConnection();
+$connection2 = $pdo->getConnection();
 
-if (isModuleAccessible($guid, $connection2)==FALSE) {
-	//Acess denied
-	$URL = $URL . "&return=fail0";
-	header("Location: {$URL}");
-}
-else {	
+if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manageSettings.php')) {
+    //Acess denied
+    $URL .= "&return=error0";
+    header("Location: {$URL}");
+} else {  
 
-	if(isset($_POST["requestApprovalType"])) {
-		if($_POST["requestApprovalType"] != null && $_POST["requestApprovalType"] != "") {
-			$requestApprovalType = $_POST["requestApprovalType"];
-		}
-	}
-	else {
-		$URL = $URL . "&return=fail2";
-		header("Location: {$URL}");
-	}
+    if (isset($_POST["requestApprovalType"])) {
+        if ($_POST["requestApprovalType"] != null && $_POST["requestApprovalType"] != "") {
+            $requestApprovalType = $_POST["requestApprovalType"];
+        }
+    } else {
+        $URL .= "&return=error1";
+        header("Location: {$URL}");
+    }
 
-	try {
-		$data=array("requestApprovalType"=> $requestApprovalType);
-		$sql="UPDATE gibbonSetting SET value=:requestApprovalType WHERE scope='Trip Planner' AND name='requestApprovalType';" ;
-		$result=$connection2->prepare($sql);
-		$result->execute($data);
-	}
-	catch(PDOException $e) {
-		print $e;
-		$URL = $URL . "&return=fail5";
-		header("Location: {$URL}");
-		exit();
-	}
+    try {
+        $data=array("requestApprovalType" => $requestApprovalType);
+        $sql="UPDATE gibbonSetting SET value=:requestApprovalType WHERE scope='Trip Planner' AND name='requestApprovalType';";
+        $result=$connection2->prepare($sql);
+        $result->execute($data);
+    } catch (PDOException $e) {
+        $URL .= "&return=error2";
+        header("Location: {$URL}");
+        exit();
+    }
 
-	if(isset($_POST["riskAssessmentTemplate"])) {
-		if($_POST["riskAssessmentTemplate"] != null && $_POST["riskAssessmentTemplate"] != "") {
-			$riskAssessmentTemplate = $_POST["riskAssessmentTemplate"];
-		}
-	}
-	else {
-		$URL = $URL . "&return=fail3";
-		header("Location: {$URL}");
-	}
+    if (isset($_POST["riskAssessmentTemplate"])) {
+        if ($_POST["riskAssessmentTemplate"] != null && $_POST["riskAssessmentTemplate"] != "") {
+            $riskAssessmentTemplate = $_POST["riskAssessmentTemplate"];
+        }
+    } else {
+        $URL .= "&return=error1";
+        header("Location: {$URL}");
+    }
 
-	try {
-		$data=array("riskAssessmentTemplate"=> $riskAssessmentTemplate);
-		$sql="UPDATE gibbonSetting SET value=:riskAssessmentTemplate WHERE scope='Trip Planner' AND name='riskAssessmentTemplate';" ;
-		$result=$connection2->prepare($sql);
-		$result->execute($data);
-	}
-	catch(PDOException $e) {
-		print $e;
-		$URL = $URL . "&return=fail6";
-		header("Location: {$URL}");
-		exit();
-	}
-
-	
-	$URL = $URL . "&return=success0";
-	header("Location: {$URL}");
-}	
+    try {
+        $data=array("riskAssessmentTemplate" => $riskAssessmentTemplate);
+        $sql="UPDATE gibbonSetting SET value=:riskAssessmentTemplate WHERE scope='Trip Planner' AND name='riskAssessmentTemplate';";
+        $result=$connection2->prepare($sql);
+        $result->execute($data);
+    } catch (PDOException $e) {
+        $URL .= "&return=error2";
+        header("Location: {$URL}");
+        exit();
+    }
+ 
+    $URL .= "&return=success0";
+    header("Location: {$URL}");
+}   
 ?>
