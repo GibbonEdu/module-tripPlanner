@@ -82,10 +82,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             var teachers = document.getElementById('teachers1');
             var students = document.getElementById('students1');
             var container = document.getElementById('finalData');
-            for(var i = 0; i < Math.max(teachers.length, students.length); i++) {
+            for (var i = 0; i < Math.max(teachers.length, students.length); i++) {
                 var teacher = teachers.options[i];
                 var student = students.options[i];
-                if(teacher != null) {
+                if (teacher != null) {
                     var teachersSelected = document.createElement("input");
                     teachersSelected.setAttribute('type', 'hidden');
                     teachersSelected.setAttribute('name', 'teachersSelected[]');
@@ -93,7 +93,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                     container.appendChild(teachersSelected);
                 }
 
-                if(student != null) {
+                if (student != null) {
                     var studentsSelected = document.createElement("input");
                     studentsSelected.setAttribute('type', 'hidden');
                     studentsSelected.setAttribute('name', 'studentsSelected[]');

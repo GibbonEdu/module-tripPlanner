@@ -19,8 +19,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 @session_start();
 
-//Module includes
-include "./modules/" . $_SESSION[$guid]["module"] . "/moduleFunctions.php";
+include "./modules/Trip Planner/moduleFunctions.php";
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manageSettings.php')) {
     //Acess denied
@@ -42,7 +41,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
 
     ?>
 
-    <form method="post" action="<?php print $_SESSION[$guid]["absoluteURL"] . "/modules/" . $_SESSION[$guid]["module"] . "/trips_manageSettingsProcess.php" ?>">
+    <form method="post" action="<?php print $_SESSION[$guid]["absoluteURL"] . "/modules/Trip Planner/trips_manageSettingsProcess.php" ?>">
         <table class='smallIntBorder' cellspacing='0' style="width: 100%">  
             <tr>
                 <?php

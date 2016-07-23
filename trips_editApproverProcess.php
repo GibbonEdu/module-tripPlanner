@@ -12,43 +12,51 @@ date_default_timezone_set($_SESSION[$guid]["timezone"]);
 
 $URL = $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/";
 
-if (isset($_GET["tripPlannerApproverID"])) {
-    if ($_GET["tripPlannerApproverID"] != null && $_GET["tripPlannerApproverID"] != "") {
-        $tripPlannerApproverID = $_GET["tripPlannerApproverID"];
-    } else {
-        $URL .= "trips_manageApprovers.php&return=error1";
-        header("Location: {$URL}");
-    }
-} else {
-    $URL .= "trips_manageApprovers.php&return=error1";
-    header("Location: {$URL}");
-}
-
-$pdo = new Gibbon\sqlConnection();
-$connection2 = $pdo->getConnection();
-
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_editApprover.php')) {
     //Acess denied
     $URL .= "trips_manageApprovers.php&return=error0";
     header("Location: {$URL}");
-} else {  
+} else {
+
+    $tripPlannerApproverID = null;
+
+    if (isset($_GET["tripPlannerApproverID"])) {
+        if ($_GET["tripPlannerApproverID"] != null && $_GET["tripPlannerApproverID"] != "") {
+            $tripPlannerApproverID = $_GET["tripPlannerApproverID"];
+        }
+    } 
+
+    if ($tripPlannerApproverID == null) {
+        $URL .= "trips_manageApprovers.php&return=error1";
+        header("Location: {$URL}");
+    }
+
+    $gibbonPersonID = null;
 
     if (isset($_POST["gibbonPersonID"])) {
         if ($_POST["gibbonPersonID"] != null && $_POST["gibbonPersonID"] != "") {
             $gibbonPersonID = $_POST["gibbonPersonID"];
         }
-    } else {
+    } 
+
+    if ($gibbonPersonID == null) {
         $URL .= "trips_editApprover.php&tripPlannerApproverID=$tripPlannerApproverID&return=error1";
         header("Location: {$URL}");
     }
 
-    $expenseApprovalType=getSettingByScope($connection2, "Trip Planner", "requestApprovalType");
-    if ($expenseApprovalType=="Chain Of All") {
+    $pdo = new Gibbon\sqlConnection();
+    $connection2 = $pdo->getConnection();
+
+    $expenseApprovalType = getSettingByScope($connection2, "Trip Planner", "requestApprovalType");
+    if ($expenseApprovalType == "Chain Of All") {
+        $sequenceNumber == null;
         if (isset($_POST["sequenceNumber"])) {
             if ($_POST["sequenceNumber"] != null && $_POST["sequenceNumber"] != "") {
                 $sequenceNumber = abs($_POST["sequenceNumber"]);
             }
-        } else {
+        } 
+
+        if ($sequenceNumber == null) {
             $URL .= "trips_editApprover.php&tripPlannerApproverID=$tripPlannerApproverID&return=error1";
             header("Location: {$URL}");
         }

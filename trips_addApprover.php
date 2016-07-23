@@ -29,7 +29,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_addApp
     print "</div>";
 } else {
     print "<div class='trail'>";
-        print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . _("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . _(getModuleName($_GET["q"])) . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . $_SESSION[$guid]["module"] . "/trips_manageApprovers.php'>" . _("Manage Approver") . "</a> > </div><div class='trailEnd'>" . _('Add Approver') . "</div>";
+        print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . _("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . _(getModuleName($_GET["q"])) . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_manageApprovers.php'>" . _("Manage Approver") . "</a> > </div><div class='trailEnd'>" . _('Add Approver') . "</div>";
     print "</div>";
 
     print "<h3>";

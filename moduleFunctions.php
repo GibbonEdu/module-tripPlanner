@@ -148,9 +148,55 @@ function needsApproval($connection2, $tripPlannerRequestID, $gibbonPersonID)
     return false;
 }
 
+function getHOD($connection2, $gibbonPersonID)
+{
+    try {
+        $data = array("gibbonPersonID" => $gibbonPersonID);
+        $sql = "SELECT gibbonDepartmentID, nameShort FROM gibbonDepartment WHERE gibbonDepartmentID IN (SELECT gibbonDepartmentID FROM gibbonDepartmentStaff WHERE gibbonPersonID=:gibbonPersonID AND role='Coordinator')";
+        $result = $connection2->prepare($sql);
+        $result->execute($data);
+    } catch (PDOException $e) {
+    }
+
+    return $result;
+}
+
+function getDepartments($connection2, $gibbonPersonID)
+{
+    try {
+        $data = array("gibbonPersonID" => $gibbonPersonID);
+        $sql = "SELECT gibbonDepartmentID FROM gibbonDepartmentStaff WHERE gibbonPersonID=:gibbonPersonID";
+        $result = $connection2->prepare($sql);
+        $result->execute($data);
+    } catch (PDOException $e) {
+    }
+
+    $departments = array();
+
+    while ($row = $result->fetch()) {
+        $departments[] = $row["gibbonDepartmentID"];
+    }
+
+    return $departments;
+}
+
+function isInvolved($connection2, $tripPlannerRequestID, $gibbonPersonID)
+{
+    try {
+        $data = array("tripPlannerRequestID" => $tripPlannerRequestID, "gibbonPersonID" => $gibbonPersonID);
+        $sql = "SELECT teacherPersonIDs FROM tripPlannerRequests WHERE tripPlannerRequestID=:tripPlannerRequestID AND teacherPersonIDs LIKE CONCAT('%', :gibbonPersonID, '%')";
+        $result = $connection2->prepare($sql);
+        $result->execute($data);
+    } catch (PDOException $e) {
+    }
+
+    return ($result->rowCount() == 1);
+}
+
 function logEvent($connection2, $tripPlannerRequestID, $gibbonPersonID, $action, $comment = null)
 {
-    if ($tripPlannerRequestID != null && $gibbonPersonID != null && $action != null) {
+    if ($tripPlannerRequestID != null && $gibbonPersonID != null && $action != null)
+    {
         try {
             $date = new DateTime();
             $data = array("tripPlannerRequestID" => $tripPlannerRequestID, "gibbonPersonID" => $gibbonPersonID, "action" => $action, "comment" => $comment, "timestamp" => $date->format('Y-m-d H:i:s'));
@@ -405,5 +451,4 @@ function makeCostBlock($guid, $connection2, $i, $outerBlock = TRUE)
         print "</div>";
     }
 }
-
 ?>

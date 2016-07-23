@@ -10,11 +10,11 @@ the Free Software Foundation, either version 3 of the License, or
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 //Basic variables
@@ -29,54 +29,54 @@ $url = "https://github.com/raynichc/Trip-Planner";
 
 //Tables
 $moduleTables[0] = "CREATE TABLE `tripPlannerApprovers` (
-  `tripPlannerApproverID` int(4) unsigned zerofill NOT NULL AUTO_INCREMENT,
-  `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
-  `sequenceNumber` int(4) NULL,
-  `gibbonPersonIDCreator` int(10) unsigned zerofill NOT NULL,
-  `timestampCreator` timestamp NULL,
-  `gibbonPersonIDUpdate` int(10) unsigned zerofill NULL,
-  `timestampUpdate` timestamp NULL,
-  PRIMARY KEY (`tripPlannerApproverID`)
+    `tripPlannerApproverID` int(4) unsigned zerofill NOT NULL AUTO_INCREMENT,
+    `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
+    `sequenceNumber` int(4) NULL,
+    `gibbonPersonIDCreator` int(10) unsigned zerofill NOT NULL,
+    `timestampCreator` timestamp NULL,
+    `gibbonPersonIDUpdate` int(10) unsigned zerofill NULL,
+    `timestampUpdate` timestamp NULL,
+    PRIMARY KEY (`tripPlannerApproverID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
 
 $moduleTables[1] = "CREATE TABLE `tripPlannerRequests` (
-  `tripPlannerRequestID` int(7) unsigned zerofill NOT NULL AUTO_INCREMENT,
-  `creatorPersonID` int(10) unsigned zerofill NOT NULL,
-  `timestampCreation` timestamp,
-  `title` varchar(60) NOT NULL,
-  `description` text NOT NULL,
-  `teacherPersonIDs` text NOT NULL,
-  `studentPersonIDs` text NOT NULL,
-  `location` text NOT NULL,
-  `date` date NOT NULL,
-  `startTime` time NOT NULL,
-  `endTime` time NOT NULL,
-  `riskAssessment` text NOT NULL,
-  `totalCost` decimal(12, 2) NOT NULL,
-  `status` ENUM('Requested', 'Approved', 'Rejected', 'Cancelled') DEFAULT 'Requested' NOT NULL,
-  `gibbonSchoolYearID` int(3) unsigned zerofill NOT NULL,
-  `gibbonPersonIDUpdate` int(10) unsigned zerofill NULL,
-  `timestampUpdate` timestamp NULL,
-  PRIMARY KEY (`tripPlannerRequestID`)
+    `tripPlannerRequestID` int(7) unsigned zerofill NOT NULL AUTO_INCREMENT,
+    `creatorPersonID` int(10) unsigned zerofill NOT NULL,
+    `timestampCreation` timestamp,
+    `title` varchar(60) NOT NULL,
+    `description` text NOT NULL,
+    `teacherPersonIDs` text NOT NULL,
+    `studentPersonIDs` text NOT NULL,
+    `location` text NOT NULL,
+    `date` date NOT NULL,
+    `startTime` time NOT NULL,
+    `endTime` time NOT NULL,
+    `riskAssessment` text NOT NULL,
+    `totalCost` decimal(12, 2) NOT NULL,
+    `status` ENUM('Requested', 'Approved', 'Rejected', 'Cancelled') DEFAULT 'Requested' NOT NULL,
+    `gibbonSchoolYearID` int(3) unsigned zerofill NOT NULL,
+    `gibbonPersonIDUpdate` int(10) unsigned zerofill NULL,
+    `timestampUpdate` timestamp NULL,
+    PRIMARY KEY (`tripPlannerRequestID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
 
 $moduleTables[2] = "CREATE TABLE `tripPlannerCostBreakdown` (
-  `tripPlannerCostBreakdownID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
-  `tripPlannerRequestID` int(7) unsigned zerofill NOT NULL,
-  `title` varchar(60) NOT NULL,
-  `description` text NOT NULL,
-  `cost` decimal(12, 2) NOT NULL,
-  PRIMARY KEY (`tripPlannerCostBreakdownID`)
+    `tripPlannerCostBreakdownID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
+    `tripPlannerRequestID` int(7) unsigned zerofill NOT NULL,
+    `title` varchar(60) NOT NULL,
+    `description` text NOT NULL,
+    `cost` decimal(12, 2) NOT NULL,
+    PRIMARY KEY (`tripPlannerCostBreakdownID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
 
 $moduleTables[3] = "CREATE TABLE `tripPlannerRequestLog` (
-  `tripPlannerRequestLogID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
-  `tripPlannerRequestID` int(7) unsigned zerofill NOT NULL,
-  `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
-  `action` ENUM('Request', 'Cancellation', 'Approval - Partial', 'Approval - Final', 'Rejection', 'Comment') NOT NULL,
-  `comment` text NULL,
-  `timestamp` timestamp NULL,
-  PRIMARY KEY (`tripPlannerRequestLogID`)
+    `tripPlannerRequestLogID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
+    `tripPlannerRequestID` int(7) unsigned zerofill NOT NULL,
+    `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
+    `action` ENUM('Request', 'Cancellation', 'Approval - Partial', 'Approval - Final', 'Rejection', 'Comment') NOT NULL,
+    `comment` text NULL,
+    `timestamp` timestamp NULL,
+    PRIMARY KEY (`tripPlannerRequestLogID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
 
 $moduleTables[4] = "INSERT INTO `gibbonSetting` (`gibbonSystemSettingsID`, `scope`, `name`, `nameDisplay`, `description`, `value`)

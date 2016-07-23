@@ -20,7 +20,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 @session_start();
 
 //Module includes
-include "./modules/" . $_SESSION[$guid]["module"] . "/moduleFunctions.php";
+include "./modules/Trip Planner/moduleFunctions.php";
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_editApprover.php')) {
     //Acess denied
@@ -30,7 +30,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_editAp
 } else {
 
     print "<div class='trail'>";
-        print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . _("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . _(getModuleName($_GET["q"])) . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . $_SESSION[$guid]["module"] . "/trips_manageApprovers.php'>" . _("Manage Approver") . "</a> > </div><div class='trailEnd'>" . _('Edit Approver') . "</div>";
+        print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . _("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . _(getModuleName($_GET["q"])) . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_manageApprovers.php'>" . _("Manage Approver") . "</a> > </div><div class='trailEnd'>" . _('Edit Approver') . "</div>";
     print "</div>";
 
     if (isset($_GET["tripPlannerApproverID"])) {
@@ -50,7 +50,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_editAp
     }
 
     ?>
-    <form method="post" action="<?php print $_SESSION[$guid]["absoluteURL"] . "/modules/" . $_SESSION[$guid]["module"] . "/trips_editApproverProcess.php?tripPlannerApproverID=$tripPlannerApproverID" ?>">
+    <form method="post" action="<?php print $_SESSION[$guid]["absoluteURL"] . "/modules/Trip Planner/trips_editApproverProcess.php?tripPlannerApproverID=$tripPlannerApproverID" ?>">
         <table class='smallIntBorder' cellspacing='0' style="width: 100%">  
             <tr>
                 <td> 
