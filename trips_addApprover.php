@@ -38,8 +38,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_addApp
 
     if (isset($_GET['return'])) {
         returnProcess($guid, $_GET['return'], null, null);
-    }
-
+    }   
     ?>
     <form method="post" action="<?php print $_SESSION[$guid]["absoluteURL"] . "/modules/Trip Planner/trips_addApproverProcess.php" ?>">
         <table class='smallIntBorder' cellspacing='0' style="width: 100%">  
@@ -104,6 +103,5 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_addApp
         </table>
     </form>
     <?php
-
 }   
 ?>

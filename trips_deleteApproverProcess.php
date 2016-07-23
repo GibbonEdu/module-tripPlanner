@@ -35,9 +35,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_delete
         header("Location: {$URL}");
     } else {  
         try {
-            $data=array("tripPlannerApproverID"=> $tripPlannerApproverID);
-            $sql="DELETE FROM tripPlannerApprovers WHERE tripPlannerApproverID=:tripPlannerApproverID";
-            $result=$connection2->prepare($sql);
+            $data = array("tripPlannerApproverID"=> $tripPlannerApproverID);
+            $sql = "DELETE FROM tripPlannerApprovers WHERE tripPlannerApproverID=:tripPlannerApproverID";
+            $result = $connection2->prepare($sql);
             $result->execute($data);
         } catch (PDOException $e) {
             $URL .= "trips_manageApprovers.php&return=error2";

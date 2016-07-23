@@ -17,7 +17,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_editAp
     $URL .= "trips_manageApprovers.php&return=error0";
     header("Location: {$URL}");
 } else {
-
     $tripPlannerApproverID = null;
 
     if (isset($_GET["tripPlannerApproverID"])) {
@@ -32,7 +31,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_editAp
     }
 
     $gibbonPersonID = null;
-
     if (isset($_POST["gibbonPersonID"])) {
         if ($_POST["gibbonPersonID"] != null && $_POST["gibbonPersonID"] != "") {
             $gibbonPersonID = $_POST["gibbonPersonID"];

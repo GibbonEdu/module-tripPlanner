@@ -37,7 +37,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             print "Approvers";
         print "</h3>";
 
-        $actionsAllowed = $highestAction == "Manage Approvers_add&edit" || $highestAction == "Manage Approvers_full";
+        $actionsAllowed = ($highestAction == "Manage Approvers_add&edit" || $highestAction == "Manage Approvers_full)";
 
         $approvers = getApprovers($connection2);
 

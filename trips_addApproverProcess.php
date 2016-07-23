@@ -50,7 +50,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_addApp
             $data["sequenceNumber"] = $sequenceNumber;
             $sql .= " OR sequenceNumber=:sequenceNumber";
         }
-        $result=$connection2->prepare($sql);
+        $result = $connection2->prepare($sql);
         $result->execute($data);
     } catch (PDOException $e) { 
         //Fail 2

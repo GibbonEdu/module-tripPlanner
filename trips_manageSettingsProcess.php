@@ -19,8 +19,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     //Acess denied
     $URL .= "&return=error0";
     header("Location: {$URL}");
-} else {  
-
+} else {
     if (isset($_POST["requestApprovalType"])) {
         if ($_POST["requestApprovalType"] != null && $_POST["requestApprovalType"] != "") {
             $requestApprovalType = $_POST["requestApprovalType"];
@@ -31,9 +30,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     }
 
     try {
-        $data=array("requestApprovalType" => $requestApprovalType);
-        $sql="UPDATE gibbonSetting SET value=:requestApprovalType WHERE scope='Trip Planner' AND name='requestApprovalType';";
-        $result=$connection2->prepare($sql);
+        $data = array("requestApprovalType" => $requestApprovalType);
+        $sql = "UPDATE gibbonSetting SET value=:requestApprovalType WHERE scope='Trip Planner' AND name='requestApprovalType';";
+        $result = $connection2->prepare($sql);
         $result->execute($data);
     } catch (PDOException $e) {
         $URL .= "&return=error2";
@@ -51,9 +50,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     }
 
     try {
-        $data=array("riskAssessmentTemplate" => $riskAssessmentTemplate);
-        $sql="UPDATE gibbonSetting SET value=:riskAssessmentTemplate WHERE scope='Trip Planner' AND name='riskAssessmentTemplate';";
-        $result=$connection2->prepare($sql);
+        $data = array("riskAssessmentTemplate" => $riskAssessmentTemplate);
+        $sql = "UPDATE gibbonSetting SET value=:riskAssessmentTemplate WHERE scope='Trip Planner' AND name='riskAssessmentTemplate';";
+        $result = $connection2->prepare($sql);
         $result->execute($data);
     } catch (PDOException $e) {
         $URL .= "&return=error2";
