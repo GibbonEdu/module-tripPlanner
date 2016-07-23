@@ -23,7 +23,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 include "./modules/Trip Planner/moduleFunctions.php";
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php')) {
-    //Acess denied
     print "<div class='error'>";
         print "You do not have access to this action.";
     print "</div>";
@@ -48,7 +47,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
 
         if (isApprover($connection2, $gibbonPersonID) || isOwner($connection2, $tripPlannerRequestID, $gibbonPersonID) || isInvolved($connection2, $tripPlannerRequestID, $gibbonPersonID) || $isHOD) {
             $databaseFail = false;
-
             try {
                 $data = array("tripPlannerRequestID" => $tripPlannerRequestID);
                 $sql = "SELECT creatorPersonID, timestampCreation, title, description, teacherPersonIDs, studentPersonIDs, location, date, startTime, endTime, riskAssessment, totalCost, status FROM tripPlannerRequests WHERE tripPlannerRequestID=:tripPlannerRequestID";
@@ -65,7 +63,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                     if (isset($_GET['return'])) {
                         returnProcess($guid, $_GET['return'], null, null);
                     }
-
 
                     $date = DateTime::createFromFormat("Y-m-d", $request["date"]);
                     $startTime = DateTime::createFromFormat("H:i:s", $request["startTime"]);

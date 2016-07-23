@@ -19,11 +19,9 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 @session_start();
 
-//Module includes
 include "./modules/Trip Planner/moduleFunctions.php";
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php')) {
-    //Acess denied
     print "<div class='error'>";
         print "You do not have access to this action.";
     print "</div>";
@@ -105,6 +103,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         print "<h3>";
             print __($guid, "Filter");
         print "</h3>";
+
         print "<form method='post' action='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=" . $_GET["q"] . "'>"; ?>
             <table class='noIntBorder' cellspacing='0' style='width: 100%'>
                 <tr>
@@ -113,14 +112,14 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                     </td>
                     <td class="right">
                         <?php
-                        $statuses = array("Requested", "Approved", "Rejected", "Cancelled", "All");
+                        $statuses = array("All", "Requested", "Approved", "Rejected", "Cancelled");
                         echo "<select name='statusFilter' id='statusFilter' style='width:302px'>";
                             foreach($statuses as $status) {
                                 $selected = "";
                                 if ($status == $statusFilter) {
                                     $selected = "selected";
                                 }
-                                echo "<option $selected value='$status'>".__($guid, $status).'</option>';
+                                echo "<option $selected value='$status'>" . __($guid, $status) . '</option>';
                             }
                         echo '</select>';
                         ?>
