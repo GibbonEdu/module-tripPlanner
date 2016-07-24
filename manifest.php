@@ -10,47 +10,202 @@ the Free Software Foundation, either version 3 of the License, or
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 //Basic variables
-$name="Trip Planner" ;
-$description="A trip planner module for Gibbon." ;
-$entryURL="trip_view.php" ;
-$type="Additional" ;
-$category="Learn" ; 
-$version="0.0.01" ; 
-$author="Ray Clark" ; 
-$url="https://github.com/raynichc/Trip-Planner" ;
+$name = "Trip Planner";
+$description = "A trip planner module for Gibbon.";
+$entryURL = "trips_manage.php";
+$type = "Additional";
+$category = "Learn"; 
+$version = "0.0.01"; 
+$author = "Ray Clark"; 
+$url = "https://github.com/raynichc/Trip-Planner";
 
 //Tables
-//$moduleTables[0]="" ;
-//$moduleTables[1]="" ;
+$moduleTables[0] = "CREATE TABLE `tripPlannerApprovers` (
+    `tripPlannerApproverID` int(4) unsigned zerofill NOT NULL AUTO_INCREMENT,
+    `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
+    `sequenceNumber` int(4) NULL,
+    `gibbonPersonIDCreator` int(10) unsigned zerofill NOT NULL,
+    `timestampCreator` timestamp NULL,
+    `gibbonPersonIDUpdate` int(10) unsigned zerofill NULL,
+    `timestampUpdate` timestamp NULL,
+    PRIMARY KEY (`tripPlannerApproverID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
+
+$moduleTables[1] = "CREATE TABLE `tripPlannerRequests` (
+    `tripPlannerRequestID` int(7) unsigned zerofill NOT NULL AUTO_INCREMENT,
+    `creatorPersonID` int(10) unsigned zerofill NOT NULL,
+    `timestampCreation` timestamp,
+    `title` varchar(60) NOT NULL,
+    `description` text NOT NULL,
+    `teacherPersonIDs` text NOT NULL,
+    `studentPersonIDs` text NOT NULL,
+    `location` text NOT NULL,
+    `date` date NOT NULL,
+    `startTime` time NOT NULL,
+    `endTime` time NOT NULL,
+    `riskAssessment` text NOT NULL,
+    `totalCost` decimal(12, 2) NOT NULL,
+    `status` ENUM('Requested', 'Approved', 'Rejected', 'Cancelled') DEFAULT 'Requested' NOT NULL,
+    `gibbonSchoolYearID` int(3) unsigned zerofill NOT NULL,
+    `gibbonPersonIDUpdate` int(10) unsigned zerofill NULL,
+    `timestampUpdate` timestamp NULL,
+    PRIMARY KEY (`tripPlannerRequestID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
+
+$moduleTables[2] = "CREATE TABLE `tripPlannerCostBreakdown` (
+    `tripPlannerCostBreakdownID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
+    `tripPlannerRequestID` int(7) unsigned zerofill NOT NULL,
+    `title` varchar(60) NOT NULL,
+    `description` text NOT NULL,
+    `cost` decimal(12, 2) NOT NULL,
+    PRIMARY KEY (`tripPlannerCostBreakdownID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
+
+$moduleTables[3] = "CREATE TABLE `tripPlannerRequestLog` (
+    `tripPlannerRequestLogID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
+    `tripPlannerRequestID` int(7) unsigned zerofill NOT NULL,
+    `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
+    `action` ENUM('Request', 'Cancellation', 'Approval - Partial', 'Approval - Final', 'Rejection', 'Comment') NOT NULL,
+    `comment` text NULL,
+    `timestamp` timestamp NULL,
+    PRIMARY KEY (`tripPlannerRequestLogID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
+
+$moduleTables[4] = "INSERT INTO `gibbonSetting` (`gibbonSystemSettingsID`, `scope`, `name`, `nameDisplay`, `description`, `value`)
+VALUES
+(NULL, 'Trip Planner', 'requestApprovalType', 'Request Approval Type', 'The type of approval that a trip request has to go through.', 'One Of'),
+(NULL, 'Trip Planner', 'riskAssessmentTemplate', 'Risk Assessment Template', 'The template for the Risk Assessment.', '');";
 
 //Actions
 $actionCount = 0;
 
-$actionRows[$actionCount]["name"]="Trips" ; 
-$actionRows[$actionCount]["precedence"]="0"; 
-$actionRows[$actionCount]["category"]="" ;
-$actionRows[$actionCount]["description"]="View of all the Trips" ;
-$actionRows[$actionCount]["URLList"]="trip_view.php" ; 
-$actionRows[$actionCount]["entryURL"]="trip_view.php" ; 
-$actionRows[$actionCount]["defaultPermissionAdmin"]="Y" ;
-$actionRows[$actionCount]["defaultPermissionTeacher"]="Y" ;
-$actionRows[$actionCount]["defaultPermissionStudent"]="N" ; 
-$actionRows[$actionCount]["defaultPermissionParent"]="N" ;
-$actionRows[$actionCount]["defaultPermissionSupport"]="N" ; 
-$actionRows[$actionCount]["categoryPermissionStaff"]="Y" ; 
-$actionRows[$actionCount]["categoryPermissionStudent"]="N" ; 
-$actionRows[$actionCount]["categoryPermissionParent"]="N" ; 
-$actionRows[$actionCount]["categoryPermissionOther"]="N" ; 
+$actionRows[$actionCount]["name"] = "Manage Trips"; 
+$actionRows[$actionCount]["precedence"] = "0"; 
+$actionRows[$actionCount]["category"] = "";
+$actionRows[$actionCount]["description"] = "Manage trips.";
+$actionRows[$actionCount]["URLList"] = "trips_manage.php"; 
+$actionRows[$actionCount]["entryURL"] = "trips_manage.php"; 
+$actionRows[$actionCount]["defaultPermissionAdmin"] = "Y";
+$actionRows[$actionCount]["defaultPermissionTeacher"] = "Y";
+$actionRows[$actionCount]["defaultPermissionStudent"] = "N"; 
+$actionRows[$actionCount]["defaultPermissionParent"] = "N";
+$actionRows[$actionCount]["defaultPermissionSupport"] = "N"; 
+$actionRows[$actionCount]["categoryPermissionStaff"] = "Y"; 
+$actionRows[$actionCount]["categoryPermissionStudent"] = "N"; 
+$actionRows[$actionCount]["categoryPermissionParent"] = "N"; 
+$actionRows[$actionCount]["categoryPermissionOther"] = "N"; 
 $actionCount++;
 
+$actionRows[$actionCount]["name"] = "Manage Trips_full"; 
+$actionRows[$actionCount]["precedence"] = "1"; 
+$actionRows[$actionCount]["category"] = "";
+$actionRows[$actionCount]["description"] = "Manage trips.";
+$actionRows[$actionCount]["URLList"] = "trips_manage.php"; 
+$actionRows[$actionCount]["entryURL"] = "trips_manage.php"; 
+$actionRows[$actionCount]["defaultPermissionAdmin"] = "Y";
+$actionRows[$actionCount]["defaultPermissionTeacher"] = "N";
+$actionRows[$actionCount]["defaultPermissionStudent"] = "N"; 
+$actionRows[$actionCount]["defaultPermissionParent"] = "N";
+$actionRows[$actionCount]["defaultPermissionSupport"] = "N"; 
+$actionRows[$actionCount]["categoryPermissionStaff"] = "Y"; 
+$actionRows[$actionCount]["categoryPermissionStudent"] = "N"; 
+$actionRows[$actionCount]["categoryPermissionParent"] = "N"; 
+$actionRows[$actionCount]["categoryPermissionOther"] = "N"; 
+$actionCount++;
+
+$actionRows[$actionCount]["name"] = "Submit Request"; 
+$actionRows[$actionCount]["precedence"] = "0"; 
+$actionRows[$actionCount]["category"] = "";
+$actionRows[$actionCount]["description"] = "Submit a trip request.";
+$actionRows[$actionCount]["URLList"] = "trips_submitRequest.php"; 
+$actionRows[$actionCount]["entryURL"] = "trips_submitRequest.php"; 
+$actionRows[$actionCount]["defaultPermissionAdmin"] = "Y";
+$actionRows[$actionCount]["defaultPermissionTeacher"] = "Y";
+$actionRows[$actionCount]["defaultPermissionStudent"] = "N"; 
+$actionRows[$actionCount]["defaultPermissionParent"] = "N";
+$actionRows[$actionCount]["defaultPermissionSupport"] = "N"; 
+$actionRows[$actionCount]["categoryPermissionStaff"] = "Y"; 
+$actionRows[$actionCount]["categoryPermissionStudent"] = "N"; 
+$actionRows[$actionCount]["categoryPermissionParent"] = "N"; 
+$actionRows[$actionCount]["categoryPermissionOther"] = "N"; 
+$actionCount++;
+
+$actionRows[$actionCount]["name"] = "Manage Approvers_view"; 
+$actionRows[$actionCount]["precedence"] = "0"; 
+$actionRows[$actionCount]["category"] = "";
+$actionRows[$actionCount]["description"] = "Manage trip approvers.";
+$actionRows[$actionCount]["URLList"] = "trips_manageApprovers.php"; 
+$actionRows[$actionCount]["entryURL"] = "trips_manageApprovers.php";
+$actionRows[$actionCount]["defaultPermissionAdmin"] = "Y";
+$actionRows[$actionCount]["defaultPermissionTeacher"] = "N";
+$actionRows[$actionCount]["defaultPermissionStudent"] = "N"; 
+$actionRows[$actionCount]["defaultPermissionParent"] = "N";
+$actionRows[$actionCount]["defaultPermissionSupport"] = "N"; 
+$actionRows[$actionCount]["categoryPermissionStaff"] = "Y"; 
+$actionRows[$actionCount]["categoryPermissionStudent"] = "N"; 
+$actionRows[$actionCount]["categoryPermissionParent"] = "N"; 
+$actionRows[$actionCount]["categoryPermissionOther"] = "N";
+$actionCount++;
+
+$actionRows[$actionCount]["name"] = "Manage Approvers_add&edit"; 
+$actionRows[$actionCount]["precedence"] = "1"; 
+$actionRows[$actionCount]["category"] = "";
+$actionRows[$actionCount]["description"] = "Manage trip approvers.";
+$actionRows[$actionCount]["URLList"] = "trips_manageApprovers.php,trips_addApprover.php,trips_editApprover.php"; 
+$actionRows[$actionCount]["entryURL"] = "trips_manageApprovers.php";
+$actionRows[$actionCount]["defaultPermissionAdmin"] = "Y";
+$actionRows[$actionCount]["defaultPermissionTeacher"] = "N";
+$actionRows[$actionCount]["defaultPermissionStudent"] = "N"; 
+$actionRows[$actionCount]["defaultPermissionParent"] = "N";
+$actionRows[$actionCount]["defaultPermissionSupport"] = "N"; 
+$actionRows[$actionCount]["categoryPermissionStaff"] = "Y"; 
+$actionRows[$actionCount]["categoryPermissionStudent"] = "N"; 
+$actionRows[$actionCount]["categoryPermissionParent"] = "N"; 
+$actionRows[$actionCount]["categoryPermissionOther"] = "N";
+$actionCount++;
+
+$actionRows[$actionCount]["name"] = "Manage Approvers_full"; 
+$actionRows[$actionCount]["precedence"] = "2"; 
+$actionRows[$actionCount]["category"] = "";
+$actionRows[$actionCount]["description"] = "Manage trip approvers.";
+$actionRows[$actionCount]["URLList"] = "trips_manageApprovers.php,trips_addApprover.php,trips_editApprover.php,trips_deleteApproverProcess.php"; 
+$actionRows[$actionCount]["entryURL"] = "trips_manageApprovers.php";
+$actionRows[$actionCount]["defaultPermissionAdmin"] = "Y";
+$actionRows[$actionCount]["defaultPermissionTeacher"] = "N";
+$actionRows[$actionCount]["defaultPermissionStudent"] = "N"; 
+$actionRows[$actionCount]["defaultPermissionParent"] = "N";
+$actionRows[$actionCount]["defaultPermissionSupport"] = "N"; 
+$actionRows[$actionCount]["categoryPermissionStaff"] = "Y"; 
+$actionRows[$actionCount]["categoryPermissionStudent"] = "N"; 
+$actionRows[$actionCount]["categoryPermissionParent"] = "N"; 
+$actionRows[$actionCount]["categoryPermissionOther"] = "N";
+$actionCount++;
+
+$actionRows[$actionCount]["name"] = "Manage Trip Planner Settings"; 
+$actionRows[$actionCount]["precedence"] = "0"; 
+$actionRows[$actionCount]["category"] = "";
+$actionRows[$actionCount]["description"] = "Manage Trip Planner Settings.";
+$actionRows[$actionCount]["URLList"] = "trips_manageSettings.php"; 
+$actionRows[$actionCount]["entryURL"] = "trips_manageSettings.php"; 
+$actionRows[$actionCount]["defaultPermissionAdmin"] = "Y";
+$actionRows[$actionCount]["defaultPermissionTeacher"] = "N";
+$actionRows[$actionCount]["defaultPermissionStudent"] = "N"; 
+$actionRows[$actionCount]["defaultPermissionParent"] = "N";
+$actionRows[$actionCount]["defaultPermissionSupport"] = "N"; 
+$actionRows[$actionCount]["categoryPermissionStaff"] = "Y"; 
+$actionRows[$actionCount]["categoryPermissionStudent"] = "N"; 
+$actionRows[$actionCount]["categoryPermissionParent"] = "N"; 
+$actionRows[$actionCount]["categoryPermissionOther"] = "N";
+$actionCount++; 
+
 //Hooks
-//$hooks[0]="" ; //Serialised array to create hook and set options. See Hooks documentation online.
+//$hooks[0] = ""; //Serialised array to create hook and set options. See Hooks documentation online.
 ?>

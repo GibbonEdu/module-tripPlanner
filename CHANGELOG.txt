@@ -1,9 +1,6 @@
 CHANGELOG
 =========
 
-v0.0.00
--------
-Set up
-
 v0.0.01
 -------
+First release.

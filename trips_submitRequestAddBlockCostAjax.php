@@ -17,8 +17,20 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/**
- * Sets version information
- */
-$moduleVersion = "0.0.01";
+include "../../functions.php";
+include "../../config.php";
+
+include "./moduleFunctions.php";
+
+//New PDO DB connection
+$pdo = new Gibbon\sqlConnection();
+$connection2 = $pdo->getConnection();
+
+@session_start();
+
+date_default_timezone_set($_SESSION[$guid]["timezone"]);
+
+$id = $_GET["id"];
+
+makeCostBlock($guid, $connection2, $id, true);
 ?>
