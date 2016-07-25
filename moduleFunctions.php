@@ -451,4 +451,30 @@ function makeCostBlock($guid, $connection2, $i, $outerBlock = TRUE)
         print "</div>";
     }
 }
+
+function getPastTrips($connection2, $tripPlannerRequestID, $gibbonPersonID)
+{
+    try {
+        $data = array("gibbonPersonID" => $gibbonPersonID, "tripPlannerRequestID" => $tripPlannerRequestID);
+        $sql = "SELECT tripPlannerRequestID, date, startTime, endTime FROM tripPlannerRequests WHERE NOT tripPlannerRequestID=:tripPlannerRequestID AND status='Approved' AND gibbonSchoolYearID=(SELECT gibbonSchoolYearID FROM tripPlannerRequests WHERE tripPlannerRequestID=:tripPlannerRequestID) AND (teacherPersonIDs LIKE CONCAT('%', :gibbonPersonID, '%') OR studentPersonIDs LIKE CONCAT('%', :gibbonPersonID, '%'))";
+        $result = $connection2->prepare($sql);
+        $result->execute($data);
+    } catch (PDOException $e) {
+    }   
+
+    return $result;
+}
+
+function getPlannerOverlaps($connection2, $date, $startTime, $endTime, $gibbonPersonID)
+{
+    try {
+        $data = array("gibbonPersonID" => $gibbonPersonID, "date" => $date, "startTime" => $startTime, "endTime" => $endTime);
+        $sql = "SELECT gibbonPlannerEntryID, gibbonCourseClassID FROM gibbonPlannerEntry WHERE date=:date AND (timeStart < :endTime OR timeEnd > :startTime) AND gibbonCourseClassID IN (SELECT gibbonCourseClassID FROM gibbonCourseClassPerson WHERE gibbonPersonID=:gibbonPersonID AND role='Student')";
+        $result = $connection2->prepare($sql);
+        $result->execute($data);
+    } catch (PDOException $e) {
+    }   
+
+    return $result;
+}
 ?>
