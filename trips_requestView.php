@@ -278,7 +278,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                             <tbody id="costInfo">
                                 <tr>
                                     <td colspan=2>
-                                        <table cellspacing='0' style='width: 100%; $style4'>
+                                        <table cellspacing='0' style='width: 100%'>
                                             <tr class='head'>
                                                 <th style='text-align: left; padding-left: 10px'>
                                                     <?php print __($guid, 'Name'); ?>
@@ -339,6 +339,69 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                                     </td>
                                     <td class="right">
                                         <input readonly name="totalCost" id="totalCost" maxlength=60 value="<?php echo $_SESSION[$guid]['currency'] . ' ' . $request['totalCost']; ?>" type="text" class="standardWidth">
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tr class="break">
+                                <td colspan=2>
+                                    <h3>
+                                        Planner Overlaps
+                                        <?php print "<div id='showPlanner'  title='" . __($guid, 'Show/Hide') . "' style='margin-top: -5px; margin-left: 3px; padding-right: 1px; float: right; width: 24px; height: 25px; background-image: url(\"" . $_SESSION[$guid]["absoluteURL"] . "/themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/minus.png\")'></div>"; ?>
+                                    </h3>
+                                    <script type="text/javascript">
+                                        $(document).ready(function(){
+                                            $('#showPlanner').unbind('click').click(function() {
+                                                if ($("#plannerInfo").is(":visible")) {
+                                                    $("#plannerInfo").css("display","none");
+                                                    $('#showPlanner').css("background-image", "url('<?php print $_SESSION[$guid]['absoluteURL'].'/themes/'.$_SESSION[$guid]['gibbonThemeName'].'/img/plus.png' ?>')");
+                                                } else {
+                                                    $("#plannerInfo").slideDown("fast", $("#plannerInfo").css("display","table-row-group"));
+                                                    $('#showPlanner').css("background-image", "url('<?php print $_SESSION[$guid]['absoluteURL'].'/themes/'.$_SESSION[$guid]['gibbonThemeName'].'/img/minus.png' ?>')");
+                                                }
+                                            });
+                                        });
+                                    </script>
+                                </td>
+                            </tr>
+                            <tbody id="plannerInfo">
+                                <tr>
+                                    <td colspan=2>
+                                        <table cellspacing='0' style='width: 100%'>
+                                            <tr class='head'>
+                                                <th style='text-align: left; padding-left: 10px; width:10%'>
+                                                    <?php print __($guid, 'Class'); ?>
+                                                </th>
+                                                <th style='text-align: left'>
+                                                    <?php print __($guid, 'Students Involved'); ?>
+                                                </th>
+                                                <th style='text-align: left; width:10%'>
+                                                    <?php print __($guid, 'Actions'); ?>
+                                                </th>
+                                            </tr>
+                                            <?php
+                                                $overlaps = getPlannerOverlaps($connection2, $request["date"], $request["startTime"], $request["endTime"], $students);
+                                                while ($row = $overlaps->fetch()) {
+                                                    $classStudents = getStudentsInClass($connection2, $row["gibbonCourseClassID"]);
+                                                    print "<tr>";
+                                                        print "<td>";
+                                                            print $row["nameShort"];
+                                                        print "</td>";
+                                                        print "<td>";
+                                                            $studentsInvolved = "";
+                                                            while ($student = $classStudents->fetch()) {
+                                                                if(in_array($student["gibbonPersonID"], $students)) {
+                                                                    $studentsInvolved .= $student["preferredName"] . " " . $student["surname"] . ", ";
+                                                                }
+                                                            }
+                                                            print substr($studentsInvolved, 0, -2);
+                                                        print "</td>";
+                                                        print "<td>";
+                                                            print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID=" . $row["tripPlannerRequestID"] . "'><img title='" . _('View') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/plus.png'/></a> ";
+                                                        print "</td>";
+                                                    print "</tr>";
+                                                }
+                                            ?>
+                                        </table>
                                     </td>
                                 </tr>
                             </tbody>

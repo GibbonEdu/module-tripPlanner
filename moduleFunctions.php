@@ -465,11 +465,33 @@ function getPastTrips($connection2, $tripPlannerRequestID, $gibbonPersonID)
     return $result;
 }
 
-function getPlannerOverlaps($connection2, $date, $startTime, $endTime, $gibbonPersonID)
+function getPlannerOverlaps($connection2, $date, $startTime, $endTime, $people)
 {
+    if (!is_array($people) || empty($people)) {
+        return null;
+    }
+
     try {
-        $data = array("gibbonPersonID" => $gibbonPersonID, "date" => $date, "startTime" => $startTime, "endTime" => $endTime);
-        $sql = "SELECT gibbonPlannerEntryID, gibbonCourseClassID FROM gibbonPlannerEntry WHERE date=:date AND (timeStart < :endTime OR timeEnd > :startTime) AND gibbonCourseClassID IN (SELECT gibbonCourseClassID FROM gibbonCourseClassPerson WHERE gibbonPersonID=:gibbonPersonID AND role='Student')";
+        $data = array("date" => $date, "startTime" => $startTime, "endTime" => $endTime);
+        $sql = "SELECT DISTINCT gibbonCourse.gibbonCourseID, gibbonCourse.nameShort, gibbonCourseClass.gibbonCourseClassID FROM gibbonTTDayRowClass JOIN gibbonTTColumnRow ON (gibbonTTDayRowClass.gibbonTTColumnRowID = gibbonTTColumnRow.gibbonTTColumnRowID) JOIN gibbonCourseClassPerson ON (gibbonTTDayRowClass.gibbonCourseClassID = gibbonCourseClassPerson.gibbonCourseClassID)JOIN gibbonCourseClass ON (gibbonCourseClass.gibbonCourseClassID = gibbonTTDayRowClass.gibbonCourseClassID) JOIN gibbonCourse ON (gibbonCourse.gibbonCourseID = gibbonCourseClass.gibbonCourseID) WHERE gibbonTTDayID = (SELECT gibbonTTDayID FROM gibbonTTDayDate WHERE date=:date) AND timeStart < :endTime AND timeEnd > :startTime AND gibbonPersonID IN (";
+        foreach ($people as $key => $id) {
+            $pData = "student" . ($key+1);
+            $data[$pData] = $id;
+            $sql .= ":" . $pData . ",";
+        }
+        $sql = substr($sql, 0, -1) . ") ORDER BY gibbonCourse.nameShort ASC";
+        $result = $connection2->prepare($sql);
+        $result->execute($data);
+    } catch (PDOException $e) {
+    }
+
+    return $result;
+}
+
+function getStudentsInClass($connection2, $gibbonCourseClassID) {
+    try {
+        $data = array("gibbonCourseClassID" => $gibbonCourseClassID);
+        $sql = "SELECT gibbonPerson.gibbonPersonID, preferredName, surname FROM gibbonCourseClassPerson JOIN gibbonPerson ON (gibbonCourseClassPerson.gibbonPersonID = gibbonPerson.gibbonPersonID) WHERE gibbonCourseClassID=:gibbonCourseClassID AND role='Student'";
         $result = $connection2->prepare($sql);
         $result->execute($data);
     } catch (PDOException $e) {
