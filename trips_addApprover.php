@@ -37,7 +37,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_addApp
     print "</h3>";
 
     if (isset($_GET['return'])) {
-        returnProcess($guid, $_GET['return'], null, null);
+        $editLink = null;
+        if(isset($_GET['tripPlannerApproverID'])) {
+            $editLink = $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_editApprover.php&tripPlannerApproverID=" . $_GET['tripPlannerApproverID'];
+        }
+        returnProcess($guid, $_GET['return'], $editLink, null);
     }   
     ?>
     <form method="post" action="<?php print $_SESSION[$guid]["absoluteURL"] . "/modules/Trip Planner/trips_addApproverProcess.php" ?>">

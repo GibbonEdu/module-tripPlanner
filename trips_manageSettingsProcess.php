@@ -20,44 +20,31 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     $URL .= "&return=error0";
     header("Location: {$URL}");
 } else {
-    if (isset($_POST["requestApprovalType"])) {
-        if ($_POST["requestApprovalType"] != null && $_POST["requestApprovalType"] != "") {
-            $requestApprovalType = $_POST["requestApprovalType"];
+
+    $settings = array("requestApprovalType", "riskAssessmentTemplate", "missedClassWarningThreshold");
+
+    foreach ($settings as $setting) {
+        $value = null;
+        if (isset($_POST[$setting])) {
+            if ($_POST[$setting] != null && $_POST[$setting] != "") {
+                $value = $_POST[$setting];
+            }
+        } 
+
+        if ($value == null) {
+            $URL .= "&return=error1";
+            header("Location: {$URL}");
         }
-    } else {
-        $URL .= "&return=error1";
-        header("Location: {$URL}");
-    }
 
-    try {
-        $data = array("requestApprovalType" => $requestApprovalType);
-        $sql = "UPDATE gibbonSetting SET value=:requestApprovalType WHERE scope='Trip Planner' AND name='requestApprovalType';";
-        $result = $connection2->prepare($sql);
-        $result->execute($data);
-    } catch (PDOException $e) {
-        $URL .= "&return=error2";
-        header("Location: {$URL}");
-        exit();
-    }
-
-    if (isset($_POST["riskAssessmentTemplate"])) {
-        if ($_POST["riskAssessmentTemplate"] != null && $_POST["riskAssessmentTemplate"] != "") {
-            $riskAssessmentTemplate = $_POST["riskAssessmentTemplate"];
+        try {
+            $data = array("value" => $value, "setting" => $setting);
+            $sql = "UPDATE gibbonSetting SET value=:value WHERE scope='Trip Planner' AND name=:setting;";
+            $result = $connection2->prepare($sql);
+            $result->execute($data);
+        } catch (PDOException $e) {
+            $URL .= "&return=error2";
+            header("Location: {$URL}");
         }
-    } else {
-        $URL .= "&return=error1";
-        header("Location: {$URL}");
-    }
-
-    try {
-        $data = array("riskAssessmentTemplate" => $riskAssessmentTemplate);
-        $sql = "UPDATE gibbonSetting SET value=:riskAssessmentTemplate WHERE scope='Trip Planner' AND name='riskAssessmentTemplate';";
-        $result = $connection2->prepare($sql);
-        $result->execute($data);
-    } catch (PDOException $e) {
-        $URL .= "&return=error2";
-        header("Location: {$URL}");
-        exit();
     }
  
     $URL .= "&return=success0";

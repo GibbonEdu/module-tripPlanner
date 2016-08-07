@@ -12,6 +12,6 @@ $sql[$count][1]="-- First version, nothing to update";
 //v0.0.02
 $count++
 $sql[$count][0]="0.0.02";
-$sql[$count][1]="";
+$sql[$count][1]="INSERT INTO gibbonSetting SET scope='Trip Planner', name='missedClassWarningThreshold', nameDisplay='Missed Class Warning Threshold', description='The threshold for displaying a warning that student has missed a class too many times. Set to 0 to disable warnings.', value='5';end";
 
 ?>
