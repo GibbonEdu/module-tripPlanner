@@ -24,6 +24,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     $items = array("title", "description", "date", "startTime", "endTime", "location", "riskAssessment", "teachersSelected", "studentsSelected", "totalCost", "order");
     $data = array("creatorPersonID" => $_SESSION[$guid]["gibbonPersonID"], "timestampCreation" => $date->format('Y-m-d H:i:s'), "gibbonSchoolYearID" => $_SESSION[$guid]["gibbonSchoolYearID"]);
     $sql = "INSERT INTO tripPlannerRequests SET creatorPersonID=:creatorPersonID, timestampCreation=:timestampCreation, gibbonSchoolYearID=:gibbonSchoolYearID, ";
+    $people = array();
 
     foreach ($items as $item) {
         if (isset($_POST[$item])) {
@@ -33,16 +34,15 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                     $date = DateTime::createFromFormat("d/m/Y", $_POST[$item]);
                     $data[$item] = $date->format("Y-m-d H:i:s");
                 } elseif ($item == "teachersSelected" || $item == "studentsSelected") {
-                    $arrayString = "";
-                    foreach ($_POST[$item] as $person) {
-                        $arrayString .= $person . ",";
-                    }
-                    $dataName = "teacherPersonIDs";
+                    $key = null;
+                    $role = "Teacher";
                     if ($item == "studentsSelected") {
-                        $dataName = "studentPersonIDs";
+                        $role = "Student";
                     } 
-                    $data[$dataName] = substr($arrayString, 0, -1);
-                    $key = $dataName;
+
+                    foreach ($_POST[$item] as $person) {
+                        $people[] = array("role" => $role, "gibbonPersonID" => $person);
+                    }
                 } elseif ($item == "order") {
                     $key = null;
                     $costs = array();
@@ -86,14 +86,19 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             $result1 = $connection2->prepare($sql1);
             $result1->execute($cost);
         }
+        $sql2 = "INSERT INTO tripPlannerRequestPerson SET tripPlannerRequestID=:tripPlannerRequestID, gibbonPersonID=:gibbonPersonID, role=:role";
+        foreach ($people as $person) {
+            $person['tripPlannerRequestID'] = $tripPlannerRequestID;
+            $result2 = $connection2->prepare($sql2);
+            $result2->execute($person);
+        }
     } catch (PDOException $e) {
-        print $e;
         $URL .= "&return=error2";
-        //header("Location: {$URL}");
+        header("Location: {$URL}");
         exit();
     }
 
-    $URL .= "&return=success0&tripPlannerRequestID=$tripPlannerRequestID";
+    $URL .= "&return=success0&tripPlannerRequestID=" . $tripPlannerRequestID;
     header("Location: {$URL}");
 }   
 ?>

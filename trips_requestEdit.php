@@ -28,29 +28,18 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         print "You do not have access to this action.";
     print "</div>";
 } else {
+    print "<div class='trail'>";
+        print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . _("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . _(getModuleName($_GET["q"])) . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_manage.php'>" . _("Manage Trip Request") . "</a> > </div><div class='trailEnd'>" . _('Edit Request') . "</div>";
+    print "</div>";
+
+    if (isset($_GET['return'])) {
+        returnProcess($guid, $_GET['return'], null, null);
+    }
+
     if (isset($_GET["tripPlannerRequestID"])) {
         $tripPlannerRequestID = $_GET["tripPlannerRequestID"];
         if (isOwner($connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"])) {
-            print "<div class='trail'>";
-                print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . _("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . _(getModuleName($_GET["q"])) . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_manage.php'>" . _("Manage Trip Request") . "</a> > </div><div class='trailEnd'>" . _('Edit Request') . "</div>";
-            print "</div>";
-
-            if (isset($_GET['return'])) {
-                returnProcess($guid, $_GET['return'], null, null);
-            }
-
-            $databaseFail = false;
-
-            try {
-                $data = array("tripPlannerRequestID" => $tripPlannerRequestID);
-                $sql = "SELECT creatorPersonID, timestampCreation, title, description, teacherPersonIDs, studentPersonIDs, location, date, startTime, endTime, riskAssessment, totalCost, status FROM tripPlannerRequests WHERE tripPlannerRequestID=:tripPlannerRequestID";
-                $result = $connection2->prepare($sql);
-                $result->execute($data);
-            } catch (PDOException $e) {
-                $databaseFail = true;
-            }
-
-            if (!$databaseFail) {
+            if (($result = getTrip($connection2, $tripPlannerRequestID)) != null) {
                 $request = $result->fetch();
 
                 if (!($request["status"] == "Cancelled" || $request["status"] == "Rejected")) {
@@ -58,15 +47,14 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                     $startTime = DateTime::createFromFormat("H:i:s", $request["startTime"]);
                     $endTime = DateTime::createFromFormat("H:i:s", $request["endTime"]);
 
-
                     $teachers = array();
-                    foreach (explode(",", $request["teacherPersonIDs"]) as $teacher) {
-                        $teachers[] = $teacher;
-                    }
-
                     $students = array();
-                    foreach (explode(",", $request["studentPersonIDs"]) as $student) {
-                        $students[] = $student;
+                    foreach (getPeopleInTrip($connection2, $tripPlannerRequestID) as $people) {
+                        if ($people['role'] == "Student") {
+                            $students[] = $people['gibbonPersonID'];
+                        } else {
+                            $teachers[] = $people['gibbonPersonID'];
+                        }
                     }
                     ?>
                     <form method="post" action="<?php echo $_SESSION[$guid]['absoluteURL'].'/modules/Trip Planner/trips_requestEditProcess.php' ?>">

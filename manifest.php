@@ -28,7 +28,8 @@ $author = "Ray Clark";
 $url = "https://github.com/raynichc/Trip-Planner";
 
 //Tables
-$moduleTables[0] = "CREATE TABLE `tripPlannerApprovers` (
+$tables = 0;
+$moduleTables[$tables++] = "CREATE TABLE `tripPlannerApprovers` (
     `tripPlannerApproverID` int(4) unsigned zerofill NOT NULL AUTO_INCREMENT,
     `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
     `sequenceNumber` int(4) NULL,
@@ -39,7 +40,7 @@ $moduleTables[0] = "CREATE TABLE `tripPlannerApprovers` (
     PRIMARY KEY (`tripPlannerApproverID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
 
-$moduleTables[1] = "CREATE TABLE `tripPlannerRequests` (
+$moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequests` (
     `tripPlannerRequestID` int(7) unsigned zerofill NOT NULL AUTO_INCREMENT,
     `creatorPersonID` int(10) unsigned zerofill NOT NULL,
     `timestampCreation` timestamp,
@@ -60,7 +61,7 @@ $moduleTables[1] = "CREATE TABLE `tripPlannerRequests` (
     PRIMARY KEY (`tripPlannerRequestID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
 
-$moduleTables[2] = "CREATE TABLE `tripPlannerCostBreakdown` (
+$moduleTables[$tables++] = "CREATE TABLE `tripPlannerCostBreakdown` (
     `tripPlannerCostBreakdownID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
     `tripPlannerRequestID` int(7) unsigned zerofill NOT NULL,
     `title` varchar(60) NOT NULL,
@@ -69,7 +70,7 @@ $moduleTables[2] = "CREATE TABLE `tripPlannerCostBreakdown` (
     PRIMARY KEY (`tripPlannerCostBreakdownID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
 
-$moduleTables[3] = "CREATE TABLE `tripPlannerRequestLog` (
+$moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestLog` (
     `tripPlannerRequestLogID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
     `tripPlannerRequestID` int(7) unsigned zerofill NOT NULL,
     `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
@@ -79,11 +80,19 @@ $moduleTables[3] = "CREATE TABLE `tripPlannerRequestLog` (
     PRIMARY KEY (`tripPlannerRequestLogID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
 
-$moduleTables[4] = "INSERT INTO `gibbonSetting` (`gibbonSystemSettingsID`, `scope`, `name`, `nameDisplay`, `description`, `value`)
+$moduleTables[$tables++] = "INSERT INTO `gibbonSetting` (`gibbonSystemSettingsID`, `scope`, `name`, `nameDisplay`, `description`, `value`)
 VALUES
 (NULL, 'Trip Planner', 'requestApprovalType', 'Request Approval Type', 'The type of approval that a trip request has to go through.', 'One Of'),
 (NULL, 'Trip Planner', 'riskAssessmentTemplate', 'Risk Assessment Template', 'The template for the Risk Assessment.', ''),
 (NULL, 'Trip Planner', 'missedClassWarningThreshold', 'Missed Class Warning Threshold', 'The threshold for displaying a warning that student has missed a class too many times. Set to 0 to disable warnings.', '5');";
+
+$moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestPerson` (
+    `tripPlannerRequestPersonID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
+    `tripPlannerRequestID` int(7) unsigned zerofill NOT NULL,
+    `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
+    `role` ENUM('Student', 'Teacher') NOT NULL,
+    PRIMARY KEY (`tripPlannerRequestPersonID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
 
 //Actions
 $actionCount = 0;

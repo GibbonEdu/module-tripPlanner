@@ -148,6 +148,56 @@ function needsApproval($connection2, $tripPlannerRequestID, $gibbonPersonID)
     return false;
 }
 
+function getTrip($connection2, $tripPlannerRequestID) {
+    try {
+        $data = array("tripPlannerRequestID" => $tripPlannerRequestID);
+        $sql = "SELECT creatorPersonID, timestampCreation, title, description, teacherPersonIDs, studentPersonIDs, location, date, startTime, endTime, riskAssessment, totalCost, status FROM tripPlannerRequests WHERE tripPlannerRequestID=:tripPlannerRequestID";
+        $result = $connection2->prepare($sql);
+        $result->execute($data);
+        if($result->rowCount() == 1) {
+            $request = $result->fetch();
+            if($request['teacherPersonIDs'] != "" || $request['studentPersonIDs'] != "") {
+                $people = array();
+                foreach (explode(",", $request["teacherPersonIDs"]) as $teacher) {
+                    $people[] = array("role" => "Teacher", "gibbonPersonID" => $teacher);
+                }
+
+                foreach (explode(",", $request["studentPersonIDs"]) as $student) {
+                    $people[] = array("role" => "Student", "gibbonPersonID" => $student);
+                }
+                $sql1 = "INSERT INTO tripPlannerRequestPerson SET tripPlannerRequestID=:tripPlannerRequestID, gibbonPersonID=:gibbonPersonID, role=:role";
+                foreach ($people as $person) {
+                    $person['tripPlannerRequestID'] = $tripPlannerRequestID;
+                    $result1 = $connection2->prepare($sql1);
+                    $result1->execute($person);
+                }
+
+                $sql2 = "UPDATE tripPlannerRequests SET teacherPersonIDs='', studentPersonIDs='' WHERE tripPlannerRequestID=:tripPlannerRequestID";
+                $result2 = $connection2->prepare($sql2);
+                $result2->execute($data);
+                $request["teacherPersonIDs"] = "";
+                $request["studentPersonIDs"] = "";
+            }
+            return $request; 
+        }
+    } catch (PDOException $e) {
+    }
+    return null;
+}
+
+function getPeopleInTrip($connection2, $tripPlannerRequestID) {
+    try {
+        $data = array("tripPlannerRequestID" => $tripPlannerRequestID);
+        $sql = "SELECT gibbonPersonID, role FROM tripPlannerRequestPerson WHERE tripPlannerRequestID=:tripPlannerRequestID";
+        $result = $connection2->prepare($sql);
+        $result->execute($data);
+        return $result;
+    } catch (PDOException $e) {
+
+    }
+    return null;
+}
+
 function getHOD($connection2, $gibbonPersonID)
 {
     try {

@@ -16,3 +16,6 @@ Fixed LiveValidation not updating on the date fieldin trips_submitRequest.php
 Fixed Edit Approver button not showing up if the user's highest action was Manage Approvers_full.
 Changed trips_addApproverProcess.php to redirect back to trips_addApprover.php on a successful additon.
 Added edit record text to success info in trips_addApprover.php
+Normalised studentPersonIDs and teacherPersonIds (Information will be put into the new database when the issue is requested).
+Fixed trips_submitRequestProcess.php not redirecting in the case of a database faliure.
+Moved breadcrumbs and return info above checks in trips_requestView.php, trips_requestEdit.php and trips_requestApprove.php
