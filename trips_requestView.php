@@ -363,14 +363,48 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                                             <th style='text-align: left'>
                                                 <?php print __($guid, 'Students Involved'); ?>
                                             </th>
+                                            <th style='text-align: left; width: 10%'>
+                                                <?php print __($guid, 'Requires Cover'); ?>
+                                            </th>
                                             <th style='text-align: left; width:10%'>
                                                 <?php print __($guid, 'Actions'); ?>
                                             </th>
                                         </tr>
                                         <?php
-                                            $overlaps = getPlannerOverlaps($connection2, $request["date"], $request["startTime"], $request["endTime"], $students);
+                                            $missedClasses = array();
+                                            foreach ($students as $student) {
+                                                $studentClasses = array();
+                                                $pastTrips = getPastTrips($connection2, $student);
+                                                while ($pastTrip = $pastTrips->fetch()) {
+                                                    $classesMissed = getPlannerOverlaps($connection2, $pastTrip['date'], $pastTrip['startTime'], $pastTrip['endTime'], array($student));
+                                                    while ($classMissed = $classesMissed->fetch()) {
+                                                        $gibbonCourseID = $classMissed['gibbonCourseID'];
+                                                        if (!isset($missedClasses[$gibbonCourseID])) {
+                                                            $studentClasses[$gibbonCourseID] = 1;
+                                                        } else {
+                                                            $studentClasses[$gibbonCourseID] = ++$studentClasses[$gibbonCourseID];
+                                                        }
+                                                    }
+                                                }
+                                                $missedClasses[$student] = $studentClasses;
+                                            }
+
+                                            try {
+                                                $sqlSetting = "SELECT value FROM gibbonSetting WHERE scope='Trip Planner' AND name='missedClassWarningThreshold'";
+                                                $resultSetting = $connection2->prepare($sqlSetting);
+                                                $resultSetting->execute();
+                                            } catch (PDOException $e) { 
+                                            }
+
+                                            $missedClassWarningThreshold = 0;
+                                            if($resultSetting->rowCount() == 1) {
+                                                $missedClassWarningThreshold = $resultSetting->fetch()['value'];
+                                            }
+
+                                            $overlaps = getPlannerOverlaps($connection2, $request["date"], $request["startTime"], $request["endTime"], array_merge($students, $teachers));
                                             while ($row = $overlaps->fetch()) {
                                                 $classStudents = getStudentsInClass($connection2, $row["gibbonCourseClassID"]);
+                                                $classTeachers = getTeachersOfClass($connection2, $row["gibbonCourseClassID"]);
                                                 print "<tr>";
                                                     print "<td>";
                                                         print $row["nameShort"];
@@ -378,11 +412,41 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                                                     print "<td>";
                                                         $studentsInvolved = "";
                                                         while ($student = $classStudents->fetch()) {
-                                                            if(in_array($student["gibbonPersonID"], $students)) {
-                                                                $studentsInvolved .= $student["preferredName"] . " " . $student["surname"] . ", ";
+                                                            if (in_array($student["gibbonPersonID"], $students)) {
+                                                                $warning = false;
+                                                                if ($missedClassWarningThreshold > 0) {
+                                                                    if (isset($missedClasses[$student["gibbonPersonID"]])) {
+                                                                        if (isset($missedClasses[$student["gibbonPersonID"]][$row['gibbonCourseID']])) {
+                                                                            $warning = $missedClassWarningThreshold <= $missedClasses[$student["gibbonPersonID"]][$row['gibbonCourseID']];
+                                                                        }
+                                                                    }
+                                                                }
+                                                                if ($warning) {
+                                                                    $studentsInvolved .= "<b style='color:#F50000'>";
+                                                                }
+                                                                $studentsInvolved .= $student["preferredName"] . " " . $student["surname"];
+                                                                if ($warning) {
+                                                                    $studentsInvolved .= "</b>";
+                                                                }
+                                                                $studentsInvolved .= ", ";
                                                             }
                                                         }
                                                         print substr($studentsInvolved, 0, -2);
+                                                    print "</td>";
+                                                    print "<td>";
+                                                        $requiresCover = true;
+                                                        while ($teacher = $classTeachers->fetch()) {
+                                                            if (!in_array($teacher['gibbonPersonID'], $teachers)) {
+                                                                $requiresCover = false;
+                                                                break;
+                                                            }
+                                                        }
+
+                                                        if ($requiresCover) {
+                                                            print "Yes";
+                                                        } else {
+                                                            print "No";
+                                                        }
                                                     print "</td>";
                                                     print "<td>";
                                                         print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID=" . $row["tripPlannerRequestID"] . "'><img title='" . _('View') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/plus.png'/></a> ";

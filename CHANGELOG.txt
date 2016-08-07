@@ -19,3 +19,6 @@ Added edit record text to success info in trips_addApprover.php
 Normalised studentPersonIDs and teacherPersonIds (Information will be put into the new database when the issue is requested).
 Fixed trips_submitRequestProcess.php not redirecting in the case of a database faliure.
 Moved breadcrumbs and return info above checks in trips_requestView.php, trips_requestEdit.php and trips_requestApprove.php
+Striped html tags from description in trips_manage.php
+Set max string length for description in trips_manage.php
+Implemented a system to check if a classes needs to be cover because of the requested trip and to check if a student has missed a class that they will miss agian if they go on the requested trip.

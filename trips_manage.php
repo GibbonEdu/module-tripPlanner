@@ -242,6 +242,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         <?php
         } else {
             $rowCount = 0;
+            $descriptionLength = 100;
             while ($row = $result->fetch()) {
                 $show = true;
                 if ($relationFilter == "Awaiting My Approval" && $ama) {
@@ -256,7 +257,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                     }
                     print "<tr class='$class'>";
                         print "<td style='width:20%'>" . $row['title'] . "</td>";
-                        print "<td>" . $row['description'] . "</td>";
+                        $descriptionText = strip_tags($row['description']);
+                        if (strlen($descriptionText)>$descriptionLength) {
+                            $descriptionText = substr($descriptionText, 0, $descriptionLength) . "...";
+                        }
+                        print "<td>" . $descriptionText . "</td>";
                         print "<td style='width:20%'>" . $row['preferredName'] . " " . $row["surname"] . "</td>";
                         print "<td style='width:12%'>";
                             print $row['status'] . "</br>";

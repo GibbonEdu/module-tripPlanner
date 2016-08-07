@@ -27,7 +27,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         $value = null;
         if (isset($_POST[$setting])) {
             if ($_POST[$setting] != null && $_POST[$setting] != "") {
-                $value = $_POST[$setting];
+                if($setting == "missedClassWarningThreshold") {
+                    $value = abs($_POST[$setting]);
+                } else {
+                    $value = $_POST[$setting];
+                }
             }
         } 
 

@@ -502,11 +502,12 @@ function makeCostBlock($guid, $connection2, $i, $outerBlock = TRUE)
     }
 }
 
-function getPastTrips($connection2, $tripPlannerRequestID, $gibbonPersonID)
+function getPastTrips($connection2, $gibbonPersonID)
 {
     try {
-        $data = array("gibbonPersonID" => $gibbonPersonID, "tripPlannerRequestID" => $tripPlannerRequestID);
-        $sql = "SELECT tripPlannerRequestID, date, startTime, endTime FROM tripPlannerRequests WHERE NOT tripPlannerRequestID=:tripPlannerRequestID AND status='Approved' AND gibbonSchoolYearID=(SELECT gibbonSchoolYearID FROM tripPlannerRequests WHERE tripPlannerRequestID=:tripPlannerRequestID) AND (teacherPersonIDs LIKE CONCAT('%', :gibbonPersonID, '%') OR studentPersonIDs LIKE CONCAT('%', :gibbonPersonID, '%'))";
+        $date = new DateTime();
+        $data = array("gibbonPersonID" => $gibbonPersonID, "tripPlannerRequestID" => $tripPlannerRequestID, "date" => $date->format('Y-m-d'));
+        $sql = "SELECT tripPlannerRequestID, date, startTime, endTime FROM tripPlannerRequests JOIN tripPlannerRequestPerson ON (tripPlannerRequestPerson.tripPlannerRequestID = tripPlannerRequests.tripPlannerRequestID) WHERE status='Approved' AND date>:date AND gibbonSchoolYearID=(SELECT gibbonSchoolYearID FROM tripPlannerRequests WHERE tripPlannerRequestID=:tripPlannerRequestID) AND (:gibbonPersonID = tripPlannerRequestPerson.gibbonPersonID OR teacherPersonIDs LIKE CONCAT('%', :gibbonPersonID, '%') OR studentPersonIDs LIKE CONCAT('%', :gibbonPersonID, '%'))";
         $result = $connection2->prepare($sql);
         $result->execute($data);
     } catch (PDOException $e) {
@@ -542,6 +543,18 @@ function getStudentsInClass($connection2, $gibbonCourseClassID) {
     try {
         $data = array("gibbonCourseClassID" => $gibbonCourseClassID);
         $sql = "SELECT gibbonPerson.gibbonPersonID, preferredName, surname FROM gibbonCourseClassPerson JOIN gibbonPerson ON (gibbonCourseClassPerson.gibbonPersonID = gibbonPerson.gibbonPersonID) WHERE gibbonCourseClassID=:gibbonCourseClassID AND role='Student'";
+        $result = $connection2->prepare($sql);
+        $result->execute($data);
+    } catch (PDOException $e) {
+    }   
+
+    return $result;
+}
+
+function getTeachersOfClass($connection2, $gibbonCourseClassID) {
+    try {
+        $data = array("gibbonCourseClassID" => $gibbonCourseClassID);
+        $sql = "SELECT gibbonCourseClassPerson.gibbonPersonID FROM gibbonCourseClassPerson WHERE gibbonCourseClassID=:gibbonCourseClassID AND role='Teacher'";
         $result = $connection2->prepare($sql);
         $result->execute($data);
     } catch (PDOException $e) {
