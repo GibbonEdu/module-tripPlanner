@@ -22,3 +22,7 @@ Moved breadcrumbs and return info above checks in trips_requestView.php, trips_r
 Striped html tags from description in trips_manage.php
 Set max string length for description in trips_manage.php
 Implemented a system to check if a classes needs to be cover because of the requested trip and to check if a student has missed a class that they will miss agian if they go on the requested trip.
+Fixed incorrect redirects in trips_requestViewProcess.php, trips_requestEditProcess.php and trips_requestEditProcess.php.
+Fixed a bug where you could not use the actions in trips_requestViewProcess.php, trips_requestEditProcess.php and trips_requestEditProcess.php.
+Made trips_requestApproveProcess.php redirect to trips_manage.php on a successful return.
+Fixed a bug where trips_requestEditProcess.php didn't work.

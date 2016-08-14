@@ -19,6 +19,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     //Acess denied
     $URL .= "trips_manage&return=error0";
     header("Location: {$URL}");
+    exit();
 } else {
     if (isset($_POST["tripPlannerRequestID"])) {
         $tripPlannerRequestID = $_POST["tripPlannerRequestID"];
@@ -30,6 +31,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             } else {
                 $URL .= "&return=error1";
                 header("Location: {$URL}");
+                exit();
             }
 
             if (isset($_POST["comment"])) {
@@ -37,6 +39,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             } elseif ($approval == "Comment") {
                 $URL .= "&return=error1";
                 header("Location: {$URL}");
+                exit();
             }
 
             if ($approval == "Approval - Partial") {
@@ -55,6 +58,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                     } catch (PDOException $e) {
                         $URL .= "&return=error2";
                         header("Location: {$URL}");
+                        exit();
                     }
 
                     $done = $result->rowCount() == 0;
@@ -70,6 +74,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                     } catch (PDOException $e) {
                         $URL .= "&return=error2";
                         header("Location: {$URL}");
+                        exit();
                     }
 
                     requestNotification($guid, $connection2, $tripPlannerRequestID, "Approved");
@@ -82,6 +87,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                     } catch (PDOException $e) {
                         $URL .= "&return=error2";
                         header("Location: {$URL}");
+                        exit();
                     }
 
                     $message = __($guid, 'A trip request is awaiting your approval.');
@@ -91,6 +97,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                 if (!logEvent($connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"], $approval, $comment)) {
                     $URL .= "&return=error2";
                     header("Location: {$URL}");
+                    exit();
                 }
             } elseif ($approval == "Rejection") {
                 try {
@@ -101,25 +108,30 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                 } catch (PDOException $e) {
                     $URL .= "&return=error2";
                     header("Location: {$URL}");
+                    exit();
                 }
                 requestNotification($guid, $connection2, $tripPlannerRequestID, "Rejected");
             } elseif ($approval == "Comment") {
                 if (!logEvent($connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"], "Comment", $comment)) {
                     $URL .= "&return=error2";
                     header("Location: {$URL}");
+                    exit();
                 }
                 requestNotification($guid, $connection2, $tripPlannerRequestID, "Comment");
             }
 
-            $URL .= "&return=success0";
+            $URL = $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_manage&return=success0";
             header("Location: {$URL}");
+            exit();
         } else {
             $URL .= "trips_requestView.php&tripPlannerRequestID=" . $tripPlannerRequestID . "&return=error0";
             header("Location: {$URL}");
+            exit();
         }
     } else {
         $URL .= "trips_manage&return=error1";
         header("Location: {$URL}");
+        exit();
     }
 }   
 ?>
