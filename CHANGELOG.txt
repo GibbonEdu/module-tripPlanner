@@ -26,3 +26,6 @@ Fixed incorrect redirects in trips_requestViewProcess.php, trips_requestEditProc
 Fixed a bug where you could not use the actions in trips_requestViewProcess.php, trips_requestEditProcess.php and trips_requestEditProcess.php.
 Made trips_requestApproveProcess.php redirect to trips_manage.php on a successful return.
 Fixed a bug where trips_requestEditProcess.php didn't work.
+Fixed a bug where you could not delete Approvers.
+Fixed a bug where you could not edit Approvers.
+Fixed a typo in the breadcrumbs of trips_editApprover.php.

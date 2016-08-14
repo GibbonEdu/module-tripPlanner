@@ -62,16 +62,19 @@ function getApprover($connection2, $tripPlannerApproverID)
         $sql = "SELECT * FROM tripPlannerApprovers WHERE tripPlannerApproverID=:tripPlannerApproverID";
         $result = $connection2->prepare($sql);
         $result->execute($data);
+        if($result->rowCount() == 1) {
+            return $result->fetch();
+        }
     } catch (PDOException $e) {
     }
 
-    return $result->fetch();
+    return null;
 }
 
 function approverExists($connection2, $tripPlannerApproverID)
 {
     $approver = getApprover($connection2, $tripPlannerApproverID);
-    return ($approver->rowCount() == 1);
+    return $approver != null;
 }
 
 function isApprover($connection2, $gibbonPersonID)
