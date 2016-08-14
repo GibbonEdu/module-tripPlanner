@@ -62,7 +62,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             $relationFilter = $_POST["relationFilter"];
         }
 
-        if ($relationFilter == "MR") {
+        //This must be the FIRST filter check!
+        if ($relationFilter == "I") {
+            $data["teacherPersonID"] = $_SESSION[$guid]["gibbonPersonID"];
+            $sql .= " JOIN tripPlannerRequestPerson ON (tripPlannerRequestPerson.tripPlannerRequestID = tripPlannerRequests.tripPlannerRequestID) WHERE (tripPlannerRequestPerson.role='Teacher' AND :teacherPersonID = tripPlannerRequestPerson.gibbonPersonID OR teacherPersonIDs LIKE CONCAT('%', :teacherPersonID, '%'))"; 
+            $connector = " AND ";
+        } elseif ($relationFilter == "MR") {
             $data["creatorPersonID"] = $_SESSION[$guid]["gibbonPersonID"];
             $sql .= $connector . "tripPlannerRequests.creatorPersonID=:creatorPersonID";
             if ($connector == " WHERE ") {
@@ -73,12 +78,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         } elseif (strpos($relationFilter, "DR") !== false) {
             $data["gibbonDepartmentID"] = substr($relationFilter, 2);
             $sql .= $connector . ":gibbonDepartmentID IN (SELECT gibbonDepartmentID FROM gibbonDepartmentStaff WHERE gibbonPersonID = tripPlannerRequests.creatorPersonID)";
-            if ($connector == " WHERE ") {
-                $connector = " AND ";
-            }
-        } elseif ($relationFilter == "I") {
-            $data["teacherPersonID"] = $_SESSION[$guid]["gibbonPersonID"];
-            $sql .= $connector . "teacherPersonIDs LIKE CONCAT('%', :teacherPersonID, '%')";
             if ($connector == " WHERE ") {
                 $connector = " AND ";
             }
@@ -243,6 +242,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         <?php
         } else {
             $rowCount = 0;
+            $descriptionLength = 100;
             while ($row = $result->fetch()) {
                 $show = true;
                 if ($relationFilter == "Awaiting My Approval" && $ama) {
@@ -257,7 +257,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                     }
                     print "<tr class='$class'>";
                         print "<td style='width:20%'>" . $row['title'] . "</td>";
-                        print "<td>" . $row['description'] . "</td>";
+                        $descriptionText = strip_tags($row['description']);
+                        if (strlen($descriptionText)>$descriptionLength) {
+                            $descriptionText = substr($descriptionText, 0, $descriptionLength) . "...";
+                        }
+                        print "<td>" . $descriptionText . "</td>";
                         print "<td style='width:20%'>" . $row['preferredName'] . " " . $row["surname"] . "</td>";
                         print "<td style='width:12%'>";
                             print $row['status'] . "</br>";

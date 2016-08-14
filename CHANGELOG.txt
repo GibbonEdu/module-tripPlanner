@@ -4,3 +4,28 @@ CHANGELOG
 v0.0.01
 -------
 First release.
+
+v0.0.02
+-------
+Fixed the page not rendering in trips_manageApprovers.php
+Fixed Add Approver button not showing up if the user's highest action was Manage Approvers_full.
+Moved return information to correct place in trips_manageApprovers.php
+Added setting to set the warning threshold for number of missed classes by a student in trips_manageSettings.php
+Fixed the edit record text now showing up in trips_submitRequst.php
+Fixed LiveValidation not updating on the date field in trips_submitRequest.php
+Fixed Edit Approver button not showing up if the user's highest action was Manage Approvers_full.
+Changed trips_addApproverProcess.php to redirect back to trips_addApprover.php on a successful additon.
+Added edit record text to success info in trips_addApprover.php
+Normalised studentPersonIDs and teacherPersonIds (Information will be put into the new database when the issue is requested).
+Fixed trips_submitRequestProcess.php not redirecting in the case of a database faliure.
+Moved breadcrumbs and return info above checks in trips_requestView.php, trips_requestEdit.php and trips_requestApprove.php
+Striped html tags from description in trips_manage.php
+Set max string length for description in trips_manage.php
+Implemented a system to check if a classes needs to be cover because of the requested trip and to check if a student has missed a class that they will miss agian if they go on the requested trip.
+Fixed incorrect redirects in trips_requestViewProcess.php, trips_requestEditProcess.php and trips_requestEditProcess.php.
+Fixed a bug where you could not use the actions in trips_requestViewProcess.php, trips_requestEditProcess.php and trips_requestEditProcess.php.
+Made trips_requestApproveProcess.php redirect to trips_manage.php on a successful return.
+Fixed a bug where trips_requestEditProcess.php didn't work.
+Fixed a bug where you could not delete Approvers.
+Fixed a bug where you could not edit Approvers.
+Fixed a typo in the breadcrumbs of trips_editApprover.php.

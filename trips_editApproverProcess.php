@@ -12,6 +12,9 @@ date_default_timezone_set($_SESSION[$guid]["timezone"]);
 
 $URL = $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/";
 
+$pdo = new Gibbon\sqlConnection();
+$connection2 = $pdo->getConnection();
+
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_editApprover.php')) {
     //Acess denied
     $URL .= "trips_manageApprovers.php&return=error0";
@@ -47,7 +50,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_editAp
 
     $expenseApprovalType = getSettingByScope($connection2, "Trip Planner", "requestApprovalType");
     if ($expenseApprovalType == "Chain Of All") {
-        $sequenceNumber == null;
+        $sequenceNumber = null;
         if (isset($_POST["sequenceNumber"])) {
             if ($_POST["sequenceNumber"] != null && $_POST["sequenceNumber"] != "") {
                 $sequenceNumber = abs($_POST["sequenceNumber"]);

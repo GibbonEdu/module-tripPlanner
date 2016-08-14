@@ -69,13 +69,15 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_addApp
             $sql = "INSERT INTO tripPlannerApprovers SET gibbonPersonID=:gibbonPersonID, sequenceNumber=:sequenceNumber, gibbonPersonIDCreator=:gibbonPersonIDCreator, timestampCreator=:timestampCreator";
             $result = $connection2->prepare($sql);
             $result->execute($data);
+            $tripPlannerApproverID = $connection2->lastInsertId();
         } catch (PDOException $e) {
             $URL .= "trips_addApprover.php&return=error2";
             header("Location: {$URL}");
             exit();
         }
 
-        $URL .= "trips_manageApprovers.php&return=success0";
+
+        $URL .= "trips_addApprover.php&return=success0&tripPlannerApproverID=" . $tripPlannerApproverID;
         header("Location: {$URL}");
     }
 }   

@@ -112,6 +112,37 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                 </td>
             </tr>
             <tr>
+                <?php
+                    try {
+                        $sql = "SELECT * FROM gibbonSetting WHERE scope='Trip Planner' AND name='missedClassWarningThreshold'";
+                        $result = $connection2->prepare($sql);
+                        $result->execute();
+                    } catch (PDOException $e) { 
+                        print "<div class='error'>" . $e->getMessage() . "</div>"; 
+                    }
+
+                    $row = $result->fetch();
+                ?>
+                <td>
+                    <b><?php print _($row["nameDisplay"]) ?> *</b><br/>
+                    <span style="font-size: 90%"><i>
+                        <?php
+                        if ($row["description"] != "") {
+                            print _($row["description"]);
+                        } 
+                        ?>
+                    </i></span>
+                </td>
+                <td class='right'>
+                    <input name="<?php print $row["name"]; ?>" id="<?php print $row["name"]; ?>" value="<?php print $row["value"]; ?>" type="text" style="width: 300px">
+                    <script type="text/javascript">
+                        var numField=new LiveValidation('<?php print $row["name"]; ?>');
+                        numField.add(Validate.Numericality, { minimum: 0 } );
+                        numField.add(Validate.Presence);
+                    </script>
+                </td>
+            </tr>
+            <tr>
                 <td>
                     <span style="font-size: 90%"><i>* <?php print _("denotes a required field"); ?></i></span>
                 </td>
