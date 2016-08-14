@@ -12,7 +12,7 @@ Fixed Add Approver button not showing up if the user's highest action was Manage
 Moved return information to correct place in trips_manageApprovers.php
 Added setting to set the warning threshold for number of missed classes by a student in trips_manageSettings.php
 Fixed the edit record text now showing up in trips_submitRequst.php
-Fixed LiveValidation not updating on the date fieldin trips_submitRequest.php
+Fixed LiveValidation not updating on the date field in trips_submitRequest.php
 Fixed Edit Approver button not showing up if the user's highest action was Manage Approvers_full.
 Changed trips_addApproverProcess.php to redirect back to trips_addApprover.php on a successful additon.
 Added edit record text to success info in trips_addApprover.php
