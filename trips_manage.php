@@ -198,11 +198,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
 
         <?php
             try {
-                // foreach (array_keys($data) as $datumKey) {
-                //     $datum = $data[$datumKey];
-                //     print $datumKey . ": " . $datum . ", ";
-                // }
-                // print "<br>" . $sql;
                 $result = $connection2->prepare($sql);
                 $result->execute($data);
             } catch (PDOException $e) {
