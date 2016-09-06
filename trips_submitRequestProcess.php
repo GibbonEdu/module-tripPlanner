@@ -21,7 +21,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     header("Location: {$URL}");
 } else {    
     $date = new DateTime();
-    $items = array("title", "description", "date", "startTime", "endTime", "location", "riskAssessment", "teachersSelected", "studentsSelected", "totalCost", "order");
+    $items = array("title", "description", "date", "startTime", "endTime", "location", "riskAssessment", "teachersSelected", "studentsSelected", "order");
     $data = array("creatorPersonID" => $_SESSION[$guid]["gibbonPersonID"], "timestampCreation" => $date->format('Y-m-d H:i:s'), "gibbonSchoolYearID" => $_SESSION[$guid]["gibbonSchoolYearID"]);
     $sql = "INSERT INTO tripPlannerRequests SET creatorPersonID=:creatorPersonID, timestampCreation=:timestampCreation, gibbonSchoolYearID=:gibbonSchoolYearID, ";
     $people = array();
@@ -92,6 +92,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             $result2 = $connection2->prepare($sql2);
             $result2->execute($person);
         }
+        notifyApprovers($guid, $connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"]);
     } catch (PDOException $e) {
         $URL .= "&return=error2";
         header("Location: {$URL}");

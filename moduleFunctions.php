@@ -30,7 +30,7 @@ function getApprovers($connection2)
     try {
         $sql = "SELECT tripPlannerApproverID, tripPlannerApprovers.gibbonPersonID, sequenceNumber FROM tripPlannerApprovers JOIN gibbonPerson ON tripPlannerApprovers.gibbonPersonID=gibbonPerson.gibbonPersonID ORDER BY ";
         $requestApprovalType = getSettingByScope($connection2, "Trip Planner", "requestApprovalType");
-        if ($requestApprovalType == "Chain Of") {
+        if ($requestApprovalType == "Chain Of All") {
             $sql .= "sequenceNumber, ";
         }
         $sql .= "surname, preferredName";
@@ -154,7 +154,7 @@ function needsApproval($connection2, $tripPlannerRequestID, $gibbonPersonID)
 function getTrip($connection2, $tripPlannerRequestID) {
     try {
         $data = array("tripPlannerRequestID" => $tripPlannerRequestID);
-        $sql = "SELECT creatorPersonID, timestampCreation, title, description, teacherPersonIDs, studentPersonIDs, location, date, startTime, endTime, riskAssessment, totalCost, status FROM tripPlannerRequests WHERE tripPlannerRequestID=:tripPlannerRequestID";
+        $sql = "SELECT creatorPersonID, timestampCreation, title, description, teacherPersonIDs, studentPersonIDs, location, date, startTime, endTime, riskAssessment, status FROM tripPlannerRequests WHERE tripPlannerRequestID=:tripPlannerRequestID";
         $result = $connection2->prepare($sql);
         $result->execute($data);
         if($result->rowCount() == 1) {
@@ -425,6 +425,24 @@ function requestNotification($guid, $connection2, $tripPlannerRequestID, $action
 
     $owner = getOwner($connection2, $tripPlannerRequestID);
     setNotification($connection2, $guid, $owner, $message, "Trip Planner", "/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID=" . $tripPlannerRequestID);
+}
+
+function notifyApprovers($guid, $connection2, $tripPlannerRequestID, $owner) {
+    $approvers = getApprovers($connection2)->fetchAll();
+    if (isset($approvers) && !empty($approvers) && is_array($approvers)) {
+        $requestApprovalType = getSettingByScope($connection2, "Trip Planner", "requestApprovalType");
+        if($requestApprovalType != null) {
+            if ($requestApprovalType == "One Of" || $requestApprovalType == "Two Of") {
+                foreach ($approvers as $approver) {
+                    if ($approver["gibbonPersonID"] != $owner) {
+                        setNotification($connection2, $guid, $approver['gibbonPersonID'], "A new trip has ben requested.", "Trip Planner", "/index.php?q=/modules/Trip Planner/trips_requestApprove.php&tripPlannerRequestID=" . $tripPlannerRequestID);   
+                    }
+                }
+            } else {
+                setNotification($connection2, $guid, $approvers[0]['gibbonPersonID'], "A new trip has ben requested.", "Trip Planner", "/index.php?q=/modules/Trip Planner/trips_requestApprove.php&tripPlannerRequestID=" . $tripPlannerRequestID);   
+            }
+        }
+    }
 }
 
 function makeCostBlock($guid, $connection2, $i, $outerBlock = TRUE)
@@ -854,13 +872,19 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                 <table class='noIntBorder' cellspacing='0' style='width:100%;'>
                                     <tr>
                                         <?php
-                                            for ($i = 0; $i < count($teachers); $i++) {
-                                                $teacher = $teachers[$i];
+                                            $teacherCount = count($teachers);
+                                            $teacherCount += 5 - ($teacherCount % 5);
+                                            for ($i = 0; $i < $teacherCount; $i++) {
                                                 if ($i % 5 == 0) {
                                                     print "</tr>";
                                                     print "<tr>";
                                                 } 
-                                                getPersonBlock($guid, $connection2, $teacher, "Staff");
+                                                if (isset($teachers[$i])) {
+                                                    getPersonBlock($guid, $connection2, $teachers[$i], "Staff");
+                                                } else {
+                                                    print "<td>";
+                                                    print "</td>";
+                                                }
                                             } 
                                         ?>
                                     </tr>
@@ -873,13 +897,19 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                 <table class='noIntBorder' cellspacing='0' style='width:100%;'>
                                     <tr>
                                         <?php
-                                            for ($i = 0; $i < count($students); $i++) {
-                                                $student = $students[$i];
+                                            $studentCount = count($students);
+                                            $studentCount += 5 - ($studentCount % 5);
+                                            for ($i = 0; $i < $studentCount; $i++) {
                                                 if ($i % 5 == 0) {
                                                     print "</tr>";
                                                     print "<tr>";
                                                 } 
-                                                getPersonBlock($guid, $connection2, $student, "Student");
+                                                if (isset($students[$i])) {
+                                                    getPersonBlock($guid, $connection2, $students[$i], "Student");
+                                                } else {
+                                                    print "<td>";
+                                                    print "</td>";
+                                                }
                                             } 
                                         ?>
                                     </tr>
@@ -937,8 +967,10 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                         } catch (PDOException $e) {
                                             print "<div class='error'>".$e->getMessage().'</div>';
                                         }
+                                        $totalCost = 0;
                                         $count = 0;
                                         while ($rowCosts = $resultCosts->fetch()) {
+                                            $totalCost += $rowCosts['cost'];
                                             $rowNum = 'odd';
                                             if ($count % 2 == 0) {
                                                 $rowNum = 'even';
@@ -971,14 +1003,14 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                 <b><?php echo __($guid, 'Total Cost') ?> *</b><br/>
                             </td>
                             <td class="right">
-                                <input readonly name="totalCost" id="totalCost" maxlength=60 value="<?php echo $_SESSION[$guid]['currency'] . ' ' . $request['totalCost']; ?>" type="text" class="standardWidth">
+                                <input readonly name="totalCost" id="totalCost" maxlength=60 value="<?php echo $_SESSION[$guid]['currency'] . ' ' . $totalCost; ?>" type="text" class="standardWidth">
                             </td>
                         </tr>
                     </tbody>
                     <tr class="break">
                         <td colspan=2>
                             <h3>
-                                Planner Overlaps
+                                Timetable Overlaps
                                 <?php print "<div id='showPlanner'  title='" . __($guid, 'Show/Hide') . "' style='margin-top: -5px; margin-left: 3px; padding-right: 1px; float: right; width: 24px; height: 25px; background-image: url(\"" . $_SESSION[$guid]["absoluteURL"] . "/themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/minus.png\")'></div>"; ?>
                             </h3>
                             <script type="text/javascript">
@@ -1008,7 +1040,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                             <?php print __($guid, 'Students Involved'); ?>
                                         </th>
                                         <th style='text-align: left; width: 10%'>
-                                            <?php print __($guid, 'Requires Cover'); ?>
+                                            <?php print __($guid, 'May Require Cover'); ?>
                                         </th>
                                         <th style='text-align: left; width:10%'>
                                             <?php print __($guid, 'Actions'); ?>
@@ -1258,4 +1290,10 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
         print "</div>";
     }
 }
+
+function sort2DArray($array, $key, $sortStyle=SORT_ASC, $sortType=SORT_STRING) {
+        $column = array_column($array, $key);
+        array_multisort($column, $sortStyle, $sortType, $array);
+        return $array;
+    }
 ?>

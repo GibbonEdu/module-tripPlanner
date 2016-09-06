@@ -46,9 +46,30 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         $sql = "SELECT tripPlannerRequests.tripPlannerRequestID, tripPlannerRequests.timestampCreation, tripPlannerRequests.title, tripPlannerRequests.description, tripPlannerRequests.status, gibbonPerson.preferredName, gibbonPerson.surname FROM tripPlannerRequests JOIN gibbonPerson ON tripPlannerRequests.creatorPersonID = gibbonPerson.gibbonPersonID";
         $connector = " WHERE ";
 
+        $relations = array();
+        $relationFilter = "MR";
+
+        if ($highestAction == "Manage Trips_full") {
+            $relations[] = "All Requests";
+            $relationFilter = "";
+        }
+
+        $relations["MR"] = "My Requests";
+        $relations["I"] = "Involved";
+
+        if ($isHOD) {
+            while ($department = $departments->fetch()) {
+                $relations["DR" . $department["gibbonDepartmentID"]] = "Department Requests - " . $department["nameShort"];
+            }
+        }
+
+        if ($ama) {
+            $relations["AMA"] = "Awaiting My Approval";
+            $relationFilter = "AMA";
+        }
+
         $statusFilter = "Requested";
         $yearFilter = $_SESSION[$guid]["gibbonSchoolYearID"];
-        $relationFilter = "MR";
 
         if (isset($_POST["statusFilter"])) {
             $statusFilter = $_POST["statusFilter"];
@@ -130,25 +151,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                     </td>
                     <td class="right">
                         <?php
-                        $relations = array();
-
-                        if ($highestAction == "Manage Trips_full") {
-                            $relations[] = "All Requests";
-                        }
-
-                        $relations["MR"] = "My Requests";
-                        $relations["I"] = "Involved";
-
-                        if ($isHOD) {
-                            while ($department = $departments->fetch()) {
-                                $relations["DR" . $department["gibbonDepartmentID"]] = "Department Requests - " . $department["nameShort"];
-                            }
-                        }
-
-                        if ($ama) {
-                            $relations["AMA"] = "Awaiting My Approval";
-                        }
-
                         echo "<select name='relationFilter' id='relationFilter' style='width:302px'>";
                             foreach (array_keys($relations) as $relationKey) {
                                 $relation = $relations[$relationKey];
@@ -198,11 +200,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
 
         <?php
             try {
-                // foreach (array_keys($data) as $datumKey) {
-                //     $datum = $data[$datumKey];
-                //     print $datumKey . ": " . $datum . ", ";
-                // }
-                // print "<br>" . $sql;
                 $result = $connection2->prepare($sql);
                 $result->execute($data);
             } catch (PDOException $e) {

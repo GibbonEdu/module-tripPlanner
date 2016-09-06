@@ -23,7 +23,7 @@ $description = "A trip planner module for Gibbon.";
 $entryURL = "trips_manage.php";
 $type = "Additional";
 $category = "Learn"; 
-$version = "0.0.02"; 
+$version = "0.0.03"; 
 $author = "Ray Clark"; 
 $url = "https://github.com/raynichc/Trip-Planner";
 
@@ -53,7 +53,6 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequests` (
     `startTime` time NOT NULL,
     `endTime` time NOT NULL,
     `riskAssessment` text NOT NULL,
-    `totalCost` decimal(12, 2) NOT NULL,
     `status` ENUM('Requested', 'Approved', 'Rejected', 'Cancelled') DEFAULT 'Requested' NOT NULL,
     `gibbonSchoolYearID` int(3) unsigned zerofill NOT NULL,
     `gibbonPersonIDUpdate` int(10) unsigned zerofill NULL,
@@ -139,6 +138,23 @@ $actionRows[$actionCount]["URLList"] = "trips_submitRequest.php";
 $actionRows[$actionCount]["entryURL"] = "trips_submitRequest.php"; 
 $actionRows[$actionCount]["defaultPermissionAdmin"] = "Y";
 $actionRows[$actionCount]["defaultPermissionTeacher"] = "Y";
+$actionRows[$actionCount]["defaultPermissionStudent"] = "N"; 
+$actionRows[$actionCount]["defaultPermissionParent"] = "N";
+$actionRows[$actionCount]["defaultPermissionSupport"] = "N"; 
+$actionRows[$actionCount]["categoryPermissionStaff"] = "Y"; 
+$actionRows[$actionCount]["categoryPermissionStudent"] = "N"; 
+$actionRows[$actionCount]["categoryPermissionParent"] = "N"; 
+$actionRows[$actionCount]["categoryPermissionOther"] = "N"; 
+$actionCount++;
+
+$actionRows[$actionCount]["name"] = "Submit Request_all"; 
+$actionRows[$actionCount]["precedence"] = "1"; 
+$actionRows[$actionCount]["category"] = "";
+$actionRows[$actionCount]["description"] = "Submit a trip request.";
+$actionRows[$actionCount]["URLList"] = "trips_submitRequest.php"; 
+$actionRows[$actionCount]["entryURL"] = "trips_submitRequest.php"; 
+$actionRows[$actionCount]["defaultPermissionAdmin"] = "Y";
+$actionRows[$actionCount]["defaultPermissionTeacher"] = "N";
 $actionRows[$actionCount]["defaultPermissionStudent"] = "N"; 
 $actionRows[$actionCount]["defaultPermissionParent"] = "N";
 $actionRows[$actionCount]["defaultPermissionSupport"] = "N"; 

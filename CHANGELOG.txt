@@ -29,3 +29,12 @@ Fixed a bug where trips_requestEditProcess.php didn't work.
 Fixed a bug where you could not delete Approvers.
 Fixed a bug where you could not edit Approvers.
 Fixed a typo in the breadcrumbs of trips_editApprover.php.
+
+v0.0.03
+-------
+Removed Total Cost field from trips_sumbmitRequest.php
+Total Cost is now calculated in trips_requestView.php, trips_requestEdit.php and trips_requestApprove.php
+Approvers now start with the Relation Filter "Awaiting my Approval"
+Approvers now get a notification if a trip has been requested.
+Added the ability to sort students by Form or Name in trips_submitRequest.php
+Added the ability to add students by Class in trips_submitRequest.php
