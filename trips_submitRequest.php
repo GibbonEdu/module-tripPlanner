@@ -46,6 +46,39 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     ?>
 
     <script type="text/javascript">
+        function sort2DArrayJS(array, key) {
+            array.sort(function(a, b) {
+                var aVar = a.formName;
+                var bVar = b.formName;
+                var oAVar = a.studentName;
+                var oBVar = b.studentName;
+                if (key == "studentName") {
+                    aVar = a.studentName;
+                    bVar = b.studentName;
+                    oAVar = a.formName;
+                    oBVar = b.formName;
+                }
+                if (aVar > bVar) {
+                    return 1;
+                }
+
+                if (aVar < bVar) {
+                    return -1;
+                }
+
+                if(oAVar > oBVar) {
+                    return 1;
+                }
+
+                if(oAVar < oBVar) {
+                    return -1
+                }
+
+                return 0;
+            });
+            return array;
+        }
+
         function optionTransfer(select0Name, select1Name) {
             var select0 = document.getElementById(select0Name);
             var select1 = document.getElementById(select1Name);
@@ -57,6 +90,13 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                         select1.add(option, null);
                     } catch (ex) {
                         select1.add(option);
+                    }
+                    var gibbonPersonID = option.value;
+                    for (var i = 0; i < allStudents.length; i++) {
+                        if(allStudents[i]['gibbonPersonID'] == gibbonPersonID) {
+                            allStudents[i]['selected'] = !allStudents[i]['selected'];
+                            break;
+                        }
                     }
                 }
             }
@@ -192,30 +232,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
                 </td>
             </tr>
-            <tr>
-                <td> 
-                    <b><?php print __($guid, 'Total Cost') ?> *</b><br/>
-                    <span style="font-size: 90%">
-                        <i>
-                        <?php
-                        if ($_SESSION[$guid]["currency"] != "") {
-                            print sprintf(__($guid, 'Numeric value of the fee in %1$s.'), $_SESSION[$guid]["currency"]);
-                        } else {
-                            print __($guid, "Numeric value of the fee.");
-                        }
-                        ?>
-                        </i>
-                    </span>
-                </td>
-                <td class="right">
-                    <input name="totalCost" id="totalCost" maxlength=15 value="" type="text" style="width: 300px">
-                    <script type="text/javascript">
-                        var totalCost=new LiveValidation('totalCost');
-                        totalCost.add(Validate.Presence);
-                        totalCost.add( Validate.Format, { pattern: /^(?:\d*\.\d{1,2}|\d+)$/, failureMessage: "Invalid number format!" } );
-                    </script>
-                </td>
-            </tr>
             <tr class='break'>
                 <td colspan=2> 
                     <h3><?php print __($guid, 'Costs') ?></h3>
@@ -252,7 +268,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                                             $costBlock = "$('#cost').append('<div id=\"costOuter' + costCount + '\"><img style=\"margin: 10px 0 5px 0\" src=\"" . $_SESSION[$guid]["absoluteURL"] . "/themes/Default/img/loading.gif\" alt=\"Loading\" onclick=\"return false;\" /><br/>Loading</div>');";
                                             $costBlock .= "$(\"#costOuter\" + costCount).load(\"" . $_SESSION[$guid]["absoluteURL"] . "/modules/Trip%20Planner/trips_submitRequestAddBlockCostAjax.php\",\"id=\" + costCount);";
                                             $costBlock .= "costCount++;";
-                                            //$costBlock.="$('#newCost').val('0');";
                                         ?>
                                         <script type='text/javascript'>
                                             function addCost() {
@@ -260,7 +275,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                                                 <?php print $costBlock ?>
                                             }
                                         </script>
-                                        
                                     </td>
                                 </tr>
                             </table>
@@ -311,31 +325,134 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                     <select name='teachers1' id='teachers1' multiple style="float: right; margin-left: 0px !important; width: 302px; height: 150px;"></select>
                 </td>
             </tr>
+            <?php
+                $allStudents = array();
+                try {
+                    $dataSelect = array('gibbonSchoolYearID' => $_SESSION[$guid]['gibbonSchoolYearID']);
+                    $sqlSelect = "SELECT gibbonPerson.gibbonPersonID, preferredName, surname, gibbonRollGroup.name AS name FROM gibbonPerson, gibbonStudentEnrolment, gibbonRollGroup WHERE gibbonPerson.gibbonPersonID=gibbonStudentEnrolment.gibbonPersonID AND gibbonStudentEnrolment.gibbonRollGroupID=gibbonRollGroup.gibbonRollGroupID AND status='FULL' AND (dateStart IS NULL OR dateStart<='".date('Y-m-d')."') AND (dateEnd IS NULL  OR dateEnd>='".date('Y-m-d')."') AND gibbonRollGroup.gibbonSchoolYearID=:gibbonSchoolYearID ORDER BY name, surname, preferredName";
+                    $resultSelect = $connection2->prepare($sqlSelect);
+                    $resultSelect->execute($dataSelect);
+                } catch (PDOException $e) {
+                }
+                while ($rowSelect = $resultSelect->fetch()) {
+                    $student = array("selected" => false);
+                    $student["studentName"] = formatName('', htmlPrep($rowSelect['preferredName']), htmlPrep($rowSelect['surname']), 'Student', true);
+                    $student["formName"] = $rowSelect["name"];
+                    $student["gibbonPersonID"] = $rowSelect["gibbonPersonID"];
+                    $allStudents[] = $student;
+                }
+                $js_array = json_encode($allStudents);
+            ?>
+            <script type="text/javascript">
+                var sortBy = "formName";
+                var allStudents = <?php print $js_array; ?>;
+                function changeSort() {
+                    if (sortBy == "studentName") {
+                        sortBy = "formName";
+                        document.getElementById('studentSort').value = "Sort by Student";
+                    } else {
+                        sortBy = "studentName";
+                        document.getElementById('studentSort').value = "Sort by Form";
+                    }
+                    allStudents = sort2DArrayJS(allStudents, sortBy);
+                    resetArrays();
+                }
+
+                function resetArrays() {
+                    var students = document.getElementById('students');
+                    var students1 = document.getElementById('students1');
+                    for(var i = Math.max(students.length, students1.length) - 1; i >=0 ; i--) {
+                        if(students.options[i] != null) {
+                            students.remove(i);
+                        }
+
+                        if(students1.options[i] != null) {
+                            students1.remove(i);
+                        }
+                    }
+
+                    for(var i = 0; i < allStudents.length; i++) {
+                        var name = allStudents[i]['formName'] + " - " + allStudents[i]['studentName'];
+                        if (sortBy == "studentName") {
+                            name = allStudents[i]['studentName'] + " (" + allStudents[i]['formName'] + ")";
+                        }
+                        var op = new Option(name, allStudents[i]['gibbonPersonID']);
+                        if (allStudents[i]['selected']) {
+                            try {
+                                students1.add(op, null);
+                            } catch (ex) {
+                                students1.add(op);
+                            }
+                        } else {
+                            try {
+                                students.add(op, null);
+                            } catch (ex) {
+                                students.add(op);
+                            }
+                        }
+                    }
+                }
+            </script>
             <tr>
                 <td colspan=2>
                     <b><?php print _('Students') ?> *</b></br>
                     <select name='students' id='students' multiple style="width: 302px; height: 150px; margin-left: 0px !important; float: left;">
                         <?php
-                            try {
-                                $data=array();
-                                $sql="SELECT gibbonPersonID, preferredName, surname FROM gibbonPerson WHERE gibbonRoleIDPrimary=003 AND status='Full' ORDER BY preferredName, surname ASC";
-                                $result=$connection2->prepare($sql);
-                                $result->execute($data);
-                            } catch (PDOException $e) {
-                            }
-
-                            while (($row = $result->fetch()) != null) {
-                                print "<option value='" . $row["gibbonPersonID"] . "'>" . $row["preferredName"] . " " . $row["surname"] . "</option>";
+                            foreach ($allStudents as $student) {
+                                print "<option value='" . $student["gibbonPersonID"] . "'>" . htmlPrep($student['formName']) . " - "  . $student["studentName"] . "</option>";
                             }
                         ?>
                     </select>
                     <div style="float: left; width: 136px; height: 148px; display: table; text-align:center;">
                         <div style="display: table-cell; vertical-align: middle;">
-                            <input type="button" value="Add" style="width: 75%;" onclick="optionTransfer('students', 'students1')" /></br>
-                            <input type="button" value="Remove" style="width: 75%;" onclick="optionTransfer('students1', 'students')" />
+                            <input type="button" id='studentSort' value="Sort by Name" style="width: 80%;" onclick="changeSort()" /></br>
+                            <input type="button" value="Add" style="width: 80%;" onclick="optionTransfer('students', 'students1')" /></br>
+                            <input type="button" value="Remove" style="width: 80%;" onclick="optionTransfer('students1', 'students')" />
                         </div>
                     </div>
                     <select name='students1' id='students1' multiple style="float: right; margin-left: 0px !important; width: 302px; height: 150px;"></select>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <b><?php print _('Add Class') ?></b></br>
+                </td>
+                <td class='right'>
+                    <?php
+                        $highestAction2 = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_submitRequest.php', $connection2);
+                    ?>
+                    <select name="gibbonCourseClassID" id="gibbonCourseClassID" style="width: 302px;">
+                        <?php
+                        try {
+                            if ($highestAction2 == 'Submit Request_all') {
+                                $dataSelect = array('gibbonSchoolYearID' => $_SESSION[$guid]['gibbonSchoolYearID']);
+                                $sqlSelect = 'SELECT gibbonCourseClassID, gibbonCourse.name, gibbonCourse.nameShort AS course, gibbonCourseClass.nameShort AS class FROM gibbonCourse JOIN gibbonCourseClass ON (gibbonCourse.gibbonCourseID=gibbonCourseClass.gibbonCourseID) WHERE gibbonSchoolYearID=:gibbonSchoolYearID ORDER BY course, class';
+                            } else {
+                                $dataSelect = array('gibbonSchoolYearID' => $_SESSION[$guid]['gibbonSchoolYearID'], 'gibbonPersonID' => $_SESSION[$guid]['gibbonPersonID']);
+                                $sqlSelect = "SELECT gibbonCourseClass.gibbonCourseClassID, gibbonCourse.name, gibbonCourse.nameShort AS course, gibbonCourseClass.nameShort AS class FROM gibbonCourse JOIN gibbonCourseClass ON (gibbonCourse.gibbonCourseID=gibbonCourseClass.gibbonCourseID) JOIN gibbonCourseClassPerson ON (gibbonCourseClassPerson.gibbonCourseClassID=gibbonCourseClass.gibbonCourseClassID) WHERE role='Teacher' AND gibbonSchoolYearID=:gibbonSchoolYearID AND gibbonPersonID=:gibbonPersonID ORDER BY course, class";
+                            }
+                            $resultSelect = $connection2->prepare($sqlSelect);
+                            $resultSelect->execute($dataSelect);
+                        } catch (PDOException $e) {
+                        }
+                        while ($rowSelect = $resultSelect->fetch()) {
+                            echo "<option value='".$rowSelect['gibbonCourseClassID']."'>".htmlPrep($rowSelect['course']).'.'.htmlPrep($rowSelect['class']).' - '.$rowSelect['name'].'</option>';
+                        }
+                        ?>
+                    </select>
+                    <div style="width:300px; float:right">
+                        <script type="text/javascript">
+                            function addClass(type) {
+                                var gibbonCourseClassID = document.getElementById("gibbonCourseClassID").value;
+                                $("#addClassDiv").load("<?php print $_SESSION[$guid]["absoluteURL"] . '/modules/Trip%20Planner/trips_submitRequestAddClassAjax.php'?>", "gibbonCourseClassID=" + gibbonCourseClassID + "&type=" + type);
+                            }
+                        </script>
+                        <input type="button" value="Add" style="width: 145px; float:left;" onclick="addClass('Add')" /></br>
+                        <input type="button" value="Remove" style="width: 145px; margin-top: -11px;" onclick="addClass('Remove')" />
+                        
+                    </div>
+                    <div id='addClassDiv'>
+                    </div>
                 </td>
             </tr>
             <tr>
