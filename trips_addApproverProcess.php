@@ -42,6 +42,16 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_addApp
     } else {
         $sequenceNumber = 0;
     }
+    
+    $finalApprover = 0;
+    $riskAssessmentApproval = getSettingByScope($connection2, "Trip Planner", "riskAssessmentApproval");
+    if ($riskAssessmentApproval) {
+        if (isset($_POST["finalApprover"])) {
+            if($_POST["finalApprover"] != null && $_POST["finalApprover"] != "") {
+                $finalApprover = 1;
+            }
+        }
+    }
 
     try {
         $data = array("gibbonPersonID"=>$gibbonPersonID); 
@@ -65,8 +75,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_addApp
         header("Location: {$URL}");
     } else {  
         try {
-            $data = array("gibbonPersonID"=> $gibbonPersonID, "sequenceNumber"=> $sequenceNumber, "gibbonPersonIDCreator"=> $_SESSION[$guid]["gibbonPersonID"], "timestampCreator"=>date('Y-m-d H:i:s', time()));
-            $sql = "INSERT INTO tripPlannerApprovers SET gibbonPersonID=:gibbonPersonID, sequenceNumber=:sequenceNumber, gibbonPersonIDCreator=:gibbonPersonIDCreator, timestampCreator=:timestampCreator";
+            $data = array("gibbonPersonID"=> $gibbonPersonID, "sequenceNumber"=> $sequenceNumber, "gibbonPersonIDCreator"=> $_SESSION[$guid]["gibbonPersonID"], "timestampCreator"=>date('Y-m-d H:i:s', time()), "finalApprover" => $finalApprover);
+            $sql = "INSERT INTO tripPlannerApprovers SET gibbonPersonID=:gibbonPersonID, sequenceNumber=:sequenceNumber, gibbonPersonIDCreator=:gibbonPersonIDCreator, timestampCreator=:timestampCreator, finalApprover=:finalApprover";
             $result = $connection2->prepare($sql);
             $result->execute($data);
             $tripPlannerApproverID = $connection2->lastInsertId();
@@ -75,7 +85,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_addApp
             header("Location: {$URL}");
             exit();
         }
-
 
         $URL .= "trips_addApprover.php&return=success0&tripPlannerApproverID=" . $tripPlannerApproverID;
         header("Location: {$URL}");

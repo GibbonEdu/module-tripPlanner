@@ -23,7 +23,7 @@ $description = "A trip planner module for Gibbon.";
 $entryURL = "trips_manage.php";
 $type = "Additional";
 $category = "Learn"; 
-$version = "0.0.03"; 
+$version = "0.0.04"; 
 $author = "Ray Clark"; 
 $url = "https://github.com/raynichc/Trip-Planner";
 
@@ -37,6 +37,7 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerApprovers` (
     `timestampCreator` timestamp NULL,
     `gibbonPersonIDUpdate` int(10) unsigned zerofill NULL,
     `timestampUpdate` timestamp NULL,
+    `finalApprover` boolean DEFAULT 0 NULL,
     PRIMARY KEY (`tripPlannerApproverID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
 
@@ -53,7 +54,7 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequests` (
     `startTime` time NOT NULL,
     `endTime` time NOT NULL,
     `riskAssessment` text NOT NULL,
-    `status` ENUM('Requested', 'Approved', 'Rejected', 'Cancelled') DEFAULT 'Requested' NOT NULL,
+    `status` ENUM('Requested', 'Approved', 'Rejected', 'Cancelled', 'Awaiting Final Approval') DEFAULT 'Requested' NOT NULL,
     `gibbonSchoolYearID` int(3) unsigned zerofill NOT NULL,
     `gibbonPersonIDUpdate` int(10) unsigned zerofill NULL,
     `timestampUpdate` timestamp NULL,
@@ -83,7 +84,8 @@ $moduleTables[$tables++] = "INSERT INTO `gibbonSetting` (`gibbonSystemSettingsID
 VALUES
 (NULL, 'Trip Planner', 'requestApprovalType', 'Request Approval Type', 'The type of approval that a trip request has to go through.', 'One Of'),
 (NULL, 'Trip Planner', 'riskAssessmentTemplate', 'Risk Assessment Template', 'The template for the Risk Assessment.', ''),
-(NULL, 'Trip Planner', 'missedClassWarningThreshold', 'Missed Class Warning Threshold', 'The threshold for displaying a warning that student has missed a class too many times. Set to 0 to disable warnings.', '5');";
+(NULL, 'Trip Planner', 'missedClassWarningThreshold', 'Missed Class Warning Threshold', 'The threshold for displaying a warning that student has missed a class too many times. Set to 0 to disable warnings.', '5'),
+(NULL, 'Trip Planner', 'riskAssessmentApproval', 'Risk Assessment Approval', 'If this is enabled the Risk Assessment becomes an optional field until the trip has gone through approval. After this a Final Approval is required before the trip becomes approved.', '1');";
 
 $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestPerson` (
     `tripPlannerRequestPersonID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,

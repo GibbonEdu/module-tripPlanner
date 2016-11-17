@@ -21,16 +21,18 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     header("Location: {$URL}");
 } else {    
     $date = new DateTime();
-    $items = array("title", "description", "date", "startTime", "endTime", "location", "riskAssessment", "teachersSelected", "studentsSelected", "order");
+    $riskAssessmentApproval = getSettingByScope($connection2, "Trip Planner", "riskAssessmentApproval");
+    $items = array("title" => true, "description" => true, "location" => true, "date" => true, "endDate" => false, "startTime" => false, "endTime" => false, "riskAssessment" => !$riskAssessmentApproval, "teachersSelected" => true, "studentsSelected" => false, "order" => false);
     $data = array("creatorPersonID" => $_SESSION[$guid]["gibbonPersonID"], "timestampCreation" => $date->format('Y-m-d H:i:s'), "gibbonSchoolYearID" => $_SESSION[$guid]["gibbonSchoolYearID"]);
     $sql = "INSERT INTO tripPlannerRequests SET creatorPersonID=:creatorPersonID, timestampCreation=:timestampCreation, gibbonSchoolYearID=:gibbonSchoolYearID, ";
     $people = array();
 
-    foreach ($items as $item) {
+    foreach ($items as $item => $required) {
         if (isset($_POST[$item])) {
             if ($_POST[$item] != null && $_POST[$item] != "") {
                 $key = $item;
-                if ($item == "date") {
+                if ($item == "date" || $item == "endDate") {
+                    print $item;
                     $date = DateTime::createFromFormat("d/m/Y", $_POST[$item]);
                     $data[$item] = $date->format("Y-m-d H:i:s");
                 } elseif ($item == "teachersSelected" || $item == "studentsSelected") {
@@ -66,10 +68,14 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                     $sql .= $key . "=:" . $key . ", ";
                 }
             }
-        } else {
+        } elseif ($required) {
             $URL .= "&return=error1";
             header("Location: {$URL}");
             exit();
+        } else {
+            if ($item == "order") {
+                $costs = array();
+            }
         }
     }
 

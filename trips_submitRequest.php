@@ -17,6 +17,17 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+To whom it may concern,
+
+I am very sorry that you have to go throught this file and try to fix or maintain it.
+If I was in your position I would start from scratch and burn this file. Let no one
+see it and most of all don't go crazy trying to figure out how it works.
+
+Sincerly,
+Ray
+*/
+
 @session_start();
 
 //Module includes
@@ -79,23 +90,27 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             return array;
         }
 
-        function optionTransfer(select0Name, select1Name) {
+        function optionTransfer(select0Name, select1Name, students) {
             var select0 = document.getElementById(select0Name);
             var select1 = document.getElementById(select1Name);
             for (var i = select0.length - 1; i>=0; i--) {
                 var option = select0.options[i];
-                if (option.selected) {
-                    select0.remove(i);
-                    try {
-                        select1.add(option, null);
-                    } catch (ex) {
-                        select1.add(option);
-                    }
-                    var gibbonPersonID = option.value;
-                    for (var i = 0; i < allStudents.length; i++) {
-                        if(allStudents[i]['gibbonPersonID'] == gibbonPersonID) {
-                            allStudents[i]['selected'] = !allStudents[i]['selected'];
-                            break;
+                if (option != null) {
+                    if (option.selected) {
+                        select0.remove(i);
+                        try {
+                            select1.add(option, null);
+                        } catch (ex) {
+                            select1.add(option);
+                        }
+                        if(students) {
+                            var gibbonPersonID = option.value;
+                            for (var i = 0; i < allStudents.length; i++) {
+                                if(allStudents[i]['gibbonPersonID'] == gibbonPersonID) {
+                                    allStudents[i]['selected'] = !allStudents[i]['selected'];
+                                    break;
+                                }
+                            }
                         }
                     }
                 }
@@ -150,6 +165,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
     <form method="post" name="requestForm" action="<?php print $_SESSION[$guid]["absoluteURL"] . "/modules/Trip Planner/trips_submitRequestProcess.php" ?>" onsubmit="submitForm(); return true;">
         <table class='smallIntBorder' cellspacing='0' style="width: 100%">
+            <tr class='break'>
+                <td colspan=2> 
+                    <h3><?php print __($guid, 'Basic Information') ?></h3>
+                </td>
+            </tr>
             <tr>
                 <td style='width: 275px'>
                     <b><?php print _('Title') ?> *</b><br/>
@@ -168,57 +188,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                     <?php print getEditor($guid, TRUE, "description", "", 5, true, true, false); ?>               
                 </td>
             </tr>
-            <tr>
-                <td> 
-                    <b><?php print _('Date') ?> *</b><br/>
-                    <span style="font-size: 90%"><i><?php print $_SESSION[$guid]["i18n"]["dateFormat"]  ?></i></span>
-                </td>
-                <td class="right">
-                    <input name="date" id="date" maxlength=10 value="" type="text" style="width: 300px">
-                    <script type="text/javascript">
-                        var date=new LiveValidation('date');
-                        date.add(Validate.Presence);
-                        date.add(Validate.Format, {pattern: <?php if ($_SESSION[$guid]["i18n"]["dateFormatRegEx"]=="") {  print "/^(0[1-9]|[12][0-9]|3[01])[- /.](0[1-9]|1[012])[- /.](19|20)\d\d$/i"; } else { print $_SESSION[$guid]["i18n"]["dateFormatRegEx"]; } ?>, failureMessage: "Use <?php if ($_SESSION[$guid]["i18n"]["dateFormat"]=="") { print "dd/mm/yyyy"; } else { print $_SESSION[$guid]["i18n"]["dateFormat"]; }?>." } ); 
-                    </script>
-                    <script type="text/javascript">
-                        $(function() {
-                            $("#date").datepicker({
-                                onClose: function () {
-                                    this.focus();
-                                }
-                            });
-                        });
-                    </script>
-                </td>
-            </tr>
-            <tr>
-                <td> 
-                    <b><?php print _('Start Time') ?> *</b><br/>
-                    <span style="font-size: 90%"><i><?php print _('Format: hh:mm (24hr)') ?><br/></i></span>
-                </td>
-                <td class="right">
-                    <input name="startTime" id="startTime" maxlength=5 value="" type="text" style="width: 300px">
-                    <script type="text/javascript">
-                        var startTime=new LiveValidation('startTime');
-                        startTime.add(Validate.Presence);
-                        startTime.add( Validate.Format, {pattern: /^(0[0-9]|[1][0-9]|2[0-3])[:](0[0-9]|[1-5][0-9])/i, failureMessage: "Use hh:mm" } ); 
-                    </script>
-                </td>
-            </tr>
-            <tr>
-                <td> 
-                    <b><?php print _('End Time') ?> *</b><br/>
-                    <span style="font-size: 90%"><i><?php print _('Format: hh:mm (24hr)') ?><br/></i></span>
-                </td>
-                <td class="right">
-                    <input name="endTime" id="endTime" maxlength=5 value="" type="text" style="width: 300px">
-                    <script type="text/javascript">
-                        var endTime=new LiveValidation('endTime');
-                        endTime.add(Validate.Presence);
-                        endTime.add( Validate.Format, {pattern: /^(0[0-9]|[1][0-9]|2[0-3])[:](0[0-9]|[1-5][0-9])/i, failureMessage: "Use hh:mm" } ); 
-                    </script>
-                </td>
-            </tr>
             <tr> 
                 <td style='width: 275px'>
                     <b><?php print _('Location') ?> *</b><br/>
@@ -232,6 +201,122 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
                 </td>
             </tr>
+            <tr class='break'>
+                <td colspan=2> 
+                    <h3><?php print __($guid, 'Date & Time') ?></h3>
+                </td>
+            </tr>
+            <tr>
+                <td> 
+                    <b><?php print _('Multiple Days') ?></b><br/>
+                </td>
+                <script type="text/javascript">
+                    function adjustDays() {
+                        var allDay = document.getElementById("multiDays");
+                        if (allDay.checked) {
+                            $("#endDateArea").slideDown("fast", $("#endDateArea").css("display","table-row"));
+
+                        } else {
+                            $('#endDateArea').css("display","none");
+                        }
+                    }
+                </script>
+                <td class="right">
+                    <input type="checkbox" id="multiDays" value="multiDays" onchange="adjustDays()">
+                </td>
+            </tr>
+            <tr>
+                <td> 
+                    <b><?php print _('Date') ?> *</b><br/>
+                    <span style="font-size: 90%"><i><?php print $_SESSION[$guid]["i18n"]["dateFormat"]  ?></i></span>
+                </td>
+                <td class="right">
+                    <input name="date" id="date" maxlength=10 value="" type="text" style="width: 300px">
+                    <script type="text/javascript">
+                        var date = new LiveValidation('date');
+                        date.add(Validate.Presence);
+                        date.add(Validate.Format, {pattern: <?php if ($_SESSION[$guid]["i18n"]["dateFormatRegEx"] == "") { print "/^(0[1-9]|[12][0-9]|3[01])[- /.](0[1-9]|1[012])[- /.](19|20)\d\d$/i"; } else { print $_SESSION[$guid]["i18n"]["dateFormatRegEx"]; } ?>, failureMessage: "Use <?php if ($_SESSION[$guid]["i18n"]["dateFormat"]=="") { print "dd/mm/yyyy"; } else { print $_SESSION[$guid]["i18n"]["dateFormat"]; }?>." } ); 
+                    </script>
+                    <script type="text/javascript">
+                        $(function() {
+                            $("#date").datepicker({
+                                onClose: function () {
+                                    this.focus();
+                                }
+                            });
+                        });
+                    </script>
+                </td>
+            </tr>
+            <tr id="endDateArea" style="display:none;">
+                <td> 
+                    <b><?php print _('End Date') ?> *</b><br/>
+                    <span style="font-size: 90%"><i><?php print $_SESSION[$guid]["i18n"]["dateFormat"]  ?></i></span>
+                </td>
+                <td class="right">
+                    <input name="endDate" id="endDate" maxlength=10 value="" type="text" style="width: 300px">
+                    <script type="text/javascript">
+                        var endDate = new LiveValidation('endDate');
+                        endDate.add(Validate.Format, {pattern: <?php if ($_SESSION[$guid]["i18n"]["dateFormatRegEx"] == "") { print "/^(0[1-9]|[12][0-9]|3[01])[- /.](0[1-9]|1[012])[- /.](19|20)\d\d$/i"; } else { print $_SESSION[$guid]["i18n"]["dateFormatRegEx"]; } ?>, failureMessage: "Use <?php if ($_SESSION[$guid]["i18n"]["dateFormat"]=="") { print "dd/mm/yyyy"; } else { print $_SESSION[$guid]["i18n"]["dateFormat"]; }?>." } ); 
+                    </script>
+                    <script type="text/javascript">
+                        $(function() {
+                            $("#endDate").datepicker({
+                                onClose: function () {
+                                    this.focus();
+                                }
+                            });
+                        });
+                    </script>
+                </td>
+            </tr>
+            <tr>
+                <td> 
+                    <b><?php print _('All Day') ?></b><br/>
+                </td>
+                <script type="text/javascript">
+                    function adjustTime() {
+                        var allDay = document.getElementById("allDay");
+                        if (allDay.checked) {
+                            $('#startTimeArea').css("display","none");
+                            $('#endTimeArea').css("display","none");
+                        } else {
+                            $("#startTimeArea").slideDown("fast", $("#startTimeArea").css("display","table-row"));
+                            $("#endTimeArea").slideDown("fast", $("#endTimeArea").css("display","table-row"));
+                        }
+                    }
+                </script>
+                <td class="right">
+                    <input type="checkbox" id="allDay" value="allDay" onchange="adjustTime()">
+                </td>
+            </tr>
+            <tr id='startTimeArea'>
+                <td> 
+                    <b><?php print _('Start Time') ?> *</b><br/>
+                    <span style="font-size: 90%"><i><?php print _('Format: hh:mm (24hr)') ?><br/></i></span>
+                </td>
+                <td class="right">
+                    <input name="startTime" id="startTime" maxlength=5 value="" type="text" style="width: 300px">
+                    <script type="text/javascript">
+                        var startTime=new LiveValidation('startTime');
+                        startTime.add( Validate.Format, {pattern: /^(0[0-9]|[1][0-9]|2[0-3])[:](0[0-9]|[1-5][0-9])/i, failureMessage: "Use hh:mm" } ); 
+                    </script>
+                </td>
+            </tr>
+            <tr id='endTimeArea'>
+                <td> 
+                    <b><?php print _('End Time') ?> *</b><br/>
+                    <span style="font-size: 90%"><i><?php print _('Format: hh:mm (24hr)') ?><br/></i></span>
+                </td>
+                <td class="right">
+                    <input name="endTime" id="endTime" maxlength=5 value="" type="text" style="width: 300px">
+                    <script type="text/javascript">
+                        var endTime=new LiveValidation('endTime');
+                        endTime.add( Validate.Format, {pattern: /^(0[0-9]|[1][0-9]|2[0-3])[:](0[0-9]|[1-5][0-9])/i, failureMessage: "Use hh:mm" } ); 
+                    </script>
+                </td>
+            </tr>
+            
             <tr class='break'>
                 <td colspan=2> 
                     <h3><?php print __($guid, 'Costs') ?></h3>
@@ -294,8 +379,21 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                     $row = $result->fetch();
                 ?>
                 <td colspan=2>
-                    <b><?php print _('Risk Assessment') ?> *</b><br/>
+                    <?php
+                        $riskAssessmentApproval = getSettingByScope($connection2, "Trip Planner", "riskAssessmentApproval");
+                    ?>
+                    <b><?php print _('Risk Assessment') . ($riskAssessmentApproval ? "" : "*") ?></b><br/>
+                    <?php 
+                        if ($riskAssessmentApproval) {
+                            print "<span style='font-size: 90%'><i><?php print _('The Risk Assessment is not required until the trip is awaiting final approval.') ?><br/></i></span><br/>";
+                        }
+                    ?>
                     <?php print getEditor($guid, TRUE, "riskAssessment", $row["value"], 5, true, true, false); ?>               
+                </td>
+            </tr>
+            <tr class='break'>
+                <td colspan=2> 
+                    <h3><?php print __($guid, 'People') ?></h3>
                 </td>
             </tr>
             <tr>
@@ -318,8 +416,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                     <div style="float: left; width: 136px; height: 148px; display: table;">
                         <div style="display: table-cell; vertical-align: middle; text-align:center;">
                             <!-- <input id="teacherFilter" align="absmiddle" maxlength=60 value="" type="text" style="width: 73%; margin-right: 12.5%" onchange="filterTeachers()" /></br> -->
-                            <input type="button" value="Add" style="width: 75%;" onclick="optionTransfer('teachers', 'teachers1')" /></br>
-                            <input type="button" value="Remove" style="width: 75%;" onclick="optionTransfer('teachers1', 'teachers')" />
+                            <input type="button" value="Add" style="width: 75%;" onclick="optionTransfer('teachers', 'teachers1', false)" /></br>
+                            <input type="button" value="Remove" style="width: 75%;" onclick="optionTransfer('teachers1', 'teachers', false)" />
                         </div>
                     </div>
                     <select name='teachers1' id='teachers1' multiple style="float: right; margin-left: 0px !important; width: 302px; height: 150px;"></select>
@@ -395,7 +493,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             </script>
             <tr>
                 <td colspan=2>
-                    <b><?php print _('Students') ?> *</b></br>
+                    <b><?php print _('Students') ?></b></br>
                     <select name='students' id='students' multiple style="width: 302px; height: 150px; margin-left: 0px !important; float: left;">
                         <?php
                             foreach ($allStudents as $student) {
@@ -406,8 +504,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                     <div style="float: left; width: 136px; height: 148px; display: table; text-align:center;">
                         <div style="display: table-cell; vertical-align: middle;">
                             <input type="button" id='studentSort' value="Sort by Name" style="width: 80%;" onclick="changeSort()" /></br>
-                            <input type="button" value="Add" style="width: 80%;" onclick="optionTransfer('students', 'students1')" /></br>
-                            <input type="button" value="Remove" style="width: 80%;" onclick="optionTransfer('students1', 'students')" />
+                            <input type="button" value="Add" style="width: 80%;" onclick="optionTransfer('students', 'students1', true)" /></br>
+                            <input type="button" value="Remove" style="width: 80%;" onclick="optionTransfer('students1', 'students', true)" />
                         </div>
                     </div>
                     <select name='students1' id='students1' multiple style="float: right; margin-left: 0px !important; width: 302px; height: 150px;"></select>
@@ -467,6 +565,5 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         </table>
     </form>
     <?php
-
 }   
 ?>

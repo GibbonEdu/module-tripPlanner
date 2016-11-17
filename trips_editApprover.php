@@ -105,6 +105,20 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_editAp
                 </tr>
                 <?php
             }
+            $riskAssessmentApproval = getSettingByScope($connection2, "Trip Planner", "riskAssessmentApproval");
+            if($riskAssessmentApproval) {
+                ?>
+                <tr>
+                    <td> 
+                        <b><?php print _('Final Approver?') ?> *</b><br/>
+                        <span style="font-size: 90%"><i><?php print _('Must be unique.') ?></i></span>
+                    </td>
+                    <td class="right">
+                        <input <?php print $approver['finalApprover'] ? "checked" : "" ?> name="finalApprover" id="finalApprover" type="checkbox">
+                    </td>
+                </tr>
+                <?php
+            }
             ?>
             <tr>
                 <td>
