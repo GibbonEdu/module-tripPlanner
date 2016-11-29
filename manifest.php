@@ -51,13 +51,15 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequests` (
     `studentPersonIDs` text NOT NULL,
     `location` text NOT NULL,
     `date` date NOT NULL,
-    `startTime` time NOT NULL,
-    `endTime` time NOT NULL,
-    `riskAssessment` text NOT NULL,
+    `startTime` time NULL,
+    `endTime` time NULL,
+    `riskAssessment` text NULL,
     `status` ENUM('Requested', 'Approved', 'Rejected', 'Cancelled', 'Awaiting Final Approval') DEFAULT 'Requested' NOT NULL,
     `gibbonSchoolYearID` int(3) unsigned zerofill NOT NULL,
     `gibbonPersonIDUpdate` int(10) unsigned zerofill NULL,
     `timestampUpdate` timestamp NULL,
+    `endDate` date NULL,
+    `letterToParents` text NOT NULL,
     PRIMARY KEY (`tripPlannerRequestID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
 
@@ -80,7 +82,7 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestLog` (
     PRIMARY KEY (`tripPlannerRequestLogID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
 
-$moduleTables[$tables++] = "INSERT INTO `gibbonSetting` (`gibbonSystemSettingsID`, `scope`, `name`, `nameDisplay`, `description`, `value`)
+$moduleTables[$tables++] = "INSERT INTO `gibbonSetting` (`gibbonSettingsID`, `scope`, `name`, `nameDisplay`, `description`, `value`)
 VALUES
 (NULL, 'Trip Planner', 'requestApprovalType', 'Request Approval Type', 'The type of approval that a trip request has to go through.', 'One Of'),
 (NULL, 'Trip Planner', 'riskAssessmentTemplate', 'Risk Assessment Template', 'The template for the Risk Assessment.', ''),
@@ -100,7 +102,7 @@ $actionCount = 0;
 
 $actionRows[$actionCount]["name"] = "Manage Trips"; 
 $actionRows[$actionCount]["precedence"] = "0"; 
-$actionRows[$actionCount]["category"] = "";
+$actionRows[$actionCount]["category"] = "Trips";
 $actionRows[$actionCount]["description"] = "Manage trips.";
 $actionRows[$actionCount]["URLList"] = "trips_manage.php"; 
 $actionRows[$actionCount]["entryURL"] = "trips_manage.php"; 
@@ -117,7 +119,7 @@ $actionCount++;
 
 $actionRows[$actionCount]["name"] = "Manage Trips_full"; 
 $actionRows[$actionCount]["precedence"] = "1"; 
-$actionRows[$actionCount]["category"] = "";
+$actionRows[$actionCount]["category"] = "Trips";
 $actionRows[$actionCount]["description"] = "Manage trips.";
 $actionRows[$actionCount]["URLList"] = "trips_manage.php"; 
 $actionRows[$actionCount]["entryURL"] = "trips_manage.php"; 
@@ -134,7 +136,7 @@ $actionCount++;
 
 $actionRows[$actionCount]["name"] = "Submit Request"; 
 $actionRows[$actionCount]["precedence"] = "0"; 
-$actionRows[$actionCount]["category"] = "";
+$actionRows[$actionCount]["category"] = "Trips";
 $actionRows[$actionCount]["description"] = "Submit a trip request.";
 $actionRows[$actionCount]["URLList"] = "trips_submitRequest.php"; 
 $actionRows[$actionCount]["entryURL"] = "trips_submitRequest.php"; 
@@ -151,7 +153,7 @@ $actionCount++;
 
 $actionRows[$actionCount]["name"] = "Submit Request_all"; 
 $actionRows[$actionCount]["precedence"] = "1"; 
-$actionRows[$actionCount]["category"] = "";
+$actionRows[$actionCount]["category"] = "Trips";
 $actionRows[$actionCount]["description"] = "Submit a trip request.";
 $actionRows[$actionCount]["URLList"] = "trips_submitRequest.php"; 
 $actionRows[$actionCount]["entryURL"] = "trips_submitRequest.php"; 
@@ -168,7 +170,7 @@ $actionCount++;
 
 $actionRows[$actionCount]["name"] = "Manage Approvers_view"; 
 $actionRows[$actionCount]["precedence"] = "0"; 
-$actionRows[$actionCount]["category"] = "";
+$actionRows[$actionCount]["category"] = "Settings";
 $actionRows[$actionCount]["description"] = "Manage trip approvers.";
 $actionRows[$actionCount]["URLList"] = "trips_manageApprovers.php"; 
 $actionRows[$actionCount]["entryURL"] = "trips_manageApprovers.php";
@@ -185,7 +187,7 @@ $actionCount++;
 
 $actionRows[$actionCount]["name"] = "Manage Approvers_add&edit"; 
 $actionRows[$actionCount]["precedence"] = "1"; 
-$actionRows[$actionCount]["category"] = "";
+$actionRows[$actionCount]["category"] = "Settings";
 $actionRows[$actionCount]["description"] = "Manage trip approvers.";
 $actionRows[$actionCount]["URLList"] = "trips_manageApprovers.php,trips_addApprover.php,trips_editApprover.php"; 
 $actionRows[$actionCount]["entryURL"] = "trips_manageApprovers.php";
@@ -202,7 +204,7 @@ $actionCount++;
 
 $actionRows[$actionCount]["name"] = "Manage Approvers_full"; 
 $actionRows[$actionCount]["precedence"] = "2"; 
-$actionRows[$actionCount]["category"] = "";
+$actionRows[$actionCount]["category"] = "Settings";
 $actionRows[$actionCount]["description"] = "Manage trip approvers.";
 $actionRows[$actionCount]["URLList"] = "trips_manageApprovers.php,trips_addApprover.php,trips_editApprover.php,trips_deleteApproverProcess.php"; 
 $actionRows[$actionCount]["entryURL"] = "trips_manageApprovers.php";
@@ -219,7 +221,7 @@ $actionCount++;
 
 $actionRows[$actionCount]["name"] = "Manage Trip Planner Settings"; 
 $actionRows[$actionCount]["precedence"] = "0"; 
-$actionRows[$actionCount]["category"] = "";
+$actionRows[$actionCount]["category"] = "Settings";
 $actionRows[$actionCount]["description"] = "Manage Trip Planner Settings.";
 $actionRows[$actionCount]["URLList"] = "trips_manageSettings.php"; 
 $actionRows[$actionCount]["entryURL"] = "trips_manageSettings.php"; 

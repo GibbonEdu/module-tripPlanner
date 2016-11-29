@@ -155,7 +155,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                     $row = $result->fetch();
                 ?>
                 <td>
-                    <b><?php print _($row["nameDisplay"]) ?> *</b><br/>
+                    <b><?php print _($row["nameDisplay"]) ?> (WIP) *</b><br/>
                     <span style="font-size: 90%"><i>
                         <?php
                         if ($row["description"] != "") {

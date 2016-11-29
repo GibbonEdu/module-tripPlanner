@@ -32,6 +32,9 @@ ALTER TABLE tripPlannerRequests CHANGE riskAssessment riskAssessment text NULL;e
 ALTER TABLE tripPlannerRequests CHANGE status status ENUM('Requested', 'Approved', 'Rejected', 'Cancelled', 'Awaiting Final Approval') DEFAULT 'Requested' NOT NULL;end
 INSERT INTO gibbonSetting SET scope='Trip Planner', name='riskAssessmentApproval', nameDisplay='Risk Assessment Approval', description='If this is enabled the Risk Assessment becomes an optional field until the trip has gone through approval. After this a Final Approval is required before the trip becomes approved.', value='1';end
 ALTER TABLE tripPlannerApprovers ADD COLUMN finalApprover boolean DEFAULT 0 NULL;end
+UPDATE gibbonAction SET category='Trips' WHERE (name='Manage Trips' OR name='Manage Trips_full' OR name='Submit Request' OR name='Submit Request_all') AND gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='Trip Planner');end
+UPDATE gibbonAction SET category='Settings' WHERE (name='Manage Approvers_view' OR name='Manage Approvers_add&edit' OR name='Manage Approvers_full' OR name='Manage Trip Planner Settings') AND gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='Trip Planner');end
+ALTER TABLE tripPlannerRequests ADD COLUMN letterToParents text NOT NULL;end
 ";
 
 ?>

@@ -367,6 +367,14 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                     </div>
                 </td>
             </tr>
+            <tr class='break'>
+                <td colspan=2> 
+                    <?php
+                        $riskAssessmentApproval = getSettingByScope($connection2, "Trip Planner", "riskAssessmentApproval");
+                    ?>
+                    <h3><?php print __($guid, 'Risk Assessment & Communication') ?></h3>
+                </td>
+            </tr>
             <tr>
                 <?php
                     try {
@@ -379,21 +387,34 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                     $row = $result->fetch();
                 ?>
                 <td colspan=2>
-                    <?php
-                        $riskAssessmentApproval = getSettingByScope($connection2, "Trip Planner", "riskAssessmentApproval");
-                    ?>
-                    <b><?php print _('Risk Assessment') . ($riskAssessmentApproval ? "" : "*") ?></b><br/>
+                    <b><?php print _('Risk Assessment') . ($riskAssessmentApproval ? "" : "*") ?> </b></br>
                     <?php 
                         if ($riskAssessmentApproval) {
                             print "<span style='font-size: 90%'><i><?php print _('The Risk Assessment is not required until the trip is awaiting final approval.') ?><br/></i></span><br/>";
                         }
                     ?>
-                    <?php print getEditor($guid, TRUE, "riskAssessment", $row["value"], 5, true, true, false); ?>               
+                    <?php print getEditor($guid, TRUE, "riskAssessment", $row["value"], 25, true, $riskAssessmentApproval, false); ?>               
+                </td>
+            </tr>
+            <tr>
+                <?php
+                    try {
+                        $sql = "SELECT value FROM gibbonSetting WHERE scope='Trip Planner' AND name='riskAssessmentTemplate'";
+                        $result = $connection2->prepare($sql);
+                        $result->execute();
+                    } catch (PDOException $e) { 
+                        print "<div class='error'>" . $e->getMessage() . "</div>"; 
+                    }
+                    $row = $result->fetch();
+                ?>
+                <td colspan=2>
+                    <b><?php print _('Letter to Parents') ?> *</b></br>
+                    <?php print getEditor($guid, TRUE, "letterToParents", "", 25, true, true, false); ?>               
                 </td>
             </tr>
             <tr class='break'>
                 <td colspan=2> 
-                    <h3><?php print __($guid, 'People') ?></h3>
+                    <h3><?php print __($guid, 'Participants') ?></h3>
                 </td>
             </tr>
             <tr>
@@ -402,7 +423,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                     <select name='teachers' id='teachers' multiple style="width: 302px; height: 150px; margin-left: 0px !important; float: left;">
                         <?php
                             try {
-                                $sql = "SELECT gibbonPersonID, preferredName, surname FROM gibbonPerson WHERE gibbonRoleIDPrimary=002 AND status='Full' ORDER BY preferredName, surname ASC";
+                                $sql = "SELECT gibbonPersonID, preferredName, surname FROM gibbonPerson JOIN gibbonRole ON (gibbonPerson.gibbonRoleIDPrimary = gibbonRole.gibbonRoleID) WHERE gibbonRole.category='Staff' AND gibbonPerson.status='Full' ORDER BY gibbonPerson.preferredName, gibbonPerson.surname ASC";
                                 $result = $connection2->prepare($sql);
                                 $result->execute();
                             } catch (PDOException $e) {
@@ -492,7 +513,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                 }
             </script>
             <tr>
-                <td colspan=2>
+                <td colspan=2 style="border:none !important;">
                     <b><?php print _('Students') ?></b></br>
                     <select name='students' id='students' multiple style="width: 302px; height: 150px; margin-left: 0px !important; float: left;">
                         <?php
@@ -513,13 +534,14 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             </tr>
             <tr>
                 <td>
-                    <b><?php print _('Add Class') ?></b></br>
+                    <b><?php print _('Add Class to Students') ?></b></br>
                 </td>
                 <td class='right'>
                     <?php
                         $highestAction2 = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_submitRequest.php', $connection2);
                     ?>
                     <select name="gibbonCourseClassID" id="gibbonCourseClassID" style="width: 302px;">
+                        <option value="">No Class</option>
                         <?php
                         try {
                             if ($highestAction2 == 'Submit Request_all') {
@@ -539,10 +561,13 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                         ?>
                     </select>
                     <div style="width:300px; float:right">
+
                         <script type="text/javascript">
                             function addClass(type) {
                                 var gibbonCourseClassID = document.getElementById("gibbonCourseClassID").value;
-                                $("#addClassDiv").load("<?php print $_SESSION[$guid]["absoluteURL"] . '/modules/Trip%20Planner/trips_submitRequestAddClassAjax.php'?>", "gibbonCourseClassID=" + gibbonCourseClassID + "&type=" + type);
+                                if(gibbonCourseClassID != "") {
+                                    $("#addClassDiv").load("<?php print $_SESSION[$guid]["absoluteURL"] . '/modules/Trip%20Planner/trips_submitRequestAddClassAjax.php'?>", "gibbonCourseClassID=" + gibbonCourseClassID + "&type=" + type);
+                                }
                             }
                         </script>
                         <input type="button" value="Add" style="width: 145px; float:left;" onclick="addClass('Add')" /></br>

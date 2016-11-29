@@ -118,6 +118,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                     if ($actionsAllowed) {
                         $colspan++;
                     }
+
+                    if($riskAssessmentApproval) {
+                        $colspan++;
+                    }
+
                     print "<td colspan=$colspan>";
                         print _("There are no records to display.");
                     print "</td>";

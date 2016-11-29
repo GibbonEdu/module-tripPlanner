@@ -17,7 +17,7 @@ $connection2 = $pdo->getConnection();
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php') || !isApprover($connection2, $_SESSION[$guid]["gibbonPersonID"])) {
     //Acess denied
-    $URL .= "trips_manage&return=error0";
+    $URL .= "trips_manage.php&return=error0";
     header("Location: {$URL}");
     exit();
 } else {
@@ -120,7 +120,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                 requestNotification($guid, $connection2, $tripPlannerRequestID, "Comment");
             }
 
-            $URL = $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_manage&return=success0";
+            $URL = $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_manage.php&return=success0";
             header("Location: {$URL}");
             exit();
         } else {
@@ -129,7 +129,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             exit();
         }
     } else {
-        $URL .= "trips_manage&return=error1";
+        $URL .= "trips_manage.php&return=error1";
         header("Location: {$URL}");
         exit();
     }

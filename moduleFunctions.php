@@ -154,7 +154,7 @@ function needsApproval($connection2, $tripPlannerRequestID, $gibbonPersonID)
 function getTrip($connection2, $tripPlannerRequestID) {
     try {
         $data = array("tripPlannerRequestID" => $tripPlannerRequestID);
-        $sql = "SELECT creatorPersonID, timestampCreation, title, description, teacherPersonIDs, studentPersonIDs, location, date, endDate, startTime, endTime, riskAssessment, status FROM tripPlannerRequests WHERE tripPlannerRequestID=:tripPlannerRequestID";
+        $sql = "SELECT creatorPersonID, timestampCreation, title, description, teacherPersonIDs, studentPersonIDs, location, date, endDate, startTime, endTime, riskAssessment, letterToParents, status FROM tripPlannerRequests WHERE tripPlannerRequestID=:tripPlannerRequestID";
         $result = $connection2->prepare($sql);
         $result->execute($data);
         if($result->rowCount() == 1) {
@@ -857,7 +857,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                     <tr class="break">
                         <td colspan=2>
                             <h3>
-                                <?php echo __($guid, 'Risk Assessment') ?>
+                                <?php echo __($guid, 'Risk Assessment & Communication') ?>
                                 <?php print "<div id='showRisk'  title='" . __($guid, 'Show/Hide') . "' style='margin-top: -5px; margin-left: 3px; padding-right: 1px; float: right; width: 23px; height: 25px; background-image: url(\"" . $_SESSION[$guid]["absoluteURL"] . "/themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/minus.png\")'></div>"; ?>
                             </h3>
                             <script type="text/javascript">
@@ -889,11 +889,24 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                 ?>
                             </td>
                         </tr>
+                        <tr>
+                            <td colspan=2> 
+                                <?php 
+                                    if ($mode == "Edit") {
+                                        print getEditor($guid, TRUE, "letterToParents", $request["letterToParents"], 5, true, true, false);
+                                    } else {
+                                        echo '<p>';
+                                        echo $request['letterToParents'];
+                                        echo '</p>';
+                                    }
+                                ?>
+                            </td>
+                        </tr>
                     </tbody>
                     <tr class="break">
                         <td colspan=2>
                             <h3>
-                                People Involved
+                                Participants
                                 <?php print "<div id='showPeople'  title='" . __($guid, 'Show/Hide') . "' style='margin-top: -5px; margin-left: 3px; padding-right: 1px; float: right; width: 23px; height: 25px; background-image: url(\"" . $_SESSION[$guid]["absoluteURL"] . "/themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/minus.png\")'></div>"; ?>
                             </h3>
                             <script type="text/javascript">
