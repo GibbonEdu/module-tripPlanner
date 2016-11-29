@@ -878,6 +878,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                     <tbody id='riskInfo'>
                         <tr>
                             <td colspan=2> 
+                                <b><?php echo __($guid, 'Risk Assessment') ?></b>
                                 <?php 
                                     if ($mode == "Edit") {
                                         print getEditor($guid, TRUE, "riskAssessment", $request["riskAssessment"], 5, true, true, false);
@@ -891,6 +892,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                         </tr>
                         <tr>
                             <td colspan=2> 
+                                <b><?php echo __($guid, 'Letter To Parents') ?></b>
                                 <?php 
                                     if ($mode == "Edit") {
                                         print getEditor($guid, TRUE, "letterToParents", $request["letterToParents"], 5, true, true, false);
