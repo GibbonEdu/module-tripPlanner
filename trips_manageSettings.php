@@ -108,7 +108,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                         } 
                         ?>
                     </i></span>
-                    <?php print getEditor($guid, TRUE, $row["name"], $row["value"], 5, true, false, false); ?>  
+                    <?php print getEditor($guid, TRUE, $row["name"], $row["value"], 25, true, false, false); ?>  
                 </td>
             </tr>
             <tr>

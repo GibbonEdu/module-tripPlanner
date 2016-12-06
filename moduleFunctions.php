@@ -390,26 +390,86 @@ function getRequestLog($guid, $connection2, $tripPlannerRequestID, $commentsOpen
     }
 }
 
-function getPersonBlock($guid, $connection2, $gibbonPersonID, $role)
+function getPersonBlock($guid, $connection2, $gibbonPersonID, $role, $numPerRow=5, $emergency=false, $medical=false)
 {
     try {
         $data = array('gibbonPersonID' => $gibbonPersonID);
-        $sql = 'SELECT title, surname, preferredName, image_240 FROM gibbonPerson WHERE gibbonPersonID=:gibbonPersonID';
+        $sql = 'SELECT title, surname, preferredName, image_240, emergency1Name, emergency1Number1, emergency1Number2, emergency1Relationship, emergency2Name, emergency2Number1, emergency2Number2, emergency2Relationship FROM gibbonPerson WHERE gibbonPersonID=:gibbonPersonID';
         $result = $connection2->prepare($sql);
         $result->execute($data);
     } catch (PDOException $e) {
         // echo "<div class='error'>".$e->getMessage().'</div>';
     }
 
+    try {
+        $dataFamily = array('gibbonPersonID' => $gibbonPersonID);
+        $sqlFamily = 'SELECT * FROM gibbonFamily JOIN gibbonFamilyChild ON (gibbonFamily.gibbonFamilyID=gibbonFamilyChild.gibbonFamilyID) WHERE gibbonPersonID=:gibbonPersonID';
+        $resultFamily = $connection2->prepare($sqlFamily);
+        $resultFamily->execute($dataFamily);
+    } catch (PDOException $e) {
+    }
+
     if ($result->rowCount() == 1) {
         $row = $result->fetch();
-        print "<td style='border: 1px solid #rgba (1,1,1,0); width:20%; text-align: center; vertical-align: top'>";
+        $width = 100.0 / $numPerRow;
+        print "<td style='border: 1px solid #rgba (1,1,1,0); width:$width%; text-align: center; vertical-align: top'>";
             print "<div>";
                 print getUserPhoto($guid, $row['image_240'], 75);
             print "</div>";
             print "<div><b>";
                 print formatName($row['title'], $row['preferredName'], $row['surname'], $role);
             print "</b><br/></div>";
+            if($emergency) {
+                print "<div id='em$gibbonPersonID' style='font-size:11px'>";
+                    if($resultFamily->rowCount() == 1) {
+                        $rowFamily = $resultFamily->fetch();
+                        try {
+                            $dataMember = array('gibbonFamilyID' => $rowFamily['gibbonFamilyID']);
+                            $sqlMember = 'SELECT * FROM gibbonFamilyAdult JOIN gibbonPerson ON (gibbonFamilyAdult.gibbonPersonID=gibbonPerson.gibbonPersonID) WHERE gibbonFamilyID=:gibbonFamilyID ORDER BY contactPriority, surname, preferredName';
+                            $resultMember = $connection2->prepare($sqlMember);
+                            $resultMember->execute($dataMember);
+                        } catch (PDOException $e) {
+                        }
+
+                        while ($rowMember = $resultMember->fetch()) {
+                            print "<b>" . formatName($rowMember['title'], $rowMember['preferredName'], $rowMember['surname'], 'Parent');
+                            try {
+                                $dataRelationship = array('gibbonPersonID1' => $rowMember['gibbonPersonID'], 'gibbonPersonID2' => $gibbonPersonID, 'gibbonFamilyID' => $rowFamily['gibbonFamilyID']);
+                                $sqlRelationship = 'SELECT * FROM gibbonFamilyRelationship WHERE gibbonPersonID1=:gibbonPersonID1 AND gibbonPersonID2=:gibbonPersonID2 AND gibbonFamilyID=:gibbonFamilyID';
+                                $resultRelationship = $connection2->prepare($sqlRelationship);
+                                $resultRelationship->execute($dataRelationship);
+                            } catch (PDOException $e) {
+                            }
+                            if ($resultRelationship->rowCount() == 1) {
+                                $rowRelationship = $resultRelationship->fetch();
+                                print " (" . $rowRelationship['relationship'] . ")";
+                            }
+                            print "</b><br/>";
+                            for ($i = 1; $i < 5; ++$i) {
+                                if ($rowMember['phone'.$i] != '') {
+                                    if ($rowMember['phone'.$i.'Type'] != '') {
+                                        print $rowMember['phone'.$i.'Type'].':</i> ';
+                                    }
+                                    if ($rowMember['phone'.$i.'CountryCode'] != '') {
+                                        print '+'.$rowMember['phone'.$i.'CountryCode'].' ';
+                                    }
+                                    print __($guid, $rowMember['phone'.$i]).'<br/>';
+                                }
+                            }
+                        }
+                    }
+                    if($row["emergency1Name"] != "") {
+                            print "<b>" . $row["emergency1Name"] . " (" . $row["emergency1Relationship"] . ")</b><br/>";
+                            print $row["emergency1Number1"] . "<br/>";
+                            print $row["emergency1Number2"] . "<br/>";
+                    }
+                    if($row["emergency2Name"] != "") {
+                            print "<b>" . $row["emergency2Name"] . " (" . $row["emergency2Relationship"] . ")</b><br/>";
+                            print $row["emergency2Number1"] . "<br/>";
+                            print $row["emergency2Number2"];
+                    }
+                print "</div>";
+            }
         print "</td>";
     }
 }
@@ -958,15 +1018,16 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                 <table class='noIntBorder' cellspacing='0' style='width:100%;'>
                                     <tr>
                                         <?php
+                                            $numPerRow = 5;
                                             $studentCount = count($students);
-                                            $studentCount += 5 - ($studentCount % 5);
+                                            $studentCount += $numPerRow - ($studentCount % $numPerRow);
                                             for ($i = 0; $i < $studentCount; $i++) {
-                                                if ($i % 5 == 0) {
+                                                if ($i % $numPerRow == 0) {
                                                     print "</tr>";
                                                     print "<tr>";
                                                 } 
                                                 if (isset($students[$i])) {
-                                                    getPersonBlock($guid, $connection2, $students[$i], "Student");
+                                                    getPersonBlock($guid, $connection2, $students[$i], "Student", $numPerRow);
                                                 } else {
                                                     print "<td>";
                                                     print "</td>";
