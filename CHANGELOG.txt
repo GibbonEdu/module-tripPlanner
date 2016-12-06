@@ -38,3 +38,21 @@ Approvers now start with the Relation Filter "Awaiting my Approval"
 Approvers now get a notification if a trip has been requested.
 Added the ability to sort students by Form or Name in trips_submitRequest.php
 Added the ability to add students by Class in trips_submitRequest.php
+
+v0.0.04
+-------
+Made students an optional field in trips_submitRequest.php
+Added Multiple Days option to trips_submitRequest.php
+Added All Day option to trips_submitRequest.php
+Added End Date field to trips_submitRequest.php
+Fixed multiple add bug in trips_submitRequest.php
+Added support for multiple days and all day events in trips_requestView.php, trips_requestEdit.php and trips_requestApprove.php
+Fixed broken redirects in trips_requestApprove.php
+Added Letter to Parents field in trips_submitRequest.php
+Put all staff in Teachers field in trips_submitRequest.php
+Added groups to Trip Planner Actions
+Made Add to Class default to No Class in trips_submitRequest.php
+Made the Risk Assessment field taller in trips_submitRequest.php
+Added Final Approval (WIP)
+Made Risk Assessment a final approval.
+Some other bug fixes I forgot about.

@@ -65,6 +65,16 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_editAp
         $sequenceNumber = 0;
     }
 
+    $finalApprover = 0;
+    $riskAssessmentApproval = getSettingByScope($connection2, "Trip Planner", "riskAssessmentApproval");
+    if ($riskAssessmentApproval) {
+        if (isset($_POST["finalApprover"])) {
+            if($_POST["finalApprover"] != null && $_POST["finalApprover"] != "") {
+                $finalApprover = 1;
+            }
+        }
+    }
+
     try {
         if ($expenseApprovalType=="Chain Of All") {
             $approver = getApprover($connection2, $tripPlannerApproverID);
@@ -91,14 +101,14 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_editAp
         exit();
     }
         
-    if ($result->rowCount() > 0 && approverExists($connection2, $tripPlannerApproverID)) {
+    if ($result->rowCount() > 0 && (approverExists($connection2, $tripPlannerApproverID && !$riskAssessmentApproval))) {
         //Fail 4
         $URL .= "trips_editApprover.php&tripPlannerApproverID=$tripPlannerApproverID&return=error1";
         header("Location: {$URL}");
     } else {  
         try {
-            $data = array("gibbonPersonID" => $gibbonPersonID, "sequenceNumber" => $sequenceNumber, "gibbonPersonIDUpdate" => $_SESSION[$guid]["gibbonPersonID"], "timestampUpdate" => date('Y-m-d H:i:s', time()), "tripPlannerApproverID" => $tripPlannerApproverID);
-            $sql = "UPDATE tripPlannerApprovers SET gibbonPersonID=:gibbonPersonID, sequenceNumber=:sequenceNumber, gibbonPersonIDUpdate=:gibbonPersonIDUpdate, timestampUpdate=:timestampUpdate WHERE tripPlannerApproverID=:tripPlannerApproverID";
+            $data = array("gibbonPersonID" => $gibbonPersonID, "sequenceNumber" => $sequenceNumber, "gibbonPersonIDUpdate" => $_SESSION[$guid]["gibbonPersonID"], "timestampUpdate" => date('Y-m-d H:i:s', time()), "tripPlannerApproverID" => $tripPlannerApproverID, "finalApprover" => $finalApprover);
+            $sql = "UPDATE tripPlannerApprovers SET gibbonPersonID=:gibbonPersonID, sequenceNumber=:sequenceNumber, finalApprover=:finalApprover, gibbonPersonIDUpdate=:gibbonPersonIDUpdate, timestampUpdate=:timestampUpdate WHERE tripPlannerApproverID=:tripPlannerApproverID";
             $result = $connection2->prepare($sql);
             $result->execute($data);
         } catch (PDOException $e) {

@@ -18,9 +18,23 @@ CREATE TABLE `tripPlannerRequestPerson` (`tripPlannerRequestPersonID` int(10) un
 
 $sql[$count][0]="0.0.03";
 $sql[$count++][1]="
-ALTER TABLE tripsPlannerRequests DROP COLUMN totalCost;end
+ALTER TABLE tripPlannerRequests DROP COLUMN totalCost;end
 INSERT INTO gibbonAction SET name='Submit Request_all', precedence=1, category='', description='Submit a trip request.', URLList='trips_submitRequest.php', entryURL='trips_submitRequest.php', defaultPermissionAdmin='Y', defaultPermissionTeacher='N', defaultPermissionStudent='N', defaultPermissionParent='N', defaultPermissionSupport='N', categoryPermissionStaff='Y', categoryPermissionStudent='N', categoryPermissionParent='N', categoryPermissionOther='N', gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='Trip Planner');end
 INSERT INTO `gibbonPermission` (`permissionID` ,`gibbonRoleID` ,`gibbonActionID`) VALUES (NULL , '1', (SELECT gibbonActionID FROM gibbonAction JOIN gibbonModule ON (gibbonAction.gibbonModuleID=gibbonModule.gibbonModuleID) WHERE gibbonModule.name='Trip Planner' AND gibbonAction.name='Submit Request_all'));end
+";
+
+$sql[$count][0]="0.0.04";
+$sql[$count++][1]="
+ALTER TABLE tripPlannerRequests ADD COLUMN endDate date NULL;end
+ALTER TABLE tripPlannerRequests CHANGE startTime startTime time NULL;end
+ALTER TABLE tripPlannerRequests CHANGE endTime endTime time NULL;end
+ALTER TABLE tripPlannerRequests CHANGE riskAssessment riskAssessment text NULL;end
+ALTER TABLE tripPlannerRequests CHANGE status status ENUM('Requested', 'Approved', 'Rejected', 'Cancelled', 'Awaiting Final Approval') DEFAULT 'Requested' NOT NULL;end
+INSERT INTO gibbonSetting SET scope='Trip Planner', name='riskAssessmentApproval', nameDisplay='Risk Assessment Approval', description='If this is enabled the Risk Assessment becomes an optional field until the trip has gone through approval. After this a Final Approval is required before the trip becomes approved.', value='1';end
+ALTER TABLE tripPlannerApprovers ADD COLUMN finalApprover boolean DEFAULT 0 NULL;end
+UPDATE gibbonAction SET category='Trips' WHERE (name='Manage Trips' OR name='Manage Trips_full' OR name='Submit Request' OR name='Submit Request_all') AND gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='Trip Planner');end
+UPDATE gibbonAction SET category='Settings' WHERE (name='Manage Approvers_view' OR name='Manage Approvers_add&edit' OR name='Manage Approvers_full' OR name='Manage Trip Planner Settings') AND gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='Trip Planner');end
+ALTER TABLE tripPlannerRequests ADD COLUMN letterToParents text NOT NULL;end
 ";
 
 ?>

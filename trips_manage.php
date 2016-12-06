@@ -132,7 +132,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                     </td>
                     <td class="right">
                         <?php
-                        $statuses = array("All", "Requested", "Approved", "Rejected", "Cancelled");
+                        $statuses = array("All", "Requested", "Approved", "Rejected", "Cancelled", "Awaiting Final Approval");
                         echo "<select name='statusFilter' id='statusFilter' style='width:302px'>";
                             foreach($statuses as $status) {
                                 $selected = "";

@@ -62,6 +62,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                         print _("Sequence Number");
                     print "</th>";
                 }
+                $riskAssessmentApproval = getSettingByScope($connection2, "Trip Planner", "riskAssessmentApproval");
+                if($riskAssessmentApproval) {
+                    print "<th>";
+                        print _("Is a Final Approver?");
+                    print "</th>";
+                }
                 if ($actionsAllowed) {
                     print "<th>";
                         print _("Action");
@@ -83,6 +89,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                         if ($expenseApprovalType == "Chain Of All") {
                             print "<td>";
                                 print $approver['sequenceNumber'];
+                            print "</td>";
+                        }
+                        if($riskAssessmentApproval) {
+                            print "<td>";
+                                print ($approver['finalApprover'] ? "Yes" : "No");
                             print "</td>";
                         }
                         if ($actionsAllowed) {
@@ -107,6 +118,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                     if ($actionsAllowed) {
                         $colspan++;
                     }
+
+                    if($riskAssessmentApproval) {
+                        $colspan++;
+                    }
+
                     print "<td colspan=$colspan>";
                         print _("There are no records to display.");
                     print "</td>";

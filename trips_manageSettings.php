@@ -108,7 +108,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                         } 
                         ?>
                     </i></span>
-                    <?php print getEditor($guid, TRUE, $row["name"], $row["value"], 5, true, false, false); ?>  
+                    <?php print getEditor($guid, TRUE, $row["name"], $row["value"], 25, true, false, false); ?>  
                 </td>
             </tr>
             <tr>
@@ -140,6 +140,35 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                         numField.add(Validate.Numericality, { minimum: 0 } );
                         numField.add(Validate.Presence);
                     </script>
+                </td>
+            </tr>
+            <tr>
+                <?php
+                    try {
+                        $sql = "SELECT * FROM gibbonSetting WHERE scope='Trip Planner' AND name='riskAssessmentApproval'";
+                        $result = $connection2->prepare($sql);
+                        $result->execute();
+                    } catch (PDOException $e) { 
+                        print "<div class='error'>" . $e->getMessage() . "</div>"; 
+                    }
+
+                    $row = $result->fetch();
+                ?>
+                <td>
+                    <b><?php print _($row["nameDisplay"]) ?> (WIP) *</b><br/>
+                    <span style="font-size: 90%"><i>
+                        <?php
+                        if ($row["description"] != "") {
+                            print _($row["description"]);
+                        } 
+                        ?>
+                    </i></span>
+                </td>
+                <td class='right'>
+                    <?php
+                        $checked = $row["value"] ? "checked" : "";
+                    ?>
+                    <input <?php print $checked ?> name="<?php print $row["name"]; ?>" id="<?php print $row["name"]; ?>" type="checkbox">
                 </td>
             </tr>
             <tr>
