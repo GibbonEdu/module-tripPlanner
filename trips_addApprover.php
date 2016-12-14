@@ -75,8 +75,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_addApp
                 </td>
             </tr>
             <?php
-            $expenseApprovalType = getSettingByScope($connection2, "Trip Planner", "requestApprovalType");
-            if ($expenseApprovalType == "Chain Of All") {
+            $requestApprovalType = getSettingByScope($connection2, "Trip Planner", "requestApprovalType");
+            if ($requestApprovalType == "Chain Of All") {
                 ?>
                 <tr>
                     <td> 

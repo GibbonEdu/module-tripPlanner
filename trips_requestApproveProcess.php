@@ -23,7 +23,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
 } else {
     if (isset($_POST["tripPlannerRequestID"])) {
         $tripPlannerRequestID = $_POST["tripPlannerRequestID"];
-        if (needsApproval($connection2, $tripPlannerRequestID, $_SESSION[$guid]['gibbonPersonID'])) {
+        $riskAssessmentApproval = getSettingByScope($connection2, "Trip Planner", "riskAssessmentApproval");
+        $status = getTripStatus($connection2, $tripPlannerRequestID);
+        if (needsApproval($connection2, $tripPlannerRequestID, $_SESSION[$guid]['gibbonPersonID']) || ($status == "Awaiting Final Approval" && isApprover($connection2, $_SESSION[$guid]["gibbonPersonID"], true))) {
             $URL .= "trips_requestApprove.php&tripPlannerRequestID=" . $tripPlannerRequestID;
 
             if (isset($_POST["approval"])) {
@@ -43,61 +45,70 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             }
 
             if ($approval == "Approval - Partial") {
-                $done = false;
-                $requestApprovalType = getSettingByScope($connection2, "Trip Planner", "requestApprovalType");
-                if ($requestApprovalType == "One Of") {
-                    $done = true;
-                } elseif ($requestApprovalType == "Two Of") {
-                    $done = (getEvents($connection2, $tripPlannerRequestID, array("Approval - Partial")) == 1);
-                } elseif ($requestApprovalType == "Chain Of All") {
-                    try {
-                        $data = array("gibbonPersonID" => $_SESSION[$guid]["gibbonPersonID"]);
-                        $sql = "SELECT * FROM `tripPlannerApprovers` WHERE sequenceNumber > (SELECT sequenceNumber FROM `tripPlannerApprovers` WHERE gibbonPersonID=:gibbonPersonID)";
-                        $result = $connection2->prepare($sql);
-                        $result->execute($data);
-                    } catch (PDOException $e) {
+                if($status == "Awaiting Final Approval") {
+                     
+                } else {
+                    $done = false;
+                    $requestApprovalType = getSettingByScope($connection2, "Trip Planner", "requestApprovalType");
+                    if ($requestApprovalType == "One Of") {
+                        $done = true;
+                    } elseif ($requestApprovalType == "Two Of") {
+                        $done = (getEvents($connection2, $tripPlannerRequestID, array("Approval - Partial")) == 1);
+                    } elseif ($requestApprovalType == "Chain Of All") {
+                        try {
+                            $data = array("gibbonPersonID" => $_SESSION[$guid]["gibbonPersonID"]);
+                            $sql = "SELECT * FROM `tripPlannerApprovers` WHERE sequenceNumber > (SELECT sequenceNumber FROM `tripPlannerApprovers` WHERE gibbonPersonID=:gibbonPersonID)";
+                            $result = $connection2->prepare($sql);
+                            $result->execute($data);
+                        } catch (PDOException $e) {
+                            $URL .= "&return=error2";
+                            header("Location: {$URL}");
+                            exit();
+                        }
+
+                        $done = $result->rowCount() == 0;
+                    }
+
+                    if ($done) {
+                        $approval = "Approval - Final";
+                        try {
+                            $status = "Approved";
+                            if($riskAssessmentApproval) {
+                                $status = "Awaiting Final Approval";
+                            }
+
+                            $data = array("tripPlannerRequestID" => $tripPlannerRequestID, "status" => $status);
+                            $sql = "UPDATE tripPlannerRequests SET status=:status WHERE tripPlannerRequestID=:tripPlannerRequestID";
+                            $result = $connection2->prepare($sql);
+                            $result->execute($data);
+                        } catch (PDOException $e) {
+                            $URL .= "&return=error2";
+                            header("Location: {$URL}");
+                            exit();
+                        }
+
+                        requestNotification($guid, $connection2, $tripPlannerRequestID, $status);
+                    } elseif ($requestApprovalType == "Chain Of All") {
+                        try {
+                            $data = array("gibbonPersonID" => $_SESSION[$guid]["gibbonPersonID"]);
+                            $sql = "SELECT gibbonPersonID FROM `tripPlannerApprovers` WHERE sequenceNumber = (SELECT sequenceNumber FROM `tripPlannerApprovers` WHERE gibbonPersonID=:gibbonPersonID)+1";
+                            $result = $connection2->prepare($sql);
+                            $result->execute($data);
+                        } catch (PDOException $e) {
+                            $URL .= "&return=error2";
+                            header("Location: {$URL}");
+                            exit();
+                        }
+
+                        $message = __($guid, 'A trip request is awaiting your approval.');
+                        setNotification($connection2, $guid, $result->fetch()["gibbonPersonID"], $message, 'Trip Planner', "/index.php?q=/modules/Trip Planner/trips_requestApprove.php&tripPlannerRequestID=$tripPlannerRequestID");
+                    }
+
+                    if (!logEvent($connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"], $approval, $comment)) {
                         $URL .= "&return=error2";
                         header("Location: {$URL}");
                         exit();
                     }
-
-                    $done = $result->rowCount() == 0;
-                }
-
-                if ($done) {
-                    $approval = "Approval - Final";
-                    try {
-                        $data = array("tripPlannerRequestID" => $tripPlannerRequestID);
-                        $sql = "UPDATE tripPlannerRequests SET status='Approved' WHERE tripPlannerRequestID=:tripPlannerRequestID";
-                        $result = $connection2->prepare($sql);
-                        $result->execute($data);
-                    } catch (PDOException $e) {
-                        $URL .= "&return=error2";
-                        header("Location: {$URL}");
-                        exit();
-                    }
-
-                    requestNotification($guid, $connection2, $tripPlannerRequestID, "Approved");
-                } elseif ($requestApprovalType == "Chain Of All") {
-                    try {
-                        $data = array("gibbonPersonID" => $_SESSION[$guid]["gibbonPersonID"]);
-                        $sql = "SELECT gibbonPersonID FROM `tripPlannerApprovers` WHERE sequenceNumber = (SELECT sequenceNumber FROM `tripPlannerApprovers` WHERE gibbonPersonID=:gibbonPersonID)+1";
-                        $result = $connection2->prepare($sql);
-                        $result->execute($data);
-                    } catch (PDOException $e) {
-                        $URL .= "&return=error2";
-                        header("Location: {$URL}");
-                        exit();
-                    }
-
-                    $message = __($guid, 'A trip request is awaiting your approval.');
-                    setNotification($connection2, $guid, $result->fetch()["gibbonPersonID"], $message, 'Trip Planner', "/index.php?q=/modules/Trip Planner/trips_requestApprove.php&tripPlannerRequestID=$tripPlannerRequestID");
-                }
-
-                if (!logEvent($connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"], $approval, $comment)) {
-                    $URL .= "&return=error2";
-                    header("Location: {$URL}");
-                    exit();
                 }
             } elseif ($approval == "Rejection") {
                 try {

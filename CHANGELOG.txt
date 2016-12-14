@@ -56,3 +56,6 @@ Made the Risk Assessment field taller in trips_submitRequest.php
 Added Final Approval (WIP)
 Made Risk Assessment a final approval.
 Some other bug fixes I forgot about.
+
+v0.0.05
+-------
