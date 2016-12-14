@@ -59,3 +59,11 @@ Some other bug fixes I forgot about.
 
 v0.0.05
 -------
+Fixed bug where endDate would improperly show up in trips_requestView.php, trips_requestEdit.php and trips_requestApprove.php
+Added new WIP features.
+
+v0.0.06
+-------
+Fixed multiple bugs with Timetable Overlaps in trips_requestView.php, trips_requestEdit.php and trips_requestApprove.php
+Fixed previousMissedClasses not working in trips_requestView.php, trips_requestEdit.php and trips_requestApprove.php
+Fixed isApprover errors.
