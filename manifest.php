@@ -23,7 +23,7 @@ $description = "A trip planner module for Gibbon.";
 $entryURL = "trips_manage.php";
 $type = "Additional";
 $category = "Learn"; 
-$version = "0.0.04"; 
+$version = "0.0.05"; 
 $author = "Ray Clark"; 
 $url = "https://github.com/raynichc/Trip-Planner";
 
@@ -58,7 +58,7 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequests` (
     `gibbonSchoolYearID` int(3) unsigned zerofill NOT NULL,
     `gibbonPersonIDUpdate` int(10) unsigned zerofill NULL,
     `timestampUpdate` timestamp NULL,
-    `endDate` date NULL,
+    `endDate` date NULL DEFAULT NULL,
     `letterToParents` text NOT NULL,
     PRIMARY KEY (`tripPlannerRequestID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;";

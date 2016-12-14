@@ -77,18 +77,20 @@ function approverExists($connection2, $tripPlannerApproverID)
     return $approver != null;
 }
 
-function isApprover($connection2, $gibbonPersonID)
+function isApprover($connection2, $gibbonPersonID, $final)
 {
 
     try {
         $data = array("gibbonPersonID" => $gibbonPersonID);
-        $sql = "SELECT tripPlannerApproverID FROM tripPlannerApprovers WHERE gibbonPersonID=:gibbonPersonID";
+        $sql = "SELECT tripPlannerApproverID, finalApprover FROM tripPlannerApprovers WHERE gibbonPersonID=:gibbonPersonID";
         $result = $connection2->prepare($sql);
         $result->execute($data);
     } catch (PDOException $e) {
     }
-
-    return ($result->rowCount() == 1);
+    if($result->rowCount() == 1) {
+        return $result->fetch()["finalApprover"] || !$final;
+    }
+    return false;
 }
 
 function needsApproval($connection2, $tripPlannerRequestID, $gibbonPersonID)
@@ -149,6 +151,20 @@ function needsApproval($connection2, $tripPlannerRequestID, $gibbonPersonID)
         }
     }
     return false;
+}
+
+function getTripStatus($connection2, $tripPlannerRequestID) {
+    try {
+        $data = array("tripPlannerRequestID" => $tripPlannerRequestID);
+        $sql = "SELECT status FROM tripPlannerRequests WHERE tripPlannerRequestID=:tripPlannerRequestID";
+        $result = $connection2->prepare($sql);
+        $result->execute($data);
+        if($result->rowCount() == 1) {
+            return $result->fetch()["status"];
+        }
+    } catch(PDOException $e) {
+    }
+    return null;
 }
 
 function getTrip($connection2, $tripPlannerRequestID) {
@@ -483,13 +499,16 @@ function requestNotification($guid, $connection2, $tripPlannerRequestID, $action
         $message = __($guid, 'Your trip request is awaiting final approval.');
     } elseif ($action == "Rejected") {
         $message = __($guid, 'Your trip request has been rejected.');
+    } elseif ($action == "Awaiting Final Approval") {
+        $message = __($guid, 'Your trip request is awaiting final approval.');
     }
 
     $owner = getOwner($connection2, $tripPlannerRequestID);
     setNotification($connection2, $guid, $owner, $message, "Trip Planner", "/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID=" . $tripPlannerRequestID);
 }
 
-function notifyApprovers($guid, $connection2, $tripPlannerRequestID, $owner) {
+function notifyApprovers($guid, $connection2, $tripPlannerRequestID, $owner)
+{
     $approvers = getApprovers($connection2)->fetchAll();
     if (isset($approvers) && !empty($approvers) && is_array($approvers)) {
         $requestApprovalType = getSettingByScope($connection2, "Trip Planner", "requestApprovalType");
@@ -741,7 +760,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
             print "</div>";
         } else {
             $date = DateTime::createFromFormat("Y-m-d", $request["date"]);
-            if($request["endDate"] != "0000-00-00") $endDate = DateTime::createFromFormat("Y-m-d", $request["endDate"]);
+            if($request["endDate"] != null) $endDate = DateTime::createFromFormat("Y-m-d", $request["endDate"]);
             if($request["startTime"] != null) $startTime = DateTime::createFromFormat("H:i:s", $request["startTime"]);
             if($request["endTime"] != null) $endTime = DateTime::createFromFormat("H:i:s", $request["endTime"]);
 

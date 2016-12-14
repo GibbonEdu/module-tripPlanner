@@ -37,4 +37,9 @@ UPDATE gibbonAction SET category='Settings' WHERE (name='Manage Approvers_view' 
 ALTER TABLE tripPlannerRequests ADD COLUMN letterToParents text NOT NULL;end
 ";
 
+$sql[$count][0]="0.0.05";
+$sql[$count++][1]="
+ALTER TABLE tripPlannerRequests CHANGE endDate endDate date NULL DEFAULT NULL;end
+UPDATE tripPlannerRequests SET endDate=NULL WHERE endDate='0000-00-00';end
+";
 ?>
