@@ -67,3 +67,7 @@ v0.0.06
 Fixed multiple bugs with Timetable Overlaps in trips_requestView.php, trips_requestEdit.php and trips_requestApprove.php
 Fixed previousMissedClasses not working in trips_requestView.php, trips_requestEdit.php and trips_requestApprove.php
 Fixed isApprover errors.
+Made Letter To Parents not mandatory.
+Made student person list printable.
+Trips now become "Awaiting Final Approval" once normal approval process is finished, if "Risk Assessment Approval" is enabled
+Added ability to auto-generate Emergency and Medical information on all students in a trip.

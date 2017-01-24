@@ -204,8 +204,8 @@ function getTrip($connection2, $tripPlannerRequestID) {
     return null;
 }
 
-function getPeopleInTrip($connection2, $trips, $role=null) {
-
+function getPeopleInTrip($connection2, $trips, $role=null)
+{
     if(!is_array($trips) || empty($trips)) {
         return null;
     }
@@ -1034,6 +1034,19 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                         <tr>
                             <td colspan=2>
                                 <b><?php echo __($guid, 'Students') ?></b>
+                                <?php
+                                    echo "<div class='linkTop'>";
+                                        if(isActionAccessible($guid, $connection2, '/modules/Students/report_student_medicalSummary_print.php')) {
+                                            $_SESSION[$guid]['report_student_medicalSummary.php_choices'] = $students;
+                                            echo "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/report.php?q=/modules/Students/report_student_medicalSummary_print.php'>".__($guid, 'Medical Info')."<img style='margin-left: 5px' title='".__($guid, 'Medical Info')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/print.png'/></a>";
+                                        }
+                                        if(isActionAccessible($guid, $connection2, '/modules/Students/report_student_emergencySummary_print.php')) {
+                                            $_SESSION[$guid]['report_student_emergencySummary.php_choices'] = $students;
+                                            echo "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/report.php?q=/modules/Students/report_student_emergencySummary_print.php'>".__($guid, 'Emergency Info')."<img style='margin-left: 5px' title='".__($guid, 'Emergency Info')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/print.png'/></a>";
+                                        }
+                                        echo "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/report.php?q=/modules/Trip Planner/trips_reportTripPeople.php&tripPlannerRequestID=$tripPlannerRequestID'>".__($guid, 'Print')."<img style='margin-left: 5px' title='".__($guid, 'Print')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/print.png'/></a>";
+                                    echo '</div>';
+                                ?>
                                 <table class='noIntBorder' cellspacing='0' style='width:100%;'>
                                     <tr>
                                         <?php

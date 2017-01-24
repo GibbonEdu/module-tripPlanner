@@ -51,6 +51,15 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             $URL .= "&return=error2";
             header("Location: {$URL}");
         }
+
+        if($setting == "riskAssessmentApproval") {
+            try {
+                $sql = "UPDATE tripPlannerRequests SET status='Requested' WHERE status='Awaiting Final Approval'";
+                $result = $connection2->prepare($sql);
+                $result->execute();
+            } catch (PDOException $e) {
+            }
+        }
     }
  
     $URL .= "&return=success0";

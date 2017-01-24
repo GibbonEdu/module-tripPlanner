@@ -46,7 +46,18 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
 
             if ($approval == "Approval - Partial") {
                 if($status == "Awaiting Final Approval") {
-                     
+                    try {
+                        $data = array("tripPlannerRequestID" => $tripPlannerRequestID, "status" => $status);
+                        $sql = "UPDATE tripPlannerRequests SET status='Approved' WHERE tripPlannerRequestID=:tripPlannerRequestID";
+                        $result = $connection2->prepare($sql);
+                        $result->execute($data);
+                    } catch (PDOException $e) {
+                        $URL .= "&return=error2";
+                        header("Location: {$URL}");
+                        exit();
+                    }
+
+                    requestNotification($guid, $connection2, $tripPlannerRequestID, "Approved");
                 } else {
                     $done = false;
                     $requestApprovalType = getSettingByScope($connection2, "Trip Planner", "requestApprovalType");

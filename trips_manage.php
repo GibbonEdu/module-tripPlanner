@@ -37,8 +37,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         }
 
         $expenseApprovalType = getSettingByScope($connection2, "Trip Planner", "requestApprovalType");
+        $riskAssessmentApproval = getSettingByScope($connection2, "Trip Planner", "riskAssessmentApproval");
 
-        $ama = isApprover($connection2, $_SESSION[$guid]["gibbonPersonID"]) && $expenseApprovalType == "Chain Of All";
+        $ama = (isApprover($connection2, $_SESSION[$guid]["gibbonPersonID"]) && $expenseApprovalType == "Chain Of All") || ($riskAssessmentApproval && isApprover($connection2, $_SESSION[$guid]["gibbonPersonID"], true));
         $departments = getHOD($connection2, $_SESSION[$guid]["gibbonPersonID"]);
         $isHOD = $departments->rowCount() > 0;
 
@@ -94,8 +95,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             if ($connector == " WHERE ") {
                 $connector = " AND ";
             }
-        } elseif ($relationFilter == "AMA" && $ama) {
-            $statusFilter = "Requested";
+        } elseif ($relationFilter == "AMA") {
+            $statusFilter = "All";
         } elseif (strpos($relationFilter, "DR") !== false) {
             $data["gibbonDepartmentID"] = substr($relationFilter, 2);
             $sql .= $connector . ":gibbonDepartmentID IN (SELECT gibbonDepartmentID FROM gibbonDepartmentStaff WHERE gibbonPersonID = tripPlannerRequests.creatorPersonID)";
@@ -242,8 +243,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             $descriptionLength = 100;
             while ($row = $result->fetch()) {
                 $show = true;
-                if ($relationFilter == "Awaiting My Approval" && $ama) {
-                    if (!needsApproval($connection2, $row["tripPlannerRequestID"], $_SESSION[$guid]["gibbonPersonID"])) {
+                if ($relationFilter == "AMA" && $ama) {
+                    if (!($row["status"] == "Requested" && needsApproval($connection2, $row["tripPlannerRequestID"], $_SESSION[$guid]["gibbonPersonID"])) && !($row["status"] == "Awaiting Final Approval" && isApprover($connection2, $_SESSION[$guid]["gibbonPersonID"], true))) {
                         $show = false;
                     }
                 }
@@ -269,15 +270,23 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                             if ($row["status"] != "Cancelled" && $row["status"] != "Rejected") {
                                 print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_requestEdit.php&tripPlannerRequestID=" . $row["tripPlannerRequestID"] . "'><img title='" . _('Edit') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/config.png'/></a> ";
                             }
-                            if ($row["status"] == "Requested") {
-                                if (needsApproval($connection2, $row["tripPlannerRequestID"], $_SESSION[$guid]["gibbonPersonID"])) {
-                                    print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_requestApprove.php&tripPlannerRequestID=" . $row["tripPlannerRequestID"] . "'><img title='" . __($guid, 'Approve/Reject') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/iconTick.png'/></a> ";
-                                }
+                            if (($row["status"] == "Requested" && needsApproval($connection2, $row["tripPlannerRequestID"], $_SESSION[$guid]["gibbonPersonID"])) || ($row["status"] == "Awaiting Final Approval" && isApprover($connection2, $_SESSION[$guid]["gibbonPersonID"], true))) {
+                                print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_requestApprove.php&tripPlannerRequestID=" . $row["tripPlannerRequestID"] . "'><img title='" . __($guid, 'Approve/Reject') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/iconTick.png'/></a> ";
                             }
                         print "</td>";
                     print "</tr>";
                     $rowCount++;
                 }
+            }
+
+            if($rowCount == 0) {
+                  ?>
+                <tr>
+                    <td colspan=5>
+                        There are no records to display
+                    </td>
+                </tr>
+            <?php  
             }
         }
         ?>

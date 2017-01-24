@@ -408,7 +408,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                     $row = $result->fetch();
                 ?>
                 <td colspan=2>
-                    <b><?php print _('Letter to Parents') ?> *</b></br>
+                    <b><?php print _('Letter to Parents') ?></b></br>
                     <?php print getEditor($guid, TRUE, "letterToParents", "", 25, true, true, false); ?>               
                 </td>
             </tr>
