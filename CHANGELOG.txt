@@ -71,3 +71,6 @@ Made Letter To Parents not mandatory.
 Made student person list printable.
 Trips now become "Awaiting Final Approval" once normal approval process is finished, if "Risk Assessment Approval" is enabled
 Added ability to auto-generate Emergency and Medical information on all students in a trip.
+
+v0.0.07
+-------

@@ -46,4 +46,8 @@ UPDATE tripPlannerRequests SET endDate=NULL WHERE endDate='0000-00-00';end
 $sql[$count][0]="0.0.06";
 $sql[$count++][1]="
 ";
+
+$sql[$count][0]="0.0.07";
+$sql[$count++][1]="
+";
 ?>
