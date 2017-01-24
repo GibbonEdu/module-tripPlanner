@@ -22,7 +22,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 } else {    
     $date = new DateTime();
     $riskAssessmentApproval = getSettingByScope($connection2, "Trip Planner", "riskAssessmentApproval");
-    $items = array("title" => true, "description" => true, "location" => true, "date" => true, "endDate" => false, "startTime" => false, "endTime" => false, "riskAssessment" => !$riskAssessmentApproval, "letterToParents" => true, "teachersSelected" => true, "studentsSelected" => false, "order" => false);
+    $items = array("title" => true, "description" => true, "location" => true, "date" => true, "endDate" => false, "startTime" => false, "endTime" => false, "riskAssessment" => !$riskAssessmentApproval, "letterToParents" => false, "teachersSelected" => true, "studentsSelected" => false, "order" => false);
     $data = array("creatorPersonID" => $_SESSION[$guid]["gibbonPersonID"], "timestampCreation" => $date->format('Y-m-d H:i:s'), "gibbonSchoolYearID" => $_SESSION[$guid]["gibbonSchoolYearID"]);
     $sql = "INSERT INTO tripPlannerRequests SET creatorPersonID=:creatorPersonID, timestampCreation=:timestampCreation, gibbonSchoolYearID=:gibbonSchoolYearID, ";
     $people = array();

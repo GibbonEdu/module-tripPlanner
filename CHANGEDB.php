@@ -42,4 +42,8 @@ $sql[$count++][1]="
 ALTER TABLE tripPlannerRequests CHANGE endDate endDate date NULL DEFAULT NULL;end
 UPDATE tripPlannerRequests SET endDate=NULL WHERE endDate='0000-00-00';end
 ";
+
+$sql[$count][0]="0.0.06";
+$sql[$count++][1]="
+";
 ?>

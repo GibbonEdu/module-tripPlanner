@@ -77,7 +77,7 @@ function approverExists($connection2, $tripPlannerApproverID)
     return $approver != null;
 }
 
-function isApprover($connection2, $gibbonPersonID, $final)
+function isApprover($connection2, $gibbonPersonID, $final=false)
 {
 
     try {
@@ -204,8 +204,8 @@ function getTrip($connection2, $tripPlannerRequestID) {
     return null;
 }
 
-function getPeopleInTrip($connection2, $trips, $role=null) {
-
+function getPeopleInTrip($connection2, $trips, $role=null)
+{
     if(!is_array($trips) || empty($trips)) {
         return null;
     }
@@ -630,7 +630,7 @@ function getPastTrips($guid, $connection2, $people)
         $date = new DateTime();
         $data = array("gibbonSchoolYearID" => $_SESSION[$guid]["gibbonSchoolYearID"], "today" => $date->format('Y-m-d'));
         $data["today"] = "2016-08-01";
-        $sql = "SELECT DISTINCT tripPlannerRequests.tripPlannerRequestID, date, startTime, endTime FROM tripPlannerRequests JOIN tripPlannerRequestPerson ON (tripPlannerRequestPerson.tripPlannerRequestID = tripPlannerRequests.tripPlannerRequestID) WHERE status='Approved' AND date>:today AND gibbonSchoolYearID=:gibbonSchoolYearID AND (";
+        $sql = "SELECT DISTINCT tripPlannerRequests.tripPlannerRequestID, startDate, endDate, startTime, endTime FROM tripPlannerRequests JOIN tripPlannerRequestPerson ON (tripPlannerRequestPerson.tripPlannerRequestID = tripPlannerRequests.tripPlannerRequestID) WHERE status='Approved' AND date>:today AND gibbonSchoolYearID=:gibbonSchoolYearID AND (";
         foreach ($people as $key => $id) {
             $pData = "person" . $key;
             $data[$pData] = $id;
@@ -1034,6 +1034,17 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                         <tr>
                             <td colspan=2>
                                 <b><?php echo __($guid, 'Students') ?></b>
+                                <?php
+                                    echo "<div class='linkTop'>";
+                                        if(isActionAccessible($guid, $connection2, '/modules/Students/report_student_medicalSummary_print.php')) {
+                                            echo "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/modules/Trip Planner/trips_requestExternalReportProcess.php?tripPlannerRequestID=$tripPlannerRequestID&report=medical'>".__($guid, 'Medical Info')."<img style='margin-right: 10px;margin-left: 5px' title='".__($guid, 'Medical Info')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/print.png'/></a>";
+                                        }
+                                        if(isActionAccessible($guid, $connection2, '/modules/Students/report_student_emergencySummary_print.php')) {
+                                            echo "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/modules/Trip Planner/trips_requestExternalReportProcess.php?tripPlannerRequestID=$tripPlannerRequestID&report=emergency'>".__($guid, 'Emergency Info')."<img style='margin-right: 10px;margin-left: 5px' title='".__($guid, 'Emergency Info')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/print.png'/></a>";
+                                        }
+                                        echo "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/report.php?q=/modules/Trip Planner/trips_reportTripPeople.php&tripPlannerRequestID=$tripPlannerRequestID'>".__($guid, 'Student List')."<img style='margin-left: 5px' title='".__($guid, 'Student List')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/print.png'/></a>";
+                                    echo '</div>';
+                                ?>
                                 <table class='noIntBorder' cellspacing='0' style='width:100%;'>
                                     <tr>
                                         <?php
@@ -1214,8 +1225,9 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                                         $courses = array();
 
                                                         while ($row = $classesMissed->fetch()) {
-                                                            for ($i = 0; $i < count($dates); $i++) { 
-                                                                if ($dates[$i] == $row['date']) {
+                                                            for ($i = 0; $i < count($startDates); $i++) {
+                                                                $withinDate = $endDates[$i] == null ? $withinDate = ($row["date"] == $startDates[$i]) : $withinDate = ($row['date'] >= $startDates[$i] && $endDates[$i] <= $row['date']);
+                                                                if ($withinDate) {
                                                                     if($row['timeStart'] < $endTimes[$i] && $row['timeEnd'] > $startTimes[$i]) {
                                                                         $classes[] = array("arrayIndex" => $i, "gibbonCourseID" => $row['gibbonCourseID'], "nameShort" => $row['nameShort'], "gibbonCourseClassID" => $row['gibbonCourseClassID']);
                                                                         $courses[] = $row['gibbonCourseClassID'];
@@ -1224,54 +1236,57 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                                             }
                                                         }
 
-                                                        $peopleInTrips = getPeopleInTrip($connection2, $trips, "Student");
+                                                        if(!empty($courses)) {
 
-                                                        while ($row = $peopleInTrips->fetch()) {
-                                                            $arrayIndex = array_search($row['tripPlannerRequestID'], $trips);
-                                                            if ($arrayIndex !== null) {
-                                                                if (isset($tripStudents[$arrayIndex])) {
-                                                                    $tempArray = $tripStudents[$arrayIndex];
-                                                                    array_push($tempArray, $row['gibbonPersonID']);
-                                                                    $tripStudents[$arrayIndex] = $tempArray;
-                                                                } else {
-                                                                    $tempArray = array($row['gibbonPersonID']);
-                                                                    $tripStudents[$arrayIndex] = $tempArray;
-                                                                }
-                                                            }
-                                                        }
+                                                            $peopleInTrips = getPeopleInTrip($connection2, $trips, "Student");
 
-                                                        $peopleInClasses = getStudentsInClass($connection2, $courses);
-
-                                                        while ($row = $peopleInClasses->fetch()) {
-                                                            $keys = array_keys(array_column($classes, 'gibbonCourseClassID'), $row['gibbonCourseClassID']);
-                                                            foreach ($keys as $key) {
-                                                                if ($key !== null) {
-                                                                    if (isset($classes[$key]["students"])) {
-                                                                        $tempArray = $classes[$key]["students"];
+                                                            while ($row = $peopleInTrips->fetch()) {
+                                                                $arrayIndex = array_search($row['tripPlannerRequestID'], $trips);
+                                                                if ($arrayIndex !== null) {
+                                                                    if (isset($tripStudents[$arrayIndex])) {
+                                                                        $tempArray = $tripStudents[$arrayIndex];
                                                                         array_push($tempArray, $row['gibbonPersonID']);
-                                                                        $classes[$key]["students"] = $tempArray;
+                                                                        $tripStudents[$arrayIndex] = $tempArray;
                                                                     } else {
                                                                         $tempArray = array($row['gibbonPersonID']);
-                                                                        $classes[$key]["students"] = $tempArray;
+                                                                        $tripStudents[$arrayIndex] = $tempArray;
                                                                     }
                                                                 }
                                                             }
-                                                        }
 
-                                                        foreach ($classes as $key => $class) {
-                                                            $cStudents = $class["students"];
-                                                            $tStudents = $tripStudents[$class["arrayIndex"]];
-                                                            $gibbonCourseID = $class["gibbonCourseID"];
-                                                            foreach ($cStudents as $cStudent) {
-                                                                if(in_array($cStudent, $tStudents)) {
-                                                                    if(!isset($missedClasses[$cStudent])) {
-                                                                        $missedClasses[$cStudent] = array();
+                                                            $peopleInClasses = getStudentsInClass($connection2, $courses);
+
+                                                            while ($row = $peopleInClasses->fetch()) {
+                                                                $keys = array_keys(array_column($classes, 'gibbonCourseClassID'), $row['gibbonCourseClassID']);
+                                                                foreach ($keys as $key) {
+                                                                    if ($key !== null) {
+                                                                        if (isset($classes[$key]["students"])) {
+                                                                            $tempArray = $classes[$key]["students"];
+                                                                            array_push($tempArray, $row['gibbonPersonID']);
+                                                                            $classes[$key]["students"] = $tempArray;
+                                                                        } else {
+                                                                            $tempArray = array($row['gibbonPersonID']);
+                                                                            $classes[$key]["students"] = $tempArray;
+                                                                        }
                                                                     }
+                                                                }
+                                                            }
 
-                                                                    if(isset($missedClasses[$cStudent][$gibbonCourseID])) {
-                                                                        $missedClasses[$cStudent][$gibbonCourseID] = ++$missedClasses[$cStudent][$gibbonCourseID];   
-                                                                    } else {
-                                                                        $missedClasses[$cStudent][$gibbonCourseID] = 1;   
+                                                            foreach ($classes as $key => $class) {
+                                                                $cStudents = $class["students"];
+                                                                $tStudents = $tripStudents[$class["arrayIndex"]];
+                                                                $gibbonCourseID = $class["gibbonCourseID"];
+                                                                foreach ($cStudents as $cStudent) {
+                                                                    if(in_array($cStudent, $tStudents)) {
+                                                                        if(!isset($missedClasses[$cStudent])) {
+                                                                            $missedClasses[$cStudent] = array();
+                                                                        }
+
+                                                                        if(isset($missedClasses[$cStudent][$gibbonCourseID])) {
+                                                                            $missedClasses[$cStudent][$gibbonCourseID] = ++$missedClasses[$cStudent][$gibbonCourseID];   
+                                                                        } else {
+                                                                            $missedClasses[$cStudent][$gibbonCourseID] = 1;   
+                                                                        }
                                                                     }
                                                                 }
                                                             }
@@ -1323,7 +1338,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                                         while ($student = $classStudents->fetch()) {
                                                             if (in_array($student["gibbonPersonID"], $students)) {
                                                                 $warning = false;
-                                                                if ($missedClassWarningThreshold > 0) {
+                                                                if ($missedClassWarningThreshold > 0 && !empty($missedClasses)) {
                                                                     if (isset($missedClasses[$student["gibbonPersonID"]])) {
                                                                         if (isset($missedClasses[$student["gibbonPersonID"]][$row['gibbonCourseID']])) {
                                                                             $warning = $missedClassWarningThreshold <= $missedClasses[$student["gibbonPersonID"]][$row['gibbonCourseID']];
@@ -1351,11 +1366,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                                             }
                                                         }
 
-                                                        if ($requiresCover) {
-                                                            print "Yes";
-                                                        } else {
-                                                            print "No";
-                                                        }
+                                                        print $requiresCover ? "Yes" : "No";
                                                     print "</td>";
                                                     print "<td>";
                                                         print "<a><img title='" . _('View') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/plus.png'/></a> ";
