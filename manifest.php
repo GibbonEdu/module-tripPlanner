@@ -76,7 +76,7 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestLog` (
     `tripPlannerRequestLogID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
     `tripPlannerRequestID` int(7) unsigned zerofill NOT NULL,
     `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
-    `action` ENUM('Request', 'Cancellation', 'Approval - Partial', 'Approval - Final', 'Rejection', 'Comment') NOT NULL,
+    `action` ENUM('Request', 'Cancellation', 'Approval - Partial', 'Approval - Final', 'Rejection', 'Comment', 'Edit') NOT NULL,
     `comment` text NULL,
     `timestamp` timestamp NULL,
     PRIMARY KEY (`tripPlannerRequestLogID`)
@@ -87,7 +87,8 @@ VALUES
 (NULL, 'Trip Planner', 'requestApprovalType', 'Request Approval Type', 'The type of approval that a trip request has to go through.', 'One Of'),
 (NULL, 'Trip Planner', 'riskAssessmentTemplate', 'Risk Assessment Template', 'The template for the Risk Assessment.', ''),
 (NULL, 'Trip Planner', 'missedClassWarningThreshold', 'Missed Class Warning Threshold', 'The threshold for displaying a warning that student has missed a class too many times. Set to 0 to disable warnings.', '5'),
-(NULL, 'Trip Planner', 'riskAssessmentApproval', 'Risk Assessment Approval', 'If this is enabled the Risk Assessment becomes an optional field until the trip has gone through approval. After this a Final Approval is required before the trip becomes approved.', '1');";
+(NULL, 'Trip Planner', 'riskAssessmentApproval', 'Risk Assessment Approval', 'If this is enabled the Risk Assessment becomes an optional field until the trip has gone through approval. After this a Final Approval is required before the trip becomes approved.', '1'),
+(NULL, 'Trip Planner', 'requestEditing', 'Allow Requests to be Edited', 'If enabled Trip Requests may be edited by the owner, if edited the approval process is reset.', '0');";
 
 $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestPerson` (
     `tripPlannerRequestPersonID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,

@@ -93,6 +93,16 @@ function isApprover($connection2, $gibbonPersonID, $final=false)
     return false;
 }
 
+/*Return Values:
+
+0: Needs Approval
+1: Databse Error
+2: No permission
+3: Already Approved.
+4: Can't approve yet. (TODO)
+5: Already Approved by you.
+
+*/
 function needsApproval($connection2, $tripPlannerRequestID, $gibbonPersonID)
 {
     if (isApprover($connection2, $gibbonPersonID)) {
@@ -102,18 +112,18 @@ function needsApproval($connection2, $tripPlannerRequestID, $gibbonPersonID)
             $result = $connection2->prepare($sql);
             $result->execute($data);
         } catch (PDOException $e) {
-            return false;
+            return 1;
         }
         $request = $result->fetch();
         if ($request["status"] == "Requested") {
             $requestApprovalType = getSettingByScope($connection2, "Trip Planner", "requestApprovalType");
             if ($requestApprovalType == "One Of") {
-                return true;
+                return 0;
             } elseif ($requestApprovalType == "Two Of") {
                 $events = getEvents($connection2, $tripPlannerRequestID, array("Approval - Partial"));
                 while ($event = $events->fetch()) {
                     if ($event["gibbonPersonID"] == $gibbonPersonID) {
-                        return false;
+                        return 5;
                     }
                 }
                 return $events->rowCount() < 2;
@@ -125,10 +135,10 @@ function needsApproval($connection2, $tripPlannerRequestID, $gibbonPersonID)
                     $resultApprovers = $connection2->prepare($sqlApprovers);
                     $resultApprovers->execute($dataApprovers);
                 } catch (PDOException $e) {
-                    return false;
+                    return 1;
                 }
-                if ($resultApprovers->rowCount() < 1) {
-                    return false;
+                if ($resultApprovers->rowCount() == 0) {
+                    return 1;
                 } else {
                     $approvers = $resultApprovers->fetchAll();
                     $gibbonPersonIDNext = null;
@@ -142,15 +152,17 @@ function needsApproval($connection2, $tripPlannerRequestID, $gibbonPersonID)
                     }
 
                     if (is_null($gibbonPersonIDNext)) {
-                        return false;
-                    } else {
-                        return $gibbonPersonIDNext == $gibbonPersonID;
+                        return 1;
+                    } else if ($gibbonPersonIDNext == $gibbonPersonID) {
+                        return 0;
                     }
                 }
             }
+        } elseif($request["status"] == "Approved") {
+            return 3;
         }
     }
-    return false;
+    return 2;
 }
 
 function getTripStatus($connection2, $tripPlannerRequestID) {
@@ -290,6 +302,8 @@ function logEvent($connection2, $tripPlannerRequestID, $gibbonPersonID, $action,
         } catch (PDOException $e) {
             return false;
         }
+    } else {
+        return false;
     }
     return true;
 }
@@ -490,24 +504,45 @@ function getPersonBlock($guid, $connection2, $gibbonPersonID, $role, $numPerRow=
     }
 }
 
-function requestNotification($guid, $connection2, $tripPlannerRequestID, $action)
+function requestNotification($guid, $connection2, $tripPlannerRequestID, $gibbonPersonID, $action)
 {
-    $message = __($guid, 'Someone has commented on your trip request.');
+    $ownerOnly = true;
+    
     if ($action == "Approved") {
         $message = __($guid, 'Your trip request has been fully approved.');
     } elseif ($action == "Awaiting Final Approval") {
         $message = __($guid, 'Your trip request is awaiting final approval.');
     } elseif ($action == "Rejected") {
         $message = __($guid, 'Your trip request has been rejected.');
-    } elseif ($action == "Awaiting Final Approval") {
-        $message = __($guid, 'Your trip request is awaiting final approval.');
+    } else {
+        $message = __($guid, 'Someone has commented on a trip request.');
+        $ownerOnly = false;
     }
 
-    $owner = getOwner($connection2, $tripPlannerRequestID);
-    setNotification($connection2, $guid, $owner, $message, "Trip Planner", "/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID=" . $tripPlannerRequestID);
+    if($ownerOnly) {
+        $owner = getOwner($connection2, $tripPlannerRequestID);
+        if($owner != $gibbonPersonID) {
+            setNotification($connection2, $guid, $owner, $message, "Trip Planner", "/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID=" . $tripPlannerRequestID);
+        }
+    } else {
+        try {
+            $data = array('tripPlannerRequestID' => $tripPlannerRequestID);
+            $sql = 'SELECT DISTINCT gibbonPersonID FROM tripPlannerRequestLog WHERE tripPlannerRequestLog.tripPlannerRequestID=:tripPlannerRequestID ORDER BY timestamp';
+            $result = $connection2->prepare($sql);
+            $result->execute($data);
+        } catch (PDOException $e) {
+            echo "<div class='error'>".$e->getMessage().'</div>';
+        }
+
+        while($row = $result->fetch()) {
+            if($row["gibbonPersonID"] != $gibbonPersonID) {
+                setNotification($connection2, $guid, $row["gibbonPersonID"], $message, "Trip Planner", "/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID=" . $tripPlannerRequestID);
+            }
+        }
+    }
 }
 
-function notifyApprovers($guid, $connection2, $tripPlannerRequestID, $owner)
+function notifyApprovers($guid, $connection2, $tripPlannerRequestID, $owner, $title)
 {
     $approvers = getApprovers($connection2)->fetchAll();
     if (isset($approvers) && !empty($approvers) && is_array($approvers)) {
@@ -516,11 +551,11 @@ function notifyApprovers($guid, $connection2, $tripPlannerRequestID, $owner)
             if ($requestApprovalType == "One Of" || $requestApprovalType == "Two Of") {
                 foreach ($approvers as $approver) {
                     if ($approver["gibbonPersonID"] != $owner) {
-                        setNotification($connection2, $guid, $approver['gibbonPersonID'], "A new trip has ben requested.", "Trip Planner", "/index.php?q=/modules/Trip Planner/trips_requestApprove.php&tripPlannerRequestID=" . $tripPlannerRequestID);   
+                        setNotification($connection2, $guid, $approver['gibbonPersonID'], "A new trip has ben requested (" . $title .  ").", "Trip Planner", "/index.php?q=/modules/Trip Planner/trips_requestApprove.php&tripPlannerRequestID=" . $tripPlannerRequestID);   
                     }
                 }
             } else {
-                setNotification($connection2, $guid, $approvers[0]['gibbonPersonID'], "A new trip has ben requested.", "Trip Planner", "/index.php?q=/modules/Trip Planner/trips_requestApprove.php&tripPlannerRequestID=" . $tripPlannerRequestID);   
+                setNotification($connection2, $guid, $approvers[0]['gibbonPersonID'], "A new trip has ben requested (" . $title .  ").", "Trip Planner", "/index.php?q=/modules/Trip Planner/trips_requestApprove.php&tripPlannerRequestID=" . $tripPlannerRequestID);   
             }
         }
     }
@@ -667,7 +702,7 @@ function getPlannerOverlaps($connection2, $startDates, $endDates = array(), $sta
             }
 
             if (isset($endTimes[$i]) && isset($startTimes[$i])) {
-                if ($endTimes[$i] == null || $startTimes[$i] == null) {
+                if ($endTimes[$i] != null && $startTimes[$i] != null) {
                     $data[$eTimeData] = $endTimes[$i];
                     $data[$sTimeData] = $startTimes[$i];
                 }
@@ -694,7 +729,6 @@ function getPlannerOverlaps($connection2, $startDates, $endDates = array(), $sta
             $sql .= ":" . $pData . ",";
         }
         $sql = substr($sql, 0, -1) . ") ORDER BY gibbonCourse.nameShort ASC, gibbonTTDayDate.date ASC";
-        // print $sql;
         $result = $connection2->prepare($sql);
         $result->execute($data);
     } catch (PDOException $e) {
@@ -935,6 +969,9 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                     </tbody>
                     <tr class="break">
                         <td colspan=2>
+                        <?php
+                            $riskAssessmentApproval = getSettingByScope($connection2, "Trip Planner", "riskAssessmentApproval");
+                        ?>
                             <h3>
                                 <?php echo __($guid, 'Risk Assessment & Communication') ?>
                                 <?php print "<div id='showRisk'  title='" . __($guid, 'Show/Hide') . "' style='margin-top: -5px; margin-left: 3px; padding-right: 1px; float: right; width: 23px; height: 25px; background-image: url(\"" . $_SESSION[$guid]["absoluteURL"] . "/themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/minus.png\")'></div>"; ?>
@@ -960,7 +997,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                 <b><?php echo __($guid, 'Risk Assessment') ?></b>
                                 <?php 
                                     if ($mode == "Edit") {
-                                        print getEditor($guid, TRUE, "riskAssessment", $request["riskAssessment"], 5, true, true, false);
+                                        print getEditor($guid, TRUE, "riskAssessment", $request["riskAssessment"], 5, true, $riskAssessmentApproval, false);
                                     } else {
                                         echo '<p>';
                                         echo $request['riskAssessment'];
@@ -1194,9 +1231,9 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                         <th style='text-align: left; width: 10%'>
                                             <?php print __($guid, 'May Require Cover'); ?>
                                         </th>
-                                        <th style='text-align: left; width:10%'>
+                                        <!-- <th style='text-align: left; width:10%'>
                                             <?php print __($guid, 'Actions'); ?>
-                                        </th>
+                                        </th> -->
                                     </tr>
                                     <?php
                                         $missedClasses = array();
@@ -1368,9 +1405,9 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
 
                                                         print $requiresCover ? "Yes" : "No";
                                                     print "</td>";
-                                                    print "<td>";
-                                                        print "<a><img title='" . _('View') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/plus.png'/></a> ";
-                                                    print "</td>";
+                                                    // print "<td>";
+                                                    //     print "<a><img title='" . _('View') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/plus.png'/></a> ";
+                                                    // print "</td>";
                                                 print "</tr>";
                                             }
                                         }
@@ -1404,7 +1441,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                             </td>
                         </tr>
                         <?php
-                        if (!needsApproval($connection2, $tripPlannerRequestID, $_SESSION[$guid]['gibbonPersonID'])) {
+                        if (needsApproval($connection2, $tripPlannerRequestID, $_SESSION[$guid]['gibbonPersonID']) != 0) {
                             ?>
                             <tr>
                                 <td colspan=2> 

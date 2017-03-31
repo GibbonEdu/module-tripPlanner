@@ -74,3 +74,13 @@ Added ability to auto-generate Emergency and Medical information on all students
 
 v0.0.07
 -------
+Fixed Approval log message
+Fixed Timetable overlaps showing classes outside trip times
+Comments and action will now inform everyone who has performed an action on the trip request.
+Indefinitly disabled the actions on timetable overlap.
+Risk Assessment and Letter to Parents can now be edited.
+Added more detailed error returns to trips_requestApprove.php
+Possible fix for comments not saving.
+Possible fix for Two Of approval not working correctly.
+Notifications now display the name of the trip.
+Changed log messages not displaying the correct event.

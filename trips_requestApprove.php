@@ -38,12 +38,26 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
 
     if (isset($_GET["tripPlannerRequestID"])) {
         $tripPlannerRequestID = $_GET["tripPlannerRequestID"];
-        if (needsApproval($connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"])) {
+        if (($approvalReturn = needsApproval($connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"])) == 0) {
             renderTrip($guid, $connection2, $tripPlannerRequestID, "Approve");
         } else {
-            print "<div class='error'>";
-                print "You do not have access to this action.";
-            print "</div>";
+            if($approvalReturn == 2 || $approvalReturn == 1) {
+                print "<div class='error'>";
+                    if($approvalReturn == 1) {
+                        print "A Database error occured.";
+                    } else {
+                        print "You do not have access to this action.";
+                    }
+                print "</div>";
+            } else if($approvalReturn == 3 || $approvalReturn == 5) {
+                print "<div class='warning'>";
+                    if($approvalReturn == 3) {
+                        print "The trip has already been approved.";
+                    } else {
+                        print "You have already approved this trip.";
+                    }
+                print "</div>";
+            }
         }
     } else {    
         print "<div class='error'>";

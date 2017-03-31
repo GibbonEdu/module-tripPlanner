@@ -57,14 +57,14 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                         exit();
                     }
 
-                    requestNotification($guid, $connection2, $tripPlannerRequestID, "Approved");
+                    requestNotification($guid, $connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"], "Approved");
                 } else {
                     $done = false;
                     $requestApprovalType = getSettingByScope($connection2, "Trip Planner", "requestApprovalType");
                     if ($requestApprovalType == "One Of") {
                         $done = true;
                     } elseif ($requestApprovalType == "Two Of") {
-                        $done = (getEvents($connection2, $tripPlannerRequestID, array("Approval - Partial")) == 1);
+                        $done = (getEvents($connection2, $tripPlannerRequestID, array("Approval - Partial"))->rowCount() == 1);
                     } elseif ($requestApprovalType == "Chain Of All") {
                         try {
                             $data = array("gibbonPersonID" => $_SESSION[$guid]["gibbonPersonID"]);
@@ -86,6 +86,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                             $status = "Approved";
                             if($riskAssessmentApproval) {
                                 $status = "Awaiting Final Approval";
+                                $approval = "Approval - Awaiting Final Approval";
                             }
 
                             $data = array("tripPlannerRequestID" => $tripPlannerRequestID, "status" => $status);
@@ -98,7 +99,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                             exit();
                         }
 
-                        requestNotification($guid, $connection2, $tripPlannerRequestID, $status);
+                        requestNotification($guid, $connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"], $status);
                     } elseif ($requestApprovalType == "Chain Of All") {
                         try {
                             $data = array("gibbonPersonID" => $_SESSION[$guid]["gibbonPersonID"]);
@@ -132,14 +133,14 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                     header("Location: {$URL}");
                     exit();
                 }
-                requestNotification($guid, $connection2, $tripPlannerRequestID, "Rejected");
+                requestNotification($guid, $connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"], "Rejected");
             } elseif ($approval == "Comment") {
                 if (!logEvent($connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"], "Comment", $comment)) {
                     $URL .= "&return=error2";
                     header("Location: {$URL}");
                     exit();
                 }
-                requestNotification($guid, $connection2, $tripPlannerRequestID, "Comment");
+                requestNotification($guid, $connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"], "Comment");
             }
 
             $URL = $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_manage.php&return=success0";

@@ -97,7 +97,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             $result2 = $connection2->prepare($sql2);
             $result2->execute($person);
         }
-        notifyApprovers($guid, $connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"]);
+        notifyApprovers($guid, $connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"], $data["title"]);
     } catch (PDOException $e) {
         $URL .= "&return=error2";
         header("Location: {$URL}");
