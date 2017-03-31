@@ -46,4 +46,10 @@ UPDATE tripPlannerRequests SET endDate=NULL WHERE endDate='0000-00-00';end
 $sql[$count][0]="0.0.06";
 $sql[$count++][1]="
 ";
+
+$sql[$count][0]="0.0.07";
+$sql[$count++][1]="
+INSERT INTO gibbonSetting SET scope='Trip Planner', name='requestEditing', nameDisplay='Allow Requests to be Edited', description='If enabled Trip Requests may be edited by the owner, if edited the approval process is reset.', value='0';end
+ALTER TABLE tripPlannerRequestLog CHANGE `action` `action` ENUM('Request', 'Cancellation', 'Approval - Partial', 'Approval - Final', 'Rejection', 'Comment', 'Edit') NOT NULL;end
+";
 ?>

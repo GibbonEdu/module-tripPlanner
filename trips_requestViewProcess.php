@@ -47,17 +47,20 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             if ($comment == "" || $comment == null) {
                 $URL .= "&return=error1";
                 header("Location: {$URL}");
+                exit();
             }
         } else {
             $URL .= "&return=error1";
             header("Location: {$URL}");
+            exit();
         }
 
         if (!logEvent($connection2, $tripPlannerRequestID, $gibbonPersonID, "Comment", $comment)) {
             $URL .= "&return=error2";
             header("Location: {$URL}");
+            exit();
         }
-        requestNotification($guid, $connection2, $tripPlannerRequestID, "Comment");
+        requestNotification($guid, $connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"], "Comment");
 
         $URL .= "&return=success0";
         header("Location: {$URL}");
