@@ -126,7 +126,11 @@ function needsApproval($connection2, $tripPlannerRequestID, $gibbonPersonID)
                         return 5;
                     }
                 }
-                return $events->rowCount() < 2;
+                if($events->rowCount() < 2) {
+                    return 0;
+                } else {
+                    return 3;
+                }
             } elseif ($requestApprovalType == "Chain Of All") {
                 //Get notifiers in sequence
                 try {
