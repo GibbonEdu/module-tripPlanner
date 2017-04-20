@@ -84,3 +84,7 @@ Possible fix for comments not saving.
 Possible fix for Two Of approval not working correctly.
 Notifications now display the name of the trip.
 Changed log messages not displaying the correct event.
+
+v0.0.08
+-------
+Fixed bug that stopped Two Of approval to return a database error.
