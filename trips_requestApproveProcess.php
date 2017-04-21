@@ -25,7 +25,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         $tripPlannerRequestID = $_POST["tripPlannerRequestID"];
         $riskAssessmentApproval = getSettingByScope($connection2, "Trip Planner", "riskAssessmentApproval");
         $status = getTripStatus($connection2, $tripPlannerRequestID);
-        if (needsApproval($connection2, $tripPlannerRequestID, $_SESSION[$guid]['gibbonPersonID']) || ($status == "Awaiting Final Approval" && isApprover($connection2, $_SESSION[$guid]["gibbonPersonID"], true))) {
+        if (($approvalReturn = needsApproval($connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"])) == 0 || ($status == "Awaiting Final Approval" && isApprover($connection2, $_SESSION[$guid]["gibbonPersonID"], true))) {
             $URL .= "trips_requestApprove.php&tripPlannerRequestID=" . $tripPlannerRequestID;
 
             if (isset($_POST["approval"])) {
