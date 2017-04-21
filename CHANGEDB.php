@@ -56,4 +56,8 @@ ALTER TABLE tripPlannerRequestLog CHANGE `action` `action` ENUM('Request', 'Canc
 $sql[$count][0]="0.0.08";
 $sql[$count++][1]="
 ";
+
+$sql[$count][0]="0.0.09";
+$sql[$count++][1]="
+";
 ?>

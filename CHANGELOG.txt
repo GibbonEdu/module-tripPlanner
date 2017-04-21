@@ -88,3 +88,7 @@ Changed log messages not displaying the correct event.
 v0.0.08
 -------
 Fixed bug that stopped Two Of approval to return a database error.
+
+v0.0.09
+-------
+Fixed bug that stopped approval in trips_requestApproveProcess.php
