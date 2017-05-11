@@ -19,6 +19,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     //Acess denied
     $URL .= "&return=error0";
     header("Location: {$URL}");
+    exit();
 } else {    
     $date = new DateTime();
     $riskAssessmentApproval = getSettingByScope($connection2, "Trip Planner", "riskAssessmentApproval");
@@ -106,5 +107,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
     $URL .= "&return=success0&tripPlannerRequestID=" . $tripPlannerRequestID;
     header("Location: {$URL}");
+    exit();
 }   
 ?>

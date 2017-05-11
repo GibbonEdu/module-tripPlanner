@@ -21,12 +21,15 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_addApp
     header("Location: {$URL}");
     exit();
 } else {    
+
+    $URL .= "trips_addApprover.php";
+
     if (isset($_POST["gibbonPersonID"])) {
         if ($_POST["gibbonPersonID"] != null && $_POST["gibbonPersonID"] != "") {
             $gibbonPersonID = $_POST["gibbonPersonID"];
         }
     } else {
-        $URL .= "trips_addApprover.php&return=error1";
+        $URL .= "&return=error1";
         header("Location: {$URL}");
         exit();
     }
@@ -38,7 +41,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_addApp
                 $sequenceNumber = abs($_POST["sequenceNumber"]);
             }
         } else {
-            $URL .= "trips_addApprover.php&return=error1";
+            $URL .= "&return=error1";
             header("Location: {$URL}");
             exit();
         }
@@ -66,13 +69,13 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_addApp
         $result = $connection2->prepare($sql);
         $result->execute($data);
     } catch (PDOException $e) { 
-        $URL .= "trips_addApprover.php&return=error2";
+        $URL .= "&return=error2";
         header("Location: {$URL}");
         exit();
     }
         
     if ($result->rowCount() > 0) {
-        $URL .= "trips_addApprover.php&return=error5";
+        $URL .= "&return=error5";
         header("Location: {$URL}");
         exit();
     } else {  
@@ -83,12 +86,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_addApp
             $result->execute($data);
             $tripPlannerApproverID = $connection2->lastInsertId();
         } catch (PDOException $e) {
-            $URL .= "trips_addApprover.php&return=error2";
+            $URL .= "&return=error2";
             header("Location: {$URL}");
             exit();
         }
 
-        $URL .= "trips_addApprover.php&return=success0&tripPlannerApproverID=" . $tripPlannerApproverID;
+        $URL .= "&return=success0&tripPlannerApproverID=" . $tripPlannerApproverID;
         header("Location: {$URL}");
         exit();
     }

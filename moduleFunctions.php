@@ -1235,9 +1235,9 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                         <th style='text-align: left; width: 10%'>
                                             <?php print __($guid, 'May Require Cover'); ?>
                                         </th>
-                                        <!-- <th style='text-align: left; width:10%'>
+                                        <th style='text-align: left; width:10%'>
                                             <?php print __($guid, 'Actions'); ?>
-                                        </th> -->
+                                        </th>
                                     </tr>
                                     <?php
                                         $missedClasses = array();
@@ -1366,6 +1366,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                             while ($row = $overlaps->fetch()) {
                                                 $classStudents = getStudentsInClass($connection2, array($row["gibbonCourseClassID"]));
                                                 $classTeachers = getTeachersOfClass($connection2, $row["gibbonCourseClassID"]);
+                                                $allStudentOnTrip = true;
                                                 print "<tr>";
                                                     print "<td>";
                                                         print $row["nameShort"];
@@ -1394,6 +1395,8 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                                                     $studentsInvolved .= "</b>";
                                                                 }
                                                                 $studentsInvolved .= ", ";
+                                                            } else {
+                                                                $allStudentOnTrip = false;
                                                             }
                                                         }
                                                         print substr($studentsInvolved, 0, -2);
@@ -1402,16 +1405,17 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                                         $requiresCover = true;
                                                         while ($teacher = $classTeachers->fetch()) {
                                                             if (!in_array($teacher['gibbonPersonID'], $teachers)) {
-                                                                $requiresCover = false;
+                                                                $requiresCover = !$allStudentOnTrip;
                                                                 break;
                                                             }
                                                         }
 
                                                         print $requiresCover ? "Yes" : "No";
                                                     print "</td>";
-                                                    // print "<td>";
+                                                    print "<td>";
+
                                                     //     print "<a><img title='" . _('View') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/plus.png'/></a> ";
-                                                    // print "</td>";
+                                                    print "</td>";
                                                 print "</tr>";
                                             }
                                         }

@@ -95,4 +95,5 @@ Fixed bug that stopped approval in trips_requestApproveProcess.php
 
 v1.0.00
 -------
-OOified most forms
+OOified most forms.
+Added exits to process files.

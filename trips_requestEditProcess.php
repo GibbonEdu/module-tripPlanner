@@ -19,6 +19,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     //Acess denied
     $URL .= "trips_manage&return=error0";
     header("Location: {$URL}");
+    exit();
 } else {
 
     if (isset($_POST["tripPlannerRequestID"])) {
