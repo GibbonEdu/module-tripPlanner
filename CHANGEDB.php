@@ -60,4 +60,8 @@ $sql[$count++][1]="
 $sql[$count][0]="0.0.09";
 $sql[$count++][1]="
 ";
+
+$sql[$count][0]="0.1.00";
+$sql[$count++][1]="
+";
 ?>
