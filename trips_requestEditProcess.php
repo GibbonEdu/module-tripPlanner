@@ -17,7 +17,7 @@ $connection2 = $pdo->getConnection();
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php')) {
     //Acess denied
-    $URL .= "trips_manage&return=error0";
+    $URL .= "trips_manage.php&return=error0";
     header("Location: {$URL}");
     exit();
 } else {
@@ -107,12 +107,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             header("Location: {$URL}");
             exit();
         } else {
-            $URL .= "trips_manage&return=error0";
+            $URL .= "trips_manage.php&return=error0";
             header("Location: {$URL}");
             exit();
         }
     } else {
-        $URL .= "trips_manage&return=error1";
+        $URL .= "trips_manag.php&return=error1";
         header("Location: {$URL}");
         exit();
     }

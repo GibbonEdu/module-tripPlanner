@@ -42,7 +42,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     }
 
     try {
-        $sql = "SELECT name, nameDisplay, description, value FROM gibbonSetting WHERE scope='Trip Planner'";
+        $sql = "SELECT name, nameDisplay, description, value FROM gibbonSetting WHERE scope='Trip Planner' ORDER BY gibbonSettingID ASC";
         $result = $connection2->prepare($sql);
         $result->execute();
     } catch(PDOException $e) {
