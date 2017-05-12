@@ -82,7 +82,7 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestLog` (
     PRIMARY KEY (`tripPlannerRequestLogID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
 
-$moduleTables[$tables++] = "INSERT INTO `gibbonSetting` (`gibbonSettingsID`, `scope`, `name`, `nameDisplay`, `description`, `value`)
+$moduleTables[$tables++] = "INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`)
 VALUES
 (NULL, 'Trip Planner', 'requestApprovalType', 'Request Approval Type', 'The type of approval that a trip request has to go through.', 'One Of'),
 (NULL, 'Trip Planner', 'riskAssessmentTemplate', 'Risk Assessment Template', 'The template for the Risk Assessment.', ''),
