@@ -136,8 +136,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             $years[$row['gibbonSchoolYearID']] = $row['name'];
         }
 
-        print $relations[$relationFilter];
-
         print "<h3>";
             print __($guid, "Filter");
         print "</h3>";

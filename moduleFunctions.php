@@ -684,15 +684,15 @@ function getPastTrips($guid, $connection2, $people)
     return $result;
 }
 
-function getPlannerOverlaps($connection2, $startDates, $endDates = array(), $startTimes = array(), $endTimes = array(), $people)
+function getPlannerOverlaps($connection2, $tripPlannerRequestID, $startDates, $endDates = array(), $startTimes = array(), $endTimes = array(), $people)
 {
     if (!is_array($people) || empty($people) || !is_array($startDates) || empty($startDates) || !is_array($endDates) || !is_array($startTimes) || !is_array($endTimes)) {
         return null;
     }
 
     try {
-        $data = array();
-        $sql = "SELECT DISTINCT gibbonCourse.gibbonCourseID, gibbonCourse.nameShort, gibbonCourseClass.gibbonCourseClassID, gibbonTTDayDate.date, timeStart, timeEnd FROM gibbonTTDayRowClass JOIN gibbonTTColumnRow ON (gibbonTTDayRowClass.gibbonTTColumnRowID = gibbonTTColumnRow.gibbonTTColumnRowID) JOIN gibbonCourseClassPerson ON (gibbonTTDayRowClass.gibbonCourseClassID = gibbonCourseClassPerson.gibbonCourseClassID) JOIN gibbonCourseClass ON (gibbonCourseClass.gibbonCourseClassID = gibbonTTDayRowClass.gibbonCourseClassID) JOIN gibbonCourse ON (gibbonCourse.gibbonCourseID = gibbonCourseClass.gibbonCourseID) LEFT JOIN gibbonTTDayDate ON (gibbonTTDayDate.gibbonTTDayID=gibbonTTDayRowClass.gibbonTTDayID) WHERE (";
+        $data = array("tripPlannerRequestID" => $tripPlannerRequestID);
+        $sql = "SELECT DISTINCT gibbonCourse.gibbonCourseID, gibbonCourse.nameShort, gibbonCourseClass.gibbonCourseClassID, gibbonTTDayDate.date, timeStart, timeEnd, requiresCover FROM gibbonTTDayRowClass JOIN gibbonTTColumnRow ON (gibbonTTDayRowClass.gibbonTTColumnRowID = gibbonTTColumnRow.gibbonTTColumnRowID) JOIN gibbonCourseClassPerson ON (gibbonTTDayRowClass.gibbonCourseClassID = gibbonCourseClassPerson.gibbonCourseClassID) JOIN gibbonCourseClass ON (gibbonCourseClass.gibbonCourseClassID = gibbonTTDayRowClass.gibbonCourseClassID) JOIN gibbonCourse ON (gibbonCourse.gibbonCourseID = gibbonCourseClass.gibbonCourseID)" . ($tripPlannerRequestID != "" && $tripPlannerRequestID != null ? " LEFT JOIN tripPlannerRequestCover ON (tripPlannerRequestCover.gibbonCourseClassID = gibbonCourseClass.gibbonCourseClassID AND tripPlannerRequestID=:tripPlannerRequestID)" : "") . " LEFT JOIN gibbonTTDayDate ON (gibbonTTDayDate.gibbonTTDayID=gibbonTTDayRowClass.gibbonTTDayID) WHERE (";
         for ($i = 0; $i < count($startDates); $i++) {
             $sDayData = "startDate" . $i;
             $eDayData = "endDate" . $i;
@@ -713,7 +713,6 @@ function getPlannerOverlaps($connection2, $startDates, $endDates = array(), $sta
             }
 
             $sql .= "(";
-            //
             if (isset($data[$eDayData])) {
                 $sql .= "gibbonTTDayDate.date >=:" . $sDayData . " AND gibbonTTDayDate.date <=:" . $eDayData;
             } else {
@@ -732,7 +731,11 @@ function getPlannerOverlaps($connection2, $startDates, $endDates = array(), $sta
             $data[$pData] = $id;
             $sql .= ":" . $pData . ",";
         }
-        $sql = substr($sql, 0, -1) . ") ORDER BY gibbonCourse.nameShort ASC, gibbonTTDayDate.date ASC";
+        $sql = substr($sql, 0, -1) . ")"; 
+        if($tripPlannerRequestID != "" && $tripPlannerRequestID != null) {
+            //$sql .= " AND tripPlannerRequestCover.tripPlannerRequestID=:tripPlannerRequestID";
+        }
+        $sql .= " ORDER BY gibbonCourse.nameShort ASC, gibbonTTDayDate.date ASC";
         $result = $connection2->prepare($sql);
         $result->execute($data);
     } catch (PDOException $e) {
@@ -1233,7 +1236,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                             <?php print __($guid, 'Students Involved'); ?>
                                         </th>
                                         <th style='text-align: left; width: 10%'>
-                                            <?php print __($guid, 'May Require Cover'); ?>
+                                            <?php print __($guid, 'Require Covers?'); ?>
                                         </th>
                                         <th style='text-align: left; width:10%'>
                                             <?php print __($guid, 'Actions'); ?>
@@ -1259,7 +1262,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                                     $endTimes[] = $row['endTime'];
                                                 }
 
-                                                $classesMissed = getPlannerOverlaps($connection2, $startDates, $endDates, $startTimes, $endTimes, $students);
+                                                $classesMissed = getPlannerOverlaps($connection2, null, $startDates, $endDates, $startTimes, $endTimes, $students);
                                                 if ($classesMissed != null) {
                                                     if($classesMissed->rowCount() > 0) {
                                                         $classes = array();
@@ -1361,7 +1364,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                             $overlapEndTime[] = $request["endTime"];
                                         }
 
-                                        $overlaps = getPlannerOverlaps($connection2, $overlapStartDate, $overlapEndDate, $overlapStartTime, $overlapEndTime, array_merge($students, $teachers));
+                                        $overlaps = getPlannerOverlaps($connection2, $tripPlannerRequestID, $overlapStartDate, $overlapEndDate, $overlapStartTime, $overlapEndTime, array_merge($students, $teachers));
                                         if ($overlaps != null) {
                                             while ($row = $overlaps->fetch()) {
                                                 $classStudents = getStudentsInClass($connection2, array($row["gibbonCourseClassID"]));
@@ -1402,19 +1405,26 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                                         print substr($studentsInvolved, 0, -2);
                                                     print "</td>";
                                                     print "<td>";
-                                                        $requiresCover = true;
-                                                        while ($teacher = $classTeachers->fetch()) {
-                                                            if (!in_array($teacher['gibbonPersonID'], $teachers)) {
-                                                                $requiresCover = !$allStudentOnTrip;
-                                                                break;
+                                                        $systemMessage = "";
+                                                        $requiresCover = $row["requiresCover"];
+                                                        if ($requiresCover == null) {
+                                                            $allTeachersOnTrip = true;
+                                                            while ($teacher = $classTeachers->fetch()) {
+                                                                if (!in_array($teacher['gibbonPersonID'], $teachers)) {
+                                                                    $allTeachersOnTrip = false;
+                                                                    break;
+                                                                }
                                                             }
+                                                            $requiresCover = !$allStudentOnTrip && $allTeachersOnTrip;
+                                                            $systemMessage = " (This is an Automated Suggestion)";
                                                         }
 
-                                                        print $requiresCover ? "Yes" : "No";
+                                                        print ($requiresCover ? "Yes" : "No") . $systemMessage;
                                                     print "</td>";
                                                     print "<td>";
-
-                                                    //     print "<a><img title='" . _('View') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/plus.png'/></a> ";
+                                                        echo "<a class='thickbox' href='".$_SESSION[$guid]['absoluteURL']."/fullscreen.php?q=/modules/Trip Planner/trips_requestCoverStatus.php&tripPlannerApproverID=$tripPlannerRequestID&gibbonCourseClassID=" . $row["gibbonCourseClassID"] . "&width=1000&height=550'><img title='".__($guid, 'Change Cover Status')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/config.png'/></a> ";
+                                                        //print "<a><img title='" . _('Change Cover Status') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/config.png'/></a> ";
+                                                        //print "<a><img title='" . _('View') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/plus.png'/></a> ";
                                                     print "</td>";
                                                 print "</tr>";
                                             }

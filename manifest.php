@@ -98,6 +98,14 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestPerson` (
     PRIMARY KEY (`tripPlannerRequestPersonID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
 
+$moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestCover` (
+    `tripPlannerRequestCoverID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
+    `tripPlannerRequestID` int(7) unsigned zerofill NOT NULL,
+    `gibbonCourseClassID` int(8) unsigned zerofill NOT NULL,
+    `requiresCover` boolean DEFAULT TRUE NOT NULL,
+    PRIMARY KEY (`tripPlannerRequestCoverID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
+
 //Actions
 $actionCount = 0;
 
