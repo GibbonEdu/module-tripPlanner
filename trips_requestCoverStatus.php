@@ -30,18 +30,44 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         print "You do not have access to this action.";
     print "</div>";
 } else {
+    if (isset($_GET["tripPlannerRequestID"])) {
+        $tripPlannerRequestID = $_GET["tripPlannerRequestID"];
+        if(isset($_GET["gibbonCourseClassID"])) {
+            $gibbonCourseClassID = $_GET["gibbonCourseClassID"];
+            if (isOwner($connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"])) {
+                $requiresCover = false;
+                if (isset($_GET["requiresCover"])) {
+                    $requiresCover = ($_GET["requiresCover"] == 1);
+                }
 
-    print "<h3>";
-        print "Change Class Cover Status";
-    print "</h3>";   
+                print "<h3>";
+                    print "Change Class Cover Status";
+                print "</h3>";
 
-    $form = Form::create("addApprover", $_SESSION[$guid]["absoluteURL"] . "/modules/Trip Planner/trips_addApproverProcess.php");
+                $form = Form::create("editCoverStatus", $_SESSION[$guid]["absoluteURL"] . "/modules/Trip Planner/trips_requestCoverStatusProcess.php?tripPlannerRequestID=$tripPlannerRequestID&gibbonCourseClassID=$gibbonCourseClassID");
 
+                $row = $form->addRow();
+                    $row->addLabel("requiresCoverLabel", "Requires Cover?");
+                    $row->addCheckBox("requiresCover")->checked($requiresCover);
 
-    $row = $form->addRow();
-        $row->addFooter();
-        $row->addSubmit();
+                $row = $form->addRow();
+                    $row->addSubmit();
 
-    print $form->getOutput();
+                print $form->getOutput();
+            } else {
+                print "<div class='error'>";
+                    print "You do not have access to this action.";
+                print "</div>";
+            }
+        } else {    
+            print "<div class='error'>";
+                print "No class selected.";
+            print "</div>";
+        }
+    } else {    
+        print "<div class='error'>";
+            print "No request selected.";
+        print "</div>";
+    }
 }   
 ?>
