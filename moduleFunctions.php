@@ -691,8 +691,11 @@ function getPlannerOverlaps($connection2, $tripPlannerRequestID, $startDates, $e
     }
 
     try {
-        $data = array("tripPlannerRequestID" => $tripPlannerRequestID);
-        $sql = "SELECT DISTINCT gibbonCourse.gibbonCourseID, gibbonCourse.nameShort, gibbonCourseClass.gibbonCourseClassID, gibbonTTDayDate.date, timeStart, timeEnd, requiresCover FROM gibbonTTDayRowClass JOIN gibbonTTColumnRow ON (gibbonTTDayRowClass.gibbonTTColumnRowID = gibbonTTColumnRow.gibbonTTColumnRowID) JOIN gibbonCourseClassPerson ON (gibbonTTDayRowClass.gibbonCourseClassID = gibbonCourseClassPerson.gibbonCourseClassID) JOIN gibbonCourseClass ON (gibbonCourseClass.gibbonCourseClassID = gibbonTTDayRowClass.gibbonCourseClassID) JOIN gibbonCourse ON (gibbonCourse.gibbonCourseID = gibbonCourseClass.gibbonCourseID)" . ($tripPlannerRequestID != "" && $tripPlannerRequestID != null ? " LEFT JOIN tripPlannerRequestCover ON (tripPlannerRequestCover.gibbonCourseClassID = gibbonCourseClass.gibbonCourseClassID AND tripPlannerRequestID=:tripPlannerRequestID)" : "") . " LEFT JOIN gibbonTTDayDate ON (gibbonTTDayDate.gibbonTTDayID=gibbonTTDayRowClass.gibbonTTDayID) WHERE (";
+        $data = array();
+        if ($tripPlannerRequestID != "" && $tripPlannerRequestID != null) {
+            $data["tripPlannerRequestID"] = $tripPlannerRequestID;
+        }
+        $sql = "SELECT DISTINCT gibbonCourse.gibbonCourseID, gibbonCourse.nameShort, gibbonCourseClass.gibbonCourseClassID, gibbonTTDayDate.date, timeStart, timeEnd" . ($tripPlannerRequestID != "" && $tripPlannerRequestID != null ? ", requiresCover" : "") . " FROM gibbonTTDayRowClass JOIN gibbonTTColumnRow ON (gibbonTTDayRowClass.gibbonTTColumnRowID = gibbonTTColumnRow.gibbonTTColumnRowID) JOIN gibbonCourseClassPerson ON (gibbonTTDayRowClass.gibbonCourseClassID = gibbonCourseClassPerson.gibbonCourseClassID) JOIN gibbonCourseClass ON (gibbonCourseClass.gibbonCourseClassID = gibbonTTDayRowClass.gibbonCourseClassID) JOIN gibbonCourse ON (gibbonCourse.gibbonCourseID = gibbonCourseClass.gibbonCourseID)" . ($tripPlannerRequestID != "" && $tripPlannerRequestID != null ? " LEFT JOIN tripPlannerRequestCover ON (tripPlannerRequestCover.gibbonCourseClassID = gibbonCourseClass.gibbonCourseClassID AND tripPlannerRequestID=:tripPlannerRequestID)" : "") . " LEFT JOIN gibbonTTDayDate ON (gibbonTTDayDate.gibbonTTDayID=gibbonTTDayRowClass.gibbonTTDayID) WHERE (";
         for ($i = 0; $i < count($startDates); $i++) {
             $sDayData = "startDate" . $i;
             $eDayData = "endDate" . $i;
@@ -732,13 +735,12 @@ function getPlannerOverlaps($connection2, $tripPlannerRequestID, $startDates, $e
             $sql .= ":" . $pData . ",";
         }
         $sql = substr($sql, 0, -1) . ")"; 
-        if($tripPlannerRequestID != "" && $tripPlannerRequestID != null) {
-            //$sql .= " AND tripPlannerRequestCover.tripPlannerRequestID=:tripPlannerRequestID";
-        }
         $sql .= " ORDER BY gibbonCourse.nameShort ASC, gibbonTTDayDate.date ASC";
+        //print $sql;
         $result = $connection2->prepare($sql);
         $result->execute($data);
     } catch (PDOException $e) {
+        print $e;
     }
 
     return $result;
@@ -821,6 +823,16 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
             }
 
             $link = $_SESSION[$guid]['absoluteURL'].'/modules/Trip Planner/trips_request' . $mode . "Process.php";
+
+            if ($mode != "Edit" && isOwner($connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"])) {
+                echo "<div class='linkTop'>";
+                    echo "<a href='".$_SESSION[$guid]['absoluteURL']."/index.php?q=/modules/Trip Planner/trips_requestEdit.php&tripPlannerRequestID=$tripPlannerRequestID'>".__($guid, 'Edit')."<img style='margin-left: 5px' title='".__($guid, 'Edit')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/config.png'/></a>";
+                echo '</div>';
+            } else if ($mode != "View") {
+                echo "<div class='linkTop'>";
+                    echo "<a href='".$_SESSION[$guid]['absoluteURL']."/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID=$tripPlannerRequestID'>".__($guid, 'View')."<img style='margin-left: 5px' title='".__($guid, 'View')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/plus.png'/></a>";
+                echo '</div>';
+            }
 
             ?>
             <form method="post" action="<?php echo $link ?>">
@@ -1391,11 +1403,13 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                                                     }
                                                                 }
                                                                 if ($warning) {
+                                                                    //$studentsInvolved .= "<a class='thickbox' href='".$_SESSION[$guid]['absoluteURL']."/fullscreen.php?q=/modules/Trip Planner/trips_requestStudentInformation.php&tripPlannerRequestID=$tripPlannerRequestID&gibbonCourseID=" . $row["gibbonCourseID"] . "&gibbonPersonID=" . $student["gibbonPersonID"] . "&width=1000&height=550'>";
                                                                     $studentsInvolved .= "<b style='color:#F50000'>";
                                                                 }
                                                                 $studentsInvolved .= $student["preferredName"] . " " . $student["surname"];
                                                                 if ($warning) {
                                                                     $studentsInvolved .= "</b>";
+                                                                    //$studentsInvolved .= "</a>";
                                                                 }
                                                                 $studentsInvolved .= ", ";
                                                             } else {
@@ -1422,8 +1436,12 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                                         print ($requiresCover ? "Yes" : "No") . $systemMessage;
                                                     print "</td>";
                                                     print "<td>";
-                                                        if($mode == "Edit") {
+                                                        if ($mode == "Edit") {
                                                             echo "<a class='thickbox' href='".$_SESSION[$guid]['absoluteURL']."/fullscreen.php?q=/modules/Trip Planner/trips_requestCoverStatus.php&tripPlannerRequestID=$tripPlannerRequestID&gibbonCourseClassID=" . $row["gibbonCourseClassID"] . "&requiresCover=$requiresCover&width=1000&height=550'><img title='".__($guid, 'Change Cover Status')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/config.png'/></a> ";
+                                                        }
+                                                        
+                                                        if ($requiresCover) {
+                                                            echo "<a class='thickbox' href='".$_SESSION[$guid]['absoluteURL']."/fullscreen.php?q=/modules/Trip Planner/trips_requestCoverTeachers.php&tripPlannerRequestID=$tripPlannerRequestID&date=" . $row["date"] . "&timeStart=" . $row["timeStart"] . "&timeEnd=" . $row["timeEnd"] . "&width=1000&height=550'><img title='".__($guid, 'View Possible Cover Teachers')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/plus.png'/></a> ";
                                                         }
                                                         //print "<a><img title='" . _('View') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/plus.png'/></a> ";
                                                     print "</td>";
