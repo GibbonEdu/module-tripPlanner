@@ -45,20 +45,39 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
 
             $riskAssessmentApproval = getSettingByScope($connection2, "Trip Planner", "riskAssessmentApproval");
 
-            $data = array("riskAssessment", "letterToParents");
+            $data = array("riskAssessment" => $riskAssessmentApproval, "letterToParents"=> $riskAssessmentApproval, "title" => true, "description" => true, "location" => true, "date" => true, "endDate" => false, "startTime" => false, "endTime" => false);
 
-            foreach($data as $datum) {
+            foreach($data as $datum => $required) {
                 if(isset($_POST[$datum])) {
-                    ${$datum} = $_POST[$datum];
-                    if ((${$datum} == "" || ${$datum} == null) && $riskAssessmentApproval) {
-                        $URL .= "&return=error1";
-                        header("Location: {$URL}");
-                        exit();
+                    if (($_POST[$datum] == "" || $_POST[$datum] == null)) {
+                        if ($required) {
+                            $URL .= "&return=error1";
+                            header("Location: {$URL}");
+                            exit();
+                        } else {
+                            ${$datum} = null;
+                            continue;
+                        }
                     }
-                } elseif ($riskAssessmentApproval) {
+                    if ($datum == "date" || $datum == "endDate") {
+                        $datee = DateTime::createFromFormat("d/m/Y", $_POST[$datum]);
+                        ${$datum} = $datee->format("Y-m-d H:i:s");
+                    } else {
+                        ${$datum} = $_POST[$datum];
+                    }
+                } elseif ($required) {
                     $URL .= "&return=error1";
                     header("Location: {$URL}");
                     exit();
+                } else {
+                    ${$datum} = null;
+                }
+            }
+
+            if (isset($_POST["allDay"])) {
+                if ($_POST["allDay"] == "on") {
+                    $startTime = null;
+                    $endTime = null;
                 }
             }
 
@@ -92,8 +111,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                 }
 
                 try {
-                    $data = array("tripPlannerRequestID" => $tripPlannerRequestID, "riskAssessment" => $riskAssessment, "letterToParents" => $letterToParents);
-                    $sql = "UPDATE tripPlannerRequests SET riskAssessment=:riskAssessment, letterToParents=:letterToParents WHERE tripPlannerRequestID=:tripPlannerRequestID";
+                    $data = array("tripPlannerRequestID" => $tripPlannerRequestID, "riskAssessment" => $riskAssessment, "letterToParents" => $letterToParents, "title" => $title, "description" => $description, "location" => $location, "date" => $date, "endDate" => $endDate, "startTime" => $startTime, "endTime" => $endTime);
+                    $sql = "UPDATE tripPlannerRequests SET riskAssessment=:riskAssessment, letterToParents=:letterToParents, title=:title, description=:description, location=:location, date=:date, endDate=:endDate, startTime=:startTime, endTime=:endTime WHERE tripPlannerRequestID=:tripPlannerRequestID";
                     $result = $connection2->prepare($sql);
                     $result->execute($data);
                 } catch (PDOException $e) {
@@ -112,7 +131,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             exit();
         }
     } else {
-        $URL .= "trips_manag.php&return=error1";
+        $URL .= "trips_manage.php&return=error1";
         header("Location: {$URL}");
         exit();
     }

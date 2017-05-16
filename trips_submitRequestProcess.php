@@ -80,6 +80,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         }
     }
 
+    if (isset($_POST["allDay"])) {
+        $data["startTime"] = null;
+        $data["endTime"] = null;
+    }
+
     $sql = substr($sql, 0, -2);
 
     try {

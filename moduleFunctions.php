@@ -864,16 +864,22 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                 <b><?php echo __($guid, 'Title') ?> *</b><br/>
                             </td>
                             <td class="right">
-                                <input readonly name="title" id="title" maxlength=60 value="<?php echo $request['title']; ?>" type="text" class="standardWidth">
+                                <input <?php print ($mode == "Edit" ? "" : "readOnly") ?> name="title" id="title" maxlength=60 value="<?php echo $request['title']; ?>" type="text" class="standardWidth">
                             </td>
                         </tr>
                         <tr>
                             <td colspan=2> 
                                 <b><?php echo __($guid, 'Description') ?></b>
                                 <?php 
+                                if ($mode == "Edit") {
+                                    print getEditor($guid, TRUE, "description", $request["description"], 5, true, true, false);
+                                } else {
+                                ?>
+                                <?php 
                                     echo '<p>';
                                     echo $request['description'];
-                                    echo '</p>'
+                                    echo '</p>';
+                                }
                                 ?>
                             </td>
                         </tr>
@@ -882,7 +888,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                 <b><?php echo __($guid, 'Location') ?> *</b><br/>
                             </td>
                             <td class="right">
-                                <input readonly name="location" id="location" maxlength=60 value="<?php echo $request['location']; ?>" type="text" class="standardWidth">
+                                <input <?php ($mode == "Edit" ? : print "readonly") ?> name="location" id="location" maxlength=60 value="<?php echo $request['location']; ?>" type="text" class="standardWidth">
                             </td>
                         </tr>
                         <tr>
@@ -934,6 +940,122 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                         </td>
                     </tr>
                     <tbody id="dateInfo">
+                        <?php
+                            if ($mode == "Edit") {
+                                ?>
+                                <tr>
+                                    <td> 
+                                        <b><?php print _('Multiple Days') ?></b><br/>
+                                    </td>
+                                    <script type="text/javascript">
+                                        function adjustDays() {
+                                            var allDay = document.getElementById("multiDays");
+                                            if (allDay.checked) {
+                                                $("#endDateArea").slideDown("fast", $("#endDateArea").css("display","table-row"));
+
+                                            } else {
+                                                $('#endDateArea').css("display","none");
+                                            }
+                                        }
+                                    </script>
+                                    <td class="right">
+                                        <input <?php $multiDay ? print "checked" : print "" ?> type="checkbox" id="multiDays" value="multiDays" onchange="adjustDays()">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td> 
+                                        <b><?php print _('Date') ?> *</b><br/>
+                                        <span style="font-size: 90%"><i><?php print $_SESSION[$guid]["i18n"]["dateFormat"]  ?></i></span>
+                                    </td>
+                                    <td class="right">
+                                        <input name="date" id="date" maxlength=10 value="<?php echo $date->format('d/m/Y'); ?>" type="text" style="width: 300px">
+                                        <script type="text/javascript">
+                                            var date = new LiveValidation('date');
+                                            date.add(Validate.Presence);
+                                            date.add(Validate.Format, {pattern: <?php if ($_SESSION[$guid]["i18n"]["dateFormatRegEx"] == "") { print "/^(0[1-9]|[12][0-9]|3[01])[- /.](0[1-9]|1[012])[- /.](19|20)\d\d$/i"; } else { print $_SESSION[$guid]["i18n"]["dateFormatRegEx"]; } ?>, failureMessage: "Use <?php if ($_SESSION[$guid]["i18n"]["dateFormat"]=="") { print "dd/mm/yyyy"; } else { print $_SESSION[$guid]["i18n"]["dateFormat"]; }?>." } ); 
+                                        </script>
+                                        <script type="text/javascript">
+                                            $(function() {
+                                                $("#date").datepicker({
+                                                    onClose: function () {
+                                                        this.focus();
+                                                    }
+                                                });
+                                            });
+                                        </script>
+                                    </td>
+                                </tr>
+                                <tr id="endDateArea" style="display:<?php $multiDay ? print "table-row" : print "none"; ?>;">
+                                    <td> 
+                                        <b><?php print _('End Date') ?> *</b><br/>
+                                        <span style="font-size: 90%"><i><?php print $_SESSION[$guid]["i18n"]["dateFormat"]  ?></i></span>
+                                    </td>
+                                    <td class="right">
+                                        <input name="endDate" id="endDate" maxlength=10 value="<?php echo ($multiDay ? $endDate->format('d/m/Y') : "") ?>" type="text" style="width: 300px">
+                                        <script type="text/javascript">
+                                            var endDate = new LiveValidation('endDate');
+                                            endDate.add(Validate.Format, {pattern: <?php if ($_SESSION[$guid]["i18n"]["dateFormatRegEx"] == "") { print "/^(0[1-9]|[12][0-9]|3[01])[- /.](0[1-9]|1[012])[- /.](19|20)\d\d$/i"; } else { print $_SESSION[$guid]["i18n"]["dateFormatRegEx"]; } ?>, failureMessage: "Use <?php if ($_SESSION[$guid]["i18n"]["dateFormat"]=="") { print "dd/mm/yyyy"; } else { print $_SESSION[$guid]["i18n"]["dateFormat"]; }?>." } ); 
+                                        </script>
+                                        <script type="text/javascript">
+                                            $(function() {
+                                                $("#endDate").datepicker({
+                                                    onClose: function () {
+                                                        this.focus();
+                                                    }
+                                                });
+                                            });
+                                        </script>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td> 
+                                        <b><?php print _('All Day') ?></b><br/>
+                                    </td>
+                                    <script type="text/javascript">
+                                        function adjustTime() {
+                                            var allDay = document.getElementById("allDay");
+                                            if (allDay.checked) {
+                                                $('#startTimeArea').css("display","none");
+                                                $('#endTimeArea').css("display","none");
+                                            } else {
+                                                $("#startTimeArea").slideDown("fast", $("#startTimeArea").css("display","table-row"));
+                                                $("#endTimeArea").slideDown("fast", $("#endTimeArea").css("display","table-row"));
+                                            }
+                                        }
+                                    </script>
+                                    <td class="right">
+                                        <input <?php $allDay ? print "checked" : print "" ?> type="checkbox" id="allDay" name="allDay" onchange="adjustTime()">
+                                    </td>
+                                </tr>
+                                <tr id='startTimeArea' style="display:<?php print ($allDay ? "none" : "table-row") ?>">
+                                    <td> 
+                                        <b><?php print _('Start Time') ?> *</b><br/>
+                                        <span style="font-size: 90%"><i><?php print _('Format: hh:mm (24hr)') ?><br/></i></span>
+                                    </td>
+                                    <td class="right">
+                                        <input name="startTime" id="startTime" maxlength=5 value="<?php echo (!$allDay ? $startTime->format('H:i') : "") ?>" type="text" style="width: 300px">
+                                        <script type="text/javascript">
+                                            var startTime=new LiveValidation('startTime');
+                                            startTime.add( Validate.Format, {pattern: /^(0[0-9]|[1][0-9]|2[0-3])[:](0[0-9]|[1-5][0-9])/i, failureMessage: "Use hh:mm" } ); 
+                                        </script>
+                                    </td>
+                                </tr>
+                                <tr id='endTimeArea' style="display:<?php print ($allDay ? "none" : "table-row") ?>">
+                                    <td> 
+                                        <b><?php print _('End Time') ?> *</b><br/>
+                                        <span style="font-size: 90%"><i><?php print _('Format: hh:mm (24hr)') ?><br/></i></span>
+                                    </td>
+                                    <td class="right">
+                                        <input name="endTime" id="endTime" maxlength=5 value="<?php echo (!$allDay ? $endTime->format('H:i') : "") ?>" type="text" style="width: 300px">
+                                        <script type="text/javascript">
+                                            var endTime=new LiveValidation('endTime');
+                                            endTime.add( Validate.Format, {pattern: /^(0[0-9]|[1][0-9]|2[0-3])[:](0[0-9]|[1-5][0-9])/i, failureMessage: "Use hh:mm" } ); 
+                                        </script>
+                                    </td>
+                                </tr>
+                                <?php
+                            } else {
+                        ?>
                         <tr>
                             <td> 
                                 <b><?php echo __($guid, ($multiDay ? 'Start ' : '') . 'Date') ?> *</b><br/>
@@ -984,6 +1106,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                             </tr>
                             <?php
                         }
+                    }
                         ?>
                     </tbody>
                     <tr class="break">
@@ -1293,7 +1416,6 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                                         }
 
                                                         if(!empty($courses)) {
-
                                                             $peopleInTrips = getPeopleInTrip($connection2, $trips, "Student");
 
                                                             while ($row = $peopleInTrips->fetch()) {
