@@ -21,6 +21,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 include "./modules/Trip Planner/moduleFunctions.php";
 
+use Gibbon\Forms\Form;
+
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manageSettings.php')) {
     //Acess denied
     print "<div class='error'>";
@@ -39,179 +41,40 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         returnProcess($guid, $_GET['return'], null, null);
     }
 
-    ?>
+    try {
+        $sql = "SELECT name, nameDisplay, description, value FROM gibbonSetting WHERE scope='Trip Planner' ORDER BY gibbonSettingID ASC";
+        $result = $connection2->prepare($sql);
+        $result->execute();
+    } catch(PDOException $e) {
+    }
 
-    <form method="post" action="<?php print $_SESSION[$guid]["absoluteURL"] . "/modules/Trip Planner/trips_manageSettingsProcess.php" ?>">
-        <table class='smallIntBorder' cellspacing='0' style="width: 100%">  
-            <tr>
-                <?php
-                try {
-                    $sql = "SELECT * FROM gibbonSetting WHERE scope='Trip Planner' AND name='requestApprovalType'";
-                    $result = $connection2->prepare($sql);
-                    $result->execute();
-                } catch (PDOException $e) { 
-                    print "<div class='error'>" . $e->getMessage() . "</div>"; 
-                }
-                
-                $row = $result->fetch();
-                ?>
-                <td> 
-                    <b><?php print _($row["nameDisplay"]) ?> *</b><br/>
-                    <span style="font-size: 90%"><i>
-                        <?php
-                        if ($row["description"] != "") {
-                            print _($row["description"]);
-                        }
-                        ?>
-                    </i></span>
-                </td>
-                <td class="right">
-                    <select name="<?php print $row["name"] ?>" id="<?php print $row["name"] ?>" style="width: 302px">
-                        <?php
-                        $selected = "";
-                        if ($row["value"] == "One Of") {
-                            $selected = "selected";
-                        }
-                        print "<option $selected value='One Of'>One Of</option>";
-                        $selected = "";
-                        if ($row["value"] == "Two Of") {
-                            $selected = "selected";
-                        }
-                        print "<option $selected value='Two Of'>Two Of</option>";
-                        $selected = "";
-                        if ($row["value"] == "Chain Of All") {
-                            $selected = "selected";
-                        }
-                        print "<option $selected value='Chain Of All'>Chain Of All</option>";
-                        ?>          
-                    </select>
-                </td>
-            </tr>
-            <tr>
-                <?php
-                    try {
-                        $sql = "SELECT * FROM gibbonSetting WHERE scope='Trip Planner' AND name='riskAssessmentTemplate'";
-                        $result = $connection2->prepare($sql);
-                        $result->execute();
-                    } catch (PDOException $e) { 
-                        print "<div class='error'>" . $e->getMessage() . "</div>"; 
-                    }
+    $form = Form::create("tripPlannerSettings", $_SESSION[$guid]["absoluteURL"] . "/modules/Trip Planner/trips_manageSettingsProcess.php");
 
-                    $row = $result->fetch();
-                ?>
-                <td colspan=2>
-                    <b><?php print _($row["nameDisplay"]) ?> *</b><br/>
-                    <span style="font-size: 90%"><i>
-                        <?php
-                        if ($row["description"] != "") {
-                            print _($row["description"]);
-                        } 
-                        ?>
-                    </i></span>
-                    <?php print getEditor($guid, TRUE, $row["name"], $row["value"], 25, true, false, false); ?>  
-                </td>
-            </tr>
-            <tr>
-                <?php
-                    try {
-                        $sql = "SELECT * FROM gibbonSetting WHERE scope='Trip Planner' AND name='missedClassWarningThreshold'";
-                        $result = $connection2->prepare($sql);
-                        $result->execute();
-                    } catch (PDOException $e) { 
-                        print "<div class='error'>" . $e->getMessage() . "</div>"; 
-                    }
+    while ($row = $result->fetch()) {
+        if ($row["name"] == "requestEditing") continue;
+        $fRow = $form->addRow();
+            if ($row["name"] == "riskAssessmentTemplate") {
+                $col = $fRow->addColumn();
+                $col->addLabel($row["name"] . "Label", $row["nameDisplay"])->description($row["description"]);
+            } else {
+                $fRow->addLabel($row["name"] . "Label", $row["nameDisplay"])->description($row["description"]);
+            }
 
-                    $row = $result->fetch();
-                ?>
-                <td>
-                    <b><?php print _($row["nameDisplay"]) ?> *</b><br/>
-                    <span style="font-size: 90%"><i>
-                        <?php
-                        if ($row["description"] != "") {
-                            print _($row["description"]);
-                        } 
-                        ?>
-                    </i></span>
-                </td>
-                <td class='right'>
-                    <input name="<?php print $row["name"]; ?>" id="<?php print $row["name"]; ?>" value="<?php print $row["value"]; ?>" type="text" style="width: 300px">
-                    <script type="text/javascript">
-                        var numField=new LiveValidation('<?php print $row["name"]; ?>');
-                        numField.add(Validate.Numericality, { minimum: 0 } );
-                        numField.add(Validate.Presence);
-                    </script>
-                </td>
-            </tr>
-            <tr>
-                <?php
-                    try {
-                        $sql = "SELECT * FROM gibbonSetting WHERE scope='Trip Planner' AND name='riskAssessmentApproval'";
-                        $result = $connection2->prepare($sql);
-                        $result->execute();
-                    } catch (PDOException $e) { 
-                        print "<div class='error'>" . $e->getMessage() . "</div>"; 
-                    }
+            if ($row["name"] == "requestApprovalType") {
+                $fRow->addSelect($row["name"])->fromArray(array("One Of", "Two Of", "Chain Of All"))->selected($row["value"])->setRequired(true);
+            } else if ($row["name"] == "riskAssessmentTemplate") {
+                $col->addEditor($row["name"], $guid)->setValue($row["value"])->setRows(25);
+            } else if ($row["name"] == "missedClassWarningThreshold") {
+                $fRow->addNumber($row["name"])->minimum(0)->setRequired(true)->decimalPlaces(0)->setValue($row["value"]);
+            } else if ($row["name"] == "riskAssessmentApproval") {
+                $fRow->addCheckBox($row["name"])->checked($row["value"]);
+            }
+    }
 
-                    $row = $result->fetch();
-                ?>
-                <td>
-                    <b><?php print _($row["nameDisplay"]) ?> (WIP) *</b><br/>
-                    <span style="font-size: 90%"><i>
-                        <?php
-                        if ($row["description"] != "") {
-                            print _($row["description"]);
-                        } 
-                        ?>
-                    </i></span>
-                </td>
-                <td class='right'>
-                    <?php
-                        $checked = $row["value"] ? "checked" : "";
-                    ?>
-                    <input <?php print $checked ?> name="<?php print $row["name"]; ?>" id="<?php print $row["name"]; ?>" type="checkbox">
-                </td>
-            </tr>
-            <!-- <tr>
-                <?php
-                    try {
-                        $sql = "SELECT * FROM gibbonSetting WHERE scope='Trip Planner' AND name='requestEditing'";
-                        $result = $connection2->prepare($sql);
-                        $result->execute();
-                        print($result->rowCount());
-                    } catch (PDOException $e) { 
-                        print "<div class='error'>" . $e->getMessage() . "</div>"; 
-                    }
+    $fRow = $form->addRow();
+        $fRow->addFooter();
+        $fRow->addSubmit();
 
-                    $row = $result->fetch();
-                ?>
-                <td>
-                    <b><?php print _($row["nameDisplay"]) ?> *</b><br/>
-                    <span style="font-size: 90%"><i>
-                        <?php
-                        if ($row["description"] != "") {
-                            print _($row["description"]);
-                        } 
-                        ?>
-                    </i></span>
-                </td>
-                <td class='right'>
-                    <?php
-                        $checked = $row["value"] ? "checked" : "";
-                    ?>
-                    <input <?php print $checked ?> name="<?php print $row["name"]; ?>" id="<?php print $row["name"]; ?>" type="checkbox">
-                </td>
-            </tr> -->
-            <tr>
-                <td>
-                    <span style="font-size: 90%"><i>* <?php print _("denotes a required field"); ?></i></span>
-                </td>
-                <td class="right">
-                    <input type="hidden" name="address" value="<?php print $_SESSION[$guid]["address"] ?>">
-                    <input type="submit" value="<?php print _("Submit"); ?>">
-                </td>
-            </tr>
-        </table>
-    </form>
-    <?php
+    print $form->getOutput();
 }   
 ?>

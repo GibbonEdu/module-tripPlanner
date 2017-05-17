@@ -19,6 +19,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     //Acess denied
     $URL .= "&return=error0";
     header("Location: {$URL}");
+    exit();
 } else {
 
     $settings = array("requestApprovalType", "riskAssessmentTemplate", "missedClassWarningThreshold", "riskAssessmentApproval");
@@ -40,6 +41,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         if ($value == null) {
             $URL .= "&return=error1";
             header("Location: {$URL}");
+            exit();
         }
 
         try {
@@ -50,6 +52,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         } catch (PDOException $e) {
             $URL .= "&return=error2";
             header("Location: {$URL}");
+            exit();
         }
 
         if($setting == "riskAssessmentApproval") {
@@ -64,5 +67,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
  
     $URL .= "&return=success0";
     header("Location: {$URL}");
+    exit();
 }   
 ?>

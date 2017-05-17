@@ -19,14 +19,19 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_addApp
     //Acess denied
     $URL .= "trips_manageApprover.php&return=error0";
     header("Location: {$URL}");
+    exit();
 } else {    
+
+    $URL .= "trips_addApprover.php";
+
     if (isset($_POST["gibbonPersonID"])) {
         if ($_POST["gibbonPersonID"] != null && $_POST["gibbonPersonID"] != "") {
             $gibbonPersonID = $_POST["gibbonPersonID"];
         }
     } else {
-        $URL .= "trips_addApprover.php&return=error1";
+        $URL .= "&return=error1";
         header("Location: {$URL}");
+        exit();
     }
 
     $expenseApprovalType = getSettingByScope($connection2, "Trip Planner", "requestApprovalType");
@@ -36,8 +41,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_addApp
                 $sequenceNumber = abs($_POST["sequenceNumber"]);
             }
         } else {
-            $URL .= "trips_addApprover.php&return=error1";
+            $URL .= "&return=error1";
             header("Location: {$URL}");
+            exit();
         }
     } else {
         $sequenceNumber = 0;
@@ -63,16 +69,15 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_addApp
         $result = $connection2->prepare($sql);
         $result->execute($data);
     } catch (PDOException $e) { 
-        //Fail 2
-        $URL .= "trips_addApprover.php&return=error2";
+        $URL .= "&return=error2";
         header("Location: {$URL}");
         exit();
     }
         
     if ($result->rowCount() > 0) {
-        //Fail 4
-        $URL .= "trips_addApprover.php&return=error5";
+        $URL .= "&return=error5";
         header("Location: {$URL}");
+        exit();
     } else {  
         try {
             $data = array("gibbonPersonID"=> $gibbonPersonID, "sequenceNumber"=> $sequenceNumber, "gibbonPersonIDCreator"=> $_SESSION[$guid]["gibbonPersonID"], "timestampCreator"=>date('Y-m-d H:i:s', time()), "finalApprover" => $finalApprover);
@@ -81,13 +86,14 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_addApp
             $result->execute($data);
             $tripPlannerApproverID = $connection2->lastInsertId();
         } catch (PDOException $e) {
-            $URL .= "trips_addApprover.php&return=error2";
+            $URL .= "&return=error2";
             header("Location: {$URL}");
             exit();
         }
 
-        $URL .= "trips_addApprover.php&return=success0&tripPlannerApproverID=" . $tripPlannerApproverID;
+        $URL .= "&return=success0&tripPlannerApproverID=" . $tripPlannerApproverID;
         header("Location: {$URL}");
+        exit();
     }
 }   
 ?>

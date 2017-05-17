@@ -10,16 +10,18 @@ include "./moduleFunctions.php";
 
 date_default_timezone_set($_SESSION[$guid]["timezone"]);
 
-$URL = $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_submitRequest.php";
+$URL = $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/";
 
 $pdo = new Gibbon\sqlConnection();
 $connection2 = $pdo->getConnection();
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submitRequest.php')) {
     //Acess denied
-    $URL .= "&return=error0";
+    $URL .= "trips_manage.php&return=error0";
     header("Location: {$URL}");
+    exit();
 } else {    
+    $URL .= "trips_submitRequest.php";
     $date = new DateTime();
     $riskAssessmentApproval = getSettingByScope($connection2, "Trip Planner", "riskAssessmentApproval");
     $items = array("title" => true, "description" => true, "location" => true, "date" => true, "endDate" => false, "startTime" => false, "endTime" => false, "riskAssessment" => !$riskAssessmentApproval, "letterToParents" => false, "teachersSelected" => true, "studentsSelected" => false, "order" => false);
@@ -78,6 +80,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         }
     }
 
+    if (isset($_POST["allDay"])) {
+        $data["startTime"] = null;
+        $data["endTime"] = null;
+    }
+
     $sql = substr($sql, 0, -2);
 
     try {
@@ -106,5 +113,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
     $URL .= "&return=success0&tripPlannerRequestID=" . $tripPlannerRequestID;
     header("Location: {$URL}");
+    exit();
 }   
 ?>

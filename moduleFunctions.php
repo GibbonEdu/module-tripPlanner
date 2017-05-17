@@ -684,7 +684,7 @@ function getPastTrips($guid, $connection2, $people)
     return $result;
 }
 
-function getPlannerOverlaps($connection2, $startDates, $endDates = array(), $startTimes = array(), $endTimes = array(), $people)
+function getPlannerOverlaps($connection2, $tripPlannerRequestID, $startDates, $endDates = array(), $startTimes = array(), $endTimes = array(), $people)
 {
     if (!is_array($people) || empty($people) || !is_array($startDates) || empty($startDates) || !is_array($endDates) || !is_array($startTimes) || !is_array($endTimes)) {
         return null;
@@ -692,7 +692,10 @@ function getPlannerOverlaps($connection2, $startDates, $endDates = array(), $sta
 
     try {
         $data = array();
-        $sql = "SELECT DISTINCT gibbonCourse.gibbonCourseID, gibbonCourse.nameShort, gibbonCourseClass.gibbonCourseClassID, gibbonTTDayDate.date, timeStart, timeEnd FROM gibbonTTDayRowClass JOIN gibbonTTColumnRow ON (gibbonTTDayRowClass.gibbonTTColumnRowID = gibbonTTColumnRow.gibbonTTColumnRowID) JOIN gibbonCourseClassPerson ON (gibbonTTDayRowClass.gibbonCourseClassID = gibbonCourseClassPerson.gibbonCourseClassID) JOIN gibbonCourseClass ON (gibbonCourseClass.gibbonCourseClassID = gibbonTTDayRowClass.gibbonCourseClassID) JOIN gibbonCourse ON (gibbonCourse.gibbonCourseID = gibbonCourseClass.gibbonCourseID) LEFT JOIN gibbonTTDayDate ON (gibbonTTDayDate.gibbonTTDayID=gibbonTTDayRowClass.gibbonTTDayID) WHERE (";
+        if ($tripPlannerRequestID != "" && $tripPlannerRequestID != null) {
+            $data["tripPlannerRequestID"] = $tripPlannerRequestID;
+        }
+        $sql = "SELECT DISTINCT gibbonCourse.gibbonCourseID, gibbonCourse.nameShort, gibbonCourseClass.gibbonCourseClassID, gibbonTTDayDate.date, timeStart, timeEnd" . ($tripPlannerRequestID != "" && $tripPlannerRequestID != null ? ", requiresCover" : "") . " FROM gibbonTTDayRowClass JOIN gibbonTTColumnRow ON (gibbonTTDayRowClass.gibbonTTColumnRowID = gibbonTTColumnRow.gibbonTTColumnRowID) JOIN gibbonCourseClassPerson ON (gibbonTTDayRowClass.gibbonCourseClassID = gibbonCourseClassPerson.gibbonCourseClassID) JOIN gibbonCourseClass ON (gibbonCourseClass.gibbonCourseClassID = gibbonTTDayRowClass.gibbonCourseClassID) JOIN gibbonCourse ON (gibbonCourse.gibbonCourseID = gibbonCourseClass.gibbonCourseID)" . ($tripPlannerRequestID != "" && $tripPlannerRequestID != null ? " LEFT JOIN tripPlannerRequestCover ON (tripPlannerRequestCover.gibbonCourseClassID = gibbonCourseClass.gibbonCourseClassID AND tripPlannerRequestID=:tripPlannerRequestID)" : "") . " LEFT JOIN gibbonTTDayDate ON (gibbonTTDayDate.gibbonTTDayID=gibbonTTDayRowClass.gibbonTTDayID) WHERE (";
         for ($i = 0; $i < count($startDates); $i++) {
             $sDayData = "startDate" . $i;
             $eDayData = "endDate" . $i;
@@ -713,7 +716,6 @@ function getPlannerOverlaps($connection2, $startDates, $endDates = array(), $sta
             }
 
             $sql .= "(";
-            //
             if (isset($data[$eDayData])) {
                 $sql .= "gibbonTTDayDate.date >=:" . $sDayData . " AND gibbonTTDayDate.date <=:" . $eDayData;
             } else {
@@ -732,10 +734,13 @@ function getPlannerOverlaps($connection2, $startDates, $endDates = array(), $sta
             $data[$pData] = $id;
             $sql .= ":" . $pData . ",";
         }
-        $sql = substr($sql, 0, -1) . ") ORDER BY gibbonCourse.nameShort ASC, gibbonTTDayDate.date ASC";
+        $sql = substr($sql, 0, -1) . ")"; 
+        $sql .= " ORDER BY gibbonCourse.nameShort ASC, gibbonTTDayDate.date ASC";
+        //print $sql;
         $result = $connection2->prepare($sql);
         $result->execute($data);
     } catch (PDOException $e) {
+        print $e;
     }
 
     return $result;
@@ -819,6 +824,16 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
 
             $link = $_SESSION[$guid]['absoluteURL'].'/modules/Trip Planner/trips_request' . $mode . "Process.php";
 
+            if ($mode != "Edit" && isOwner($connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"])) {
+                echo "<div class='linkTop'>";
+                    echo "<a href='".$_SESSION[$guid]['absoluteURL']."/index.php?q=/modules/Trip Planner/trips_requestEdit.php&tripPlannerRequestID=$tripPlannerRequestID'>".__($guid, 'Edit')."<img style='margin-left: 5px' title='".__($guid, 'Edit')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/config.png'/></a>";
+                echo '</div>';
+            } else if ($mode != "View") {
+                echo "<div class='linkTop'>";
+                    echo "<a href='".$_SESSION[$guid]['absoluteURL']."/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID=$tripPlannerRequestID'>".__($guid, 'View')."<img style='margin-left: 5px' title='".__($guid, 'View')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/plus.png'/></a>";
+                echo '</div>';
+            }
+
             ?>
             <form method="post" action="<?php echo $link ?>">
                 <table class="smallIntBorder fullWidth" cellspacing=0>
@@ -849,16 +864,22 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                 <b><?php echo __($guid, 'Title') ?> *</b><br/>
                             </td>
                             <td class="right">
-                                <input readonly name="title" id="title" maxlength=60 value="<?php echo $request['title']; ?>" type="text" class="standardWidth">
+                                <input <?php print ($mode == "Edit" ? "" : "readOnly") ?> name="title" id="title" maxlength=60 value="<?php echo $request['title']; ?>" type="text" class="standardWidth">
                             </td>
                         </tr>
                         <tr>
                             <td colspan=2> 
                                 <b><?php echo __($guid, 'Description') ?></b>
                                 <?php 
+                                if ($mode == "Edit") {
+                                    print getEditor($guid, TRUE, "description", $request["description"], 5, true, true, false);
+                                } else {
+                                ?>
+                                <?php 
                                     echo '<p>';
                                     echo $request['description'];
-                                    echo '</p>'
+                                    echo '</p>';
+                                }
                                 ?>
                             </td>
                         </tr>
@@ -867,7 +888,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                 <b><?php echo __($guid, 'Location') ?> *</b><br/>
                             </td>
                             <td class="right">
-                                <input readonly name="location" id="location" maxlength=60 value="<?php echo $request['location']; ?>" type="text" class="standardWidth">
+                                <input <?php ($mode == "Edit" ? : print "readonly") ?> name="location" id="location" maxlength=60 value="<?php echo $request['location']; ?>" type="text" class="standardWidth">
                             </td>
                         </tr>
                         <tr>
@@ -919,6 +940,122 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                         </td>
                     </tr>
                     <tbody id="dateInfo">
+                        <?php
+                            if ($mode == "Edit") {
+                                ?>
+                                <tr>
+                                    <td> 
+                                        <b><?php print _('Multiple Days') ?></b><br/>
+                                    </td>
+                                    <script type="text/javascript">
+                                        function adjustDays() {
+                                            var allDay = document.getElementById("multiDays");
+                                            if (allDay.checked) {
+                                                $("#endDateArea").slideDown("fast", $("#endDateArea").css("display","table-row"));
+
+                                            } else {
+                                                $('#endDateArea').css("display","none");
+                                            }
+                                        }
+                                    </script>
+                                    <td class="right">
+                                        <input <?php $multiDay ? print "checked" : print "" ?> type="checkbox" id="multiDays" value="multiDays" onchange="adjustDays()">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td> 
+                                        <b><?php print _('Date') ?> *</b><br/>
+                                        <span style="font-size: 90%"><i><?php print $_SESSION[$guid]["i18n"]["dateFormat"]  ?></i></span>
+                                    </td>
+                                    <td class="right">
+                                        <input name="date" id="date" maxlength=10 value="<?php echo $date->format('d/m/Y'); ?>" type="text" style="width: 300px">
+                                        <script type="text/javascript">
+                                            var date = new LiveValidation('date');
+                                            date.add(Validate.Presence);
+                                            date.add(Validate.Format, {pattern: <?php if ($_SESSION[$guid]["i18n"]["dateFormatRegEx"] == "") { print "/^(0[1-9]|[12][0-9]|3[01])[- /.](0[1-9]|1[012])[- /.](19|20)\d\d$/i"; } else { print $_SESSION[$guid]["i18n"]["dateFormatRegEx"]; } ?>, failureMessage: "Use <?php if ($_SESSION[$guid]["i18n"]["dateFormat"]=="") { print "dd/mm/yyyy"; } else { print $_SESSION[$guid]["i18n"]["dateFormat"]; }?>." } ); 
+                                        </script>
+                                        <script type="text/javascript">
+                                            $(function() {
+                                                $("#date").datepicker({
+                                                    onClose: function () {
+                                                        this.focus();
+                                                    }
+                                                });
+                                            });
+                                        </script>
+                                    </td>
+                                </tr>
+                                <tr id="endDateArea" style="display:<?php $multiDay ? print "table-row" : print "none"; ?>;">
+                                    <td> 
+                                        <b><?php print _('End Date') ?> *</b><br/>
+                                        <span style="font-size: 90%"><i><?php print $_SESSION[$guid]["i18n"]["dateFormat"]  ?></i></span>
+                                    </td>
+                                    <td class="right">
+                                        <input name="endDate" id="endDate" maxlength=10 value="<?php echo ($multiDay ? $endDate->format('d/m/Y') : "") ?>" type="text" style="width: 300px">
+                                        <script type="text/javascript">
+                                            var endDate = new LiveValidation('endDate');
+                                            endDate.add(Validate.Format, {pattern: <?php if ($_SESSION[$guid]["i18n"]["dateFormatRegEx"] == "") { print "/^(0[1-9]|[12][0-9]|3[01])[- /.](0[1-9]|1[012])[- /.](19|20)\d\d$/i"; } else { print $_SESSION[$guid]["i18n"]["dateFormatRegEx"]; } ?>, failureMessage: "Use <?php if ($_SESSION[$guid]["i18n"]["dateFormat"]=="") { print "dd/mm/yyyy"; } else { print $_SESSION[$guid]["i18n"]["dateFormat"]; }?>." } ); 
+                                        </script>
+                                        <script type="text/javascript">
+                                            $(function() {
+                                                $("#endDate").datepicker({
+                                                    onClose: function () {
+                                                        this.focus();
+                                                    }
+                                                });
+                                            });
+                                        </script>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td> 
+                                        <b><?php print _('All Day') ?></b><br/>
+                                    </td>
+                                    <script type="text/javascript">
+                                        function adjustTime() {
+                                            var allDay = document.getElementById("allDay");
+                                            if (allDay.checked) {
+                                                $('#startTimeArea').css("display","none");
+                                                $('#endTimeArea').css("display","none");
+                                            } else {
+                                                $("#startTimeArea").slideDown("fast", $("#startTimeArea").css("display","table-row"));
+                                                $("#endTimeArea").slideDown("fast", $("#endTimeArea").css("display","table-row"));
+                                            }
+                                        }
+                                    </script>
+                                    <td class="right">
+                                        <input <?php $allDay ? print "checked" : print "" ?> type="checkbox" id="allDay" name="allDay" onchange="adjustTime()">
+                                    </td>
+                                </tr>
+                                <tr id='startTimeArea' style="display:<?php print ($allDay ? "none" : "table-row") ?>">
+                                    <td> 
+                                        <b><?php print _('Start Time') ?> *</b><br/>
+                                        <span style="font-size: 90%"><i><?php print _('Format: hh:mm (24hr)') ?><br/></i></span>
+                                    </td>
+                                    <td class="right">
+                                        <input name="startTime" id="startTime" maxlength=5 value="<?php echo (!$allDay ? $startTime->format('H:i') : "") ?>" type="text" style="width: 300px">
+                                        <script type="text/javascript">
+                                            var startTime=new LiveValidation('startTime');
+                                            startTime.add( Validate.Format, {pattern: /^(0[0-9]|[1][0-9]|2[0-3])[:](0[0-9]|[1-5][0-9])/i, failureMessage: "Use hh:mm" } ); 
+                                        </script>
+                                    </td>
+                                </tr>
+                                <tr id='endTimeArea' style="display:<?php print ($allDay ? "none" : "table-row") ?>">
+                                    <td> 
+                                        <b><?php print _('End Time') ?> *</b><br/>
+                                        <span style="font-size: 90%"><i><?php print _('Format: hh:mm (24hr)') ?><br/></i></span>
+                                    </td>
+                                    <td class="right">
+                                        <input name="endTime" id="endTime" maxlength=5 value="<?php echo (!$allDay ? $endTime->format('H:i') : "") ?>" type="text" style="width: 300px">
+                                        <script type="text/javascript">
+                                            var endTime=new LiveValidation('endTime');
+                                            endTime.add( Validate.Format, {pattern: /^(0[0-9]|[1][0-9]|2[0-3])[:](0[0-9]|[1-5][0-9])/i, failureMessage: "Use hh:mm" } ); 
+                                        </script>
+                                    </td>
+                                </tr>
+                                <?php
+                            } else {
+                        ?>
                         <tr>
                             <td> 
                                 <b><?php echo __($guid, ($multiDay ? 'Start ' : '') . 'Date') ?> *</b><br/>
@@ -969,6 +1106,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                             </tr>
                             <?php
                         }
+                    }
                         ?>
                     </tbody>
                     <tr class="break">
@@ -1233,11 +1371,11 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                             <?php print __($guid, 'Students Involved'); ?>
                                         </th>
                                         <th style='text-align: left; width: 10%'>
-                                            <?php print __($guid, 'May Require Cover'); ?>
+                                            <?php print __($guid, 'Require Covers?'); ?>
                                         </th>
-                                        <!-- <th style='text-align: left; width:10%'>
+                                        <th style='text-align: left; width:10%'>
                                             <?php print __($guid, 'Actions'); ?>
-                                        </th> -->
+                                        </th>
                                     </tr>
                                     <?php
                                         $missedClasses = array();
@@ -1259,7 +1397,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                                     $endTimes[] = $row['endTime'];
                                                 }
 
-                                                $classesMissed = getPlannerOverlaps($connection2, $startDates, $endDates, $startTimes, $endTimes, $students);
+                                                $classesMissed = getPlannerOverlaps($connection2, null, $startDates, $endDates, $startTimes, $endTimes, $students);
                                                 if ($classesMissed != null) {
                                                     if($classesMissed->rowCount() > 0) {
                                                         $classes = array();
@@ -1278,7 +1416,6 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                                         }
 
                                                         if(!empty($courses)) {
-
                                                             $peopleInTrips = getPeopleInTrip($connection2, $trips, "Student");
 
                                                             while ($row = $peopleInTrips->fetch()) {
@@ -1361,11 +1498,12 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                             $overlapEndTime[] = $request["endTime"];
                                         }
 
-                                        $overlaps = getPlannerOverlaps($connection2, $overlapStartDate, $overlapEndDate, $overlapStartTime, $overlapEndTime, array_merge($students, $teachers));
+                                        $overlaps = getPlannerOverlaps($connection2, $tripPlannerRequestID, $overlapStartDate, $overlapEndDate, $overlapStartTime, $overlapEndTime, array_merge($students, $teachers));
                                         if ($overlaps != null) {
                                             while ($row = $overlaps->fetch()) {
                                                 $classStudents = getStudentsInClass($connection2, array($row["gibbonCourseClassID"]));
                                                 $classTeachers = getTeachersOfClass($connection2, $row["gibbonCourseClassID"]);
+                                                $allStudentOnTrip = true;
                                                 print "<tr>";
                                                     print "<td>";
                                                         print $row["nameShort"];
@@ -1387,31 +1525,48 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $mode) {
                                                                     }
                                                                 }
                                                                 if ($warning) {
+                                                                    //$studentsInvolved .= "<a class='thickbox' href='".$_SESSION[$guid]['absoluteURL']."/fullscreen.php?q=/modules/Trip Planner/trips_requestStudentInformation.php&tripPlannerRequestID=$tripPlannerRequestID&gibbonCourseID=" . $row["gibbonCourseID"] . "&gibbonPersonID=" . $student["gibbonPersonID"] . "&width=1000&height=550'>";
                                                                     $studentsInvolved .= "<b style='color:#F50000'>";
                                                                 }
                                                                 $studentsInvolved .= $student["preferredName"] . " " . $student["surname"];
                                                                 if ($warning) {
                                                                     $studentsInvolved .= "</b>";
+                                                                    //$studentsInvolved .= "</a>";
                                                                 }
                                                                 $studentsInvolved .= ", ";
+                                                            } else {
+                                                                $allStudentOnTrip = false;
                                                             }
                                                         }
                                                         print substr($studentsInvolved, 0, -2);
                                                     print "</td>";
                                                     print "<td>";
-                                                        $requiresCover = true;
-                                                        while ($teacher = $classTeachers->fetch()) {
-                                                            if (!in_array($teacher['gibbonPersonID'], $teachers)) {
-                                                                $requiresCover = false;
-                                                                break;
+                                                        $systemMessage = "";
+                                                        $requiresCover = $row["requiresCover"];
+                                                        if ($requiresCover == null) {
+                                                            $allTeachersOnTrip = true;
+                                                            while ($teacher = $classTeachers->fetch()) {
+                                                                if (!in_array($teacher['gibbonPersonID'], $teachers)) {
+                                                                    $allTeachersOnTrip = false;
+                                                                    break;
+                                                                }
                                                             }
+                                                            $requiresCover = !$allStudentOnTrip && $allTeachersOnTrip;
+                                                            $systemMessage = " (This is an Automated Suggestion)";
                                                         }
 
-                                                        print $requiresCover ? "Yes" : "No";
+                                                        print ($requiresCover ? "Yes" : "No") . $systemMessage;
                                                     print "</td>";
-                                                    // print "<td>";
-                                                    //     print "<a><img title='" . _('View') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/plus.png'/></a> ";
-                                                    // print "</td>";
+                                                    print "<td>";
+                                                        if ($mode == "Edit") {
+                                                            echo "<a class='thickbox' href='".$_SESSION[$guid]['absoluteURL']."/fullscreen.php?q=/modules/Trip Planner/trips_requestCoverStatus.php&tripPlannerRequestID=$tripPlannerRequestID&gibbonCourseClassID=" . $row["gibbonCourseClassID"] . "&requiresCover=$requiresCover&width=1000&height=550'><img title='".__($guid, 'Change Cover Status')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/config.png'/></a> ";
+                                                        }
+                                                        
+                                                        if ($requiresCover) {
+                                                            echo "<a class='thickbox' href='".$_SESSION[$guid]['absoluteURL']."/fullscreen.php?q=/modules/Trip Planner/trips_requestCoverTeachers.php&tripPlannerRequestID=$tripPlannerRequestID&date=" . $row["date"] . "&timeStart=" . $row["timeStart"] . "&timeEnd=" . $row["timeEnd"] . "&width=1000&height=550'><img title='".__($guid, 'View Possible Cover Teachers')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/plus.png'/></a> ";
+                                                        }
+                                                        //print "<a><img title='" . _('View') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/plus.png'/></a> ";
+                                                    print "</td>";
                                                 print "</tr>";
                                             }
                                         }

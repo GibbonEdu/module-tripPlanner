@@ -22,6 +22,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 //Module includes
 include "./modules/Trip Planner/moduleFunctions.php";
 
+use Gibbon\Forms\Form;
+
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_addApprover.php')) {
     //Acess denied
     print "<div class='error'>";
@@ -43,83 +45,46 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_addApp
         }
         returnProcess($guid, $_GET['return'], $editLink, null);
     }   
-    ?>
-    <form method="post" action="<?php print $_SESSION[$guid]["absoluteURL"] . "/modules/Trip Planner/trips_addApproverProcess.php" ?>">
-        <table class='smallIntBorder' cellspacing='0' style="width: 100%">  
-            <tr>
-                <td> 
-                    <b><?php print _('Staff') ?> *</b><br/>
-                </td>
-                <td class="right">
-                    <select name="gibbonPersonID" id="gibbonPersonID" style="width: 302px">
-                        <option value="Please select..."><?php print _('Please select...') ?></option>
-                        <?php
-                        try {
-                            $sqlSelect = "SELECT * FROM gibbonPerson JOIN gibbonStaff ON (gibbonPerson.gibbonPersonID=gibbonStaff.gibbonPersonID) WHERE status='Full' ORDER BY surname, preferredName";
-                            $resultSelect = $connection2->prepare($sqlSelect);
-                            $resultSelect->execute();
-                        } catch (PDOException $e) {
-                        }
 
-                        while ($rowSelect = $resultSelect->fetch()) {
-                            if (!isApprover($connection2, $rowSelect["gibbonPersonID"])) {
-                                print "<option value='" . $rowSelect["gibbonPersonID"] . "'>" . formatName("", htmlPrep($rowSelect["preferredName"]), htmlPrep($rowSelect["surname"]), "Staff", true, true) . "</option>";
-                            }
-                        }
-                        ?>
-                    </select>
-                    <script type="text/javascript">
-                        var gibbonPersonID=new LiveValidation('gibbonPersonID');
-                        gibbonPersonID.add(Validate.Exclusion, { within: ['Please select...'], failureMessage: "<?php print _('Select something!') ?>"});
-                    </script>
-                </td>
-            </tr>
-            <?php
-            $requestApprovalType = getSettingByScope($connection2, "Trip Planner", "requestApprovalType");
-            if ($requestApprovalType == "Chain Of All") {
-                ?>
-                <tr>
-                    <td> 
-                        <b><?php print _('Sequence Number') ?> *</b><br/>
-                        <span style="font-size: 90%"><i><?php print _('Must be unique.') ?></i></span>
-                    </td>
-                    <td class="right">
-                        <input name="sequenceNumber" ID="sequenceNumber" value="" type="text" style="width: 300px">
-                        <script type="text/javascript">
-                            var sequenceNumber=new LiveValidation('sequenceNumber');
-                            sequenceNumber.add(Validate.Numericality, { minimum: 0 } );
-                            sequenceNumber.add(Validate.Presence);
-                        </script>
-                    </td>
-                </tr>
-                <?php
-            }
-            $riskAssessmentApproval = getSettingByScope($connection2, "Trip Planner", "riskAssessmentApproval");
-            if($riskAssessmentApproval) {
-                ?>
-                <tr>
-                    <td> 
-                        <b><?php print _('Final Approver?') ?> *</b><br/>
-                        <span style="font-size: 90%"><i><?php print _('Must be unique.') ?></i></span>
-                    </td>
-                    <td class="right">
-                        <input name="finalApprover" id="finalApprover" type="checkbox">
-                    </td>
-                </tr>
-                <?php
-            }
-            ?>
-            <tr>
-                <td>
-                    <span style="font-size: 90%"><i>* <?php print _("denotes a required field"); ?></i></span>
-                </td>
-                <td class="right">
-                    <input type="hidden" name="address" value="<?php print $_SESSION[$guid]["address"] ?>">
-                    <input type="submit" value="<?php print _("Submit"); ?>">
-                </td>
-            </tr>
-        </table>
-    </form>
-    <?php
+    try {
+        $sqlSelect = "SELECT * FROM gibbonPerson JOIN gibbonStaff ON (gibbonPerson.gibbonPersonID=gibbonStaff.gibbonPersonID) WHERE status='Full' ORDER BY surname, preferredName";
+        $resultSelect = $connection2->prepare($sqlSelect);
+        $resultSelect->execute();
+    } catch (PDOException $e) {
+    }
+
+    $staff = array();
+
+    while ($rowSelect = $resultSelect->fetch()) {
+        if (!isApprover($connection2, $rowSelect["gibbonPersonID"])) {
+            $staff[$rowSelect["gibbonPersonID"]] = formatName("", htmlPrep($rowSelect["preferredName"]), htmlPrep($rowSelect["surname"]), "Staff", true, true);
+        }
+    }
+
+    $form = Form::create("addApprover", $_SESSION[$guid]["absoluteURL"] . "/modules/Trip Planner/trips_addApproverProcess.php");
+
+    $row = $form->addRow();
+        $row->addLabel("staffLabel", "Staff *");
+        $row->addSelect("gibbonPersonID")->fromArray($staff)->setRequired(true)->placeholder("Please select...");
+
+    $requestApprovalType = getSettingByScope($connection2, "Trip Planner", "requestApprovalType");
+    if ($requestApprovalType == "Chain Of All") {
+        $row = $form->addRow();
+            $row->addLabel("sequenceNumberLabel", "Sequence Number *")->description("Must be unique.");
+            $row->addNumber("sequenceNumber")->minimum(0)->decimalPlaces(0)->setRequired(true);
+    }
+
+    $riskAssessmentApproval = getSettingByScope($connection2, "Trip Planner", "riskAssessmentApproval");
+    if($riskAssessmentApproval) {
+        $row = $form->addRow();
+            $row->addLabel("finalApproverLabel", "Final Approver");
+            $row->addCheckbox("finalApprover");
+    }
+
+    $row = $form->addRow();
+        $row->addFooter();
+        $row->addSubmit();
+
+    print $form->getOutput();
 }   
 ?>

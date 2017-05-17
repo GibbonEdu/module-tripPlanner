@@ -21,6 +21,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 include "./modules/Trip Planner/moduleFunctions.php";
 
+use Gibbon\Forms\Form;
+
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php')) {
     print "<div class='error'>";
         print "You do not have access to this action.";
@@ -121,90 +123,48 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             }
         }
 
+        try {
+            $sqlYear = "SELECT gibbonSchoolYearID, name FROM gibbonSchoolYear";
+            $resultYear = $connection2->prepare($sqlYear);
+            $resultYear->execute();
+        } catch (PDOException $e) {
+        }
+
+        $years = array();
+
+        while ($row = $resultYear->fetch()) {
+            $years[$row['gibbonSchoolYearID']] = $row['name'];
+        }
+
         print "<h3>";
             print __($guid, "Filter");
         print "</h3>";
 
-        print "<form method='post' action='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=" . $_GET["q"] . "'>"; ?>
-            <table class='noIntBorder' cellspacing='0' style='width: 100%'>
-                <tr>
-                    <td> 
-                        <b><?php echo __($guid, 'Status Filter') ?> *</b><br/>
-                    </td>
-                    <td class="right">
-                        <?php
-                        $statuses = array("All", "Requested", "Approved", "Rejected", "Cancelled", "Awaiting Final Approval");
-                        echo "<select name='statusFilter' id='statusFilter' style='width:302px'>";
-                            foreach($statuses as $status) {
-                                $selected = "";
-                                if ($status == $statusFilter) {
-                                    $selected = "selected";
-                                }
-                                echo "<option $selected value='$status'>" . __($guid, $status) . '</option>';
-                            }
-                        echo '</select>';
-                        ?>
-                    </td>
-                </tr>
-                <tr>
-                    <td> 
-                        <b><?php echo __($guid, 'Relation Filter') ?> *</b><br/>
-                    </td>
-                    <td class="right">
-                        <?php
-                        echo "<select name='relationFilter' id='relationFilter' style='width:302px'>";
-                            foreach (array_keys($relations) as $relationKey) {
-                                $relation = $relations[$relationKey];
-                                $selected = "";
-                                if ($relationKey == $relationFilter) {
-                                    $selected = "selected";
-                                }
-                                echo "<option $selected value='$relationKey'>". __($guid, $relation) .'</option>';
-                            }
-                        echo '</select>';
-                        ?>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <b><?php echo __($guid, 'Year Filter') ?> *</b><br/>
-                    </td>
-                    <td class="right">
-                        <select name='yearFilter' id='yearFilter' style='width:302px'>
-                            <option value='All Years'>All Years</option>
-                            <?php
-                            try {
-                                $sqlYear = "SELECT gibbonSchoolYearID, name FROM gibbonSchoolYear";
-                                $resultYear = $connection2->prepare($sqlYear);
-                                $resultYear->execute();
-                            } catch (PDOException $e) {
-                            }
+        $form = Form::create("tripFilters", $_SESSION[$guid]["absoluteURL"] . "/index.php?q=" . $_GET["q"]);
 
-                            while ($row = $resultYear->fetch()) {
-                                $selected = "" ;
-                                if ($row['gibbonSchoolYearID'] == $yearFilter) {
-                                    $selected = "selected" ;
-                                }
-                                print "<option $selected value='" . $row['gibbonSchoolYearID'] . "'>". $row['name'] ."</option>" ;
-                            }
-                            ?>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <td class='right' colspan=2>
-                        <input type='submit' value='<?php print _('Go') ?>'>
-                    </td>
-                </tr>
-            </table>
-        </form>
+        $row = $form->addRow();
+            $row->addLabel("statusFilterLabel", "Status Filter");
+            $row->addSelect("statusFilter")->fromArray(array("All", "Requested", "Approved", "Rejected", "Cancelled", "Awaiting Final Approval"))->selected($statusFilter);
 
-        <?php
-            try {
-                $result = $connection2->prepare($sql);
-                $result->execute($data);
-            } catch (PDOException $e) {
-            }
+        $row = $form->addRow();
+            $row->addLabel("relationFilterLabel", "Relation Filter");
+            $row->addSelect("relationFilter")->fromArray($relations)->selected($relationFilter);
+
+        $row = $form->addRow();
+            $row->addLabel("yearFilterLabel", "Year Filter");
+            $row->addSelect("yearFilter")->fromArray($years)->selected($yearFilter);
+
+        $row = $form->addRow();
+            $row->addFooter();
+            $row->addSubmit();
+
+        print $form->getOutput();
+
+        try {
+            $result = $connection2->prepare($sql);
+            $result->execute($data);
+        } catch (PDOException $e) {
+        }
         ?>
 
         <h3>

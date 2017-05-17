@@ -23,7 +23,7 @@ $description = "A trip planner module for Gibbon.";
 $entryURL = "trips_manage.php";
 $type = "Additional";
 $category = "Learn"; 
-$version = "0.0.09"; 
+$version = "0.1.00"; 
 $author = "Ray Clark"; 
 $url = "https://github.com/raynichc/Trip-Planner";
 
@@ -82,7 +82,7 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestLog` (
     PRIMARY KEY (`tripPlannerRequestLogID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
 
-$moduleTables[$tables++] = "INSERT INTO `gibbonSetting` (`gibbonSettingsID`, `scope`, `name`, `nameDisplay`, `description`, `value`)
+$moduleTables[$tables++] = "INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`)
 VALUES
 (NULL, 'Trip Planner', 'requestApprovalType', 'Request Approval Type', 'The type of approval that a trip request has to go through.', 'One Of'),
 (NULL, 'Trip Planner', 'riskAssessmentTemplate', 'Risk Assessment Template', 'The template for the Risk Assessment.', ''),
@@ -96,6 +96,14 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestPerson` (
     `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
     `role` ENUM('Student', 'Teacher') NOT NULL,
     PRIMARY KEY (`tripPlannerRequestPersonID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
+
+$moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestCover` (
+    `tripPlannerRequestCoverID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
+    `tripPlannerRequestID` int(7) unsigned zerofill NOT NULL,
+    `gibbonCourseClassID` int(8) unsigned zerofill NOT NULL,
+    `requiresCover` boolean DEFAULT TRUE NOT NULL,
+    PRIMARY KEY (`tripPlannerRequestCoverID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
 
 //Actions

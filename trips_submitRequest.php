@@ -423,14 +423,14 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                     <select name='teachers' id='teachers' multiple style="width: 302px; height: 150px; margin-left: 0px !important; float: left;">
                         <?php
                             try {
-                                $sql = "SELECT gibbonPersonID, preferredName, surname FROM gibbonPerson JOIN gibbonRole ON (gibbonPerson.gibbonRoleIDPrimary = gibbonRole.gibbonRoleID) WHERE gibbonRole.category='Staff' AND gibbonPerson.status='Full' ORDER BY gibbonPerson.preferredName, gibbonPerson.surname ASC";
+                                $sql = "SELECT gibbonPersonID, preferredName, surname, title, gibbonRole.category FROM gibbonPerson JOIN gibbonRole ON (gibbonPerson.gibbonRoleIDPrimary = gibbonRole.gibbonRoleID) WHERE gibbonRole.category='Staff' AND gibbonPerson.status='Full' ORDER BY gibbonPerson.surname, gibbonPerson.preferredName ASC";
                                 $result = $connection2->prepare($sql);
                                 $result->execute();
                             } catch (PDOException $e) {
                             }
 
                             while (($row = $result->fetch()) != null) {
-                                print "<option value='" . $row["gibbonPersonID"] . "'>" . $row["preferredName"] . " " . $row["surname"] . "</option>";
+                                print "<option value='" . $row["gibbonPersonID"] . "'>" . formatName($row['title'], $row["preferredName"], $row["surname"], $row["category"], true, true) . "</option>";
                             }
                         ?>
                     </select>

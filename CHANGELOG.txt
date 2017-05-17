@@ -92,3 +92,11 @@ Fixed bug that stopped Two Of approval to return a database error.
 v0.0.09
 -------
 Fixed bug that stopped approval in trips_requestApproveProcess.php
+
+v1.0.00
+-------
+OOified most forms.
+Added exits to process files.
+Changed May Require Cover to Requries Cover?
+Added ability to set Cover requirement.
+System cover reccomendations now state they are reccomended my the system.

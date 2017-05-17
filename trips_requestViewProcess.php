@@ -17,8 +17,9 @@ $connection2 = $pdo->getConnection();
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php')) {
     //Acess denied
-    $URL .= "&return=error0";
+    $URL .= "trips_manage.php&return=error0";
     header("Location: {$URL}");
+    exit();
 } else {
     if (isset($_POST["tripPlannerRequestID"])) {
         $tripPlannerRequestID = $_POST["tripPlannerRequestID"];
@@ -64,9 +65,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
 
         $URL .= "&return=success0";
         header("Location: {$URL}");
+        exit();
     } else {
         $URL .= "trips_manage.php&return=error0";
         header("Location: {$URL}");
+        exit();
     }
 }   
 ?>

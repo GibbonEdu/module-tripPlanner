@@ -19,6 +19,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_editAp
     //Acess denied
     $URL .= "trips_manageApprovers.php&return=error0";
     header("Location: {$URL}");
+    exit();
 } else {
     $tripPlannerApproverID = null;
 
@@ -31,7 +32,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_editAp
     if ($tripPlannerApproverID == null) {
         $URL .= "trips_manageApprovers.php&return=error1";
         header("Location: {$URL}");
+        exit();
     }
+
+    $URL .= "trips_editApprover.php";
 
     $gibbonPersonID = null;
     if (isset($_POST["gibbonPersonID"])) {
@@ -41,8 +45,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_editAp
     } 
 
     if ($gibbonPersonID == null) {
-        $URL .= "trips_editApprover.php&tripPlannerApproverID=$tripPlannerApproverID&return=error1";
+        $URL .= "&tripPlannerApproverID=$tripPlannerApproverID&return=error1";
         header("Location: {$URL}");
+        exit();
     }
 
     $pdo = new Gibbon\sqlConnection();
@@ -58,8 +63,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_editAp
         } 
 
         if ($sequenceNumber == null) {
-            $URL .= "trips_editApprover.php&tripPlannerApproverID=$tripPlannerApproverID&return=error1";
+            $URL .= "&tripPlannerApproverID=$tripPlannerApproverID&return=error1";
             header("Location: {$URL}");
+            exit();
         }
     } else {
         $sequenceNumber = 0;
@@ -96,15 +102,16 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_editAp
         $result->execute($data);
     } catch (PDOException $e) { 
         //Fail 2
-        $URL .= "trips_editApprover.php&tripPlannerApproverID=$tripPlannerApproverID&return=error2";
+        $URL .= "&tripPlannerApproverID=$tripPlannerApproverID&return=error2";
         header("Location: {$URL}");
         exit();
     }
         
     if ($result->rowCount() > 0 && (approverExists($connection2, $tripPlannerApproverID && !$riskAssessmentApproval))) {
         //Fail 4
-        $URL .= "trips_editApprover.php&tripPlannerApproverID=$tripPlannerApproverID&return=error1";
+        $URL .= "&tripPlannerApproverID=$tripPlannerApproverID&return=error1";
         header("Location: {$URL}");
+        exit();
     } else {  
         try {
             $data = array("gibbonPersonID" => $gibbonPersonID, "sequenceNumber" => $sequenceNumber, "gibbonPersonIDUpdate" => $_SESSION[$guid]["gibbonPersonID"], "timestampUpdate" => date('Y-m-d H:i:s', time()), "tripPlannerApproverID" => $tripPlannerApproverID, "finalApprover" => $finalApprover);
@@ -112,12 +119,13 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_editAp
             $result = $connection2->prepare($sql);
             $result->execute($data);
         } catch (PDOException $e) {
-            $URL .= "trips_editApprover.php&tripPlannerApproverID=$tripPlannerApproverID&return=error2";
+            $URL .= "&tripPlannerApproverID=$tripPlannerApproverID&return=error2";
             header("Location: {$URL}");
             exit();
         }
-        $URL .= "trips_manageApprovers.php&return=success0";
+        $URL .= "&tripPlannerApproverID=$tripPlannerApproverID&return=success0";
         header("Location: {$URL}");
+        exit();
     }
 }   
 ?>
