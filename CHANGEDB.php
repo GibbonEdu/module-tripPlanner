@@ -65,4 +65,8 @@ $sql[$count][0]="0.1.00";
 $sql[$count++][1]="
 CREATE TABLE tripPlannerRequestCover (`tripPlannerRequestCoverID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,`tripPlannerRequestID` int(7) unsigned zerofill NOT NULL,`gibbonCourseClassID` int(8) unsigned zerofill NOT NULL,`requiresCover` boolean DEFAULT TRUE NOT NULL,PRIMARY KEY (`tripPlannerRequestCoverID`)) ENGINE=MyISAM DEFAULT CHARSET=utf8;end
 ";
+
+$sql[$count][0]="0.1.01";
+$sql[$count++][1]="
+";
 ?>

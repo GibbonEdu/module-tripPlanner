@@ -555,11 +555,11 @@ function notifyApprovers($guid, $connection2, $tripPlannerRequestID, $owner, $ti
             if ($requestApprovalType == "One Of" || $requestApprovalType == "Two Of") {
                 foreach ($approvers as $approver) {
                     if ($approver["gibbonPersonID"] != $owner) {
-                        setNotification($connection2, $guid, $approver['gibbonPersonID'], "A new trip has ben requested (" . $title .  ").", "Trip Planner", "/index.php?q=/modules/Trip Planner/trips_requestApprove.php&tripPlannerRequestID=" . $tripPlannerRequestID);   
+                        setNotification($connection2, $guid, $approver['gibbonPersonID'], "A new trip has been requested (" . $title .  ").", "Trip Planner", "/index.php?q=/modules/Trip Planner/trips_requestApprove.php&tripPlannerRequestID=" . $tripPlannerRequestID);   
                     }
                 }
             } else {
-                setNotification($connection2, $guid, $approvers[0]['gibbonPersonID'], "A new trip has ben requested (" . $title .  ").", "Trip Planner", "/index.php?q=/modules/Trip Planner/trips_requestApprove.php&tripPlannerRequestID=" . $tripPlannerRequestID);   
+                setNotification($connection2, $guid, $approvers[0]['gibbonPersonID'], "A new trip has been requested (" . $title .  ").", "Trip Planner", "/index.php?q=/modules/Trip Planner/trips_requestApprove.php&tripPlannerRequestID=" . $tripPlannerRequestID);   
             }
         }
     }

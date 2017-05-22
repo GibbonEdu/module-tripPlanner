@@ -93,10 +93,14 @@ v0.0.09
 -------
 Fixed bug that stopped approval in trips_requestApproveProcess.php
 
-v1.0.00
+v0.1.00
 -------
 OOified most forms.
 Added exits to process files.
 Changed May Require Cover to Requries Cover?
 Added ability to set Cover requirement.
 System cover reccomendations now state they are reccomended my the system.
+
+v0.1.01
+-------
+Fixed a typo when informing Approvers of a new request.
