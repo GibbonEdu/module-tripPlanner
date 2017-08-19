@@ -376,6 +376,42 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                 </td>
             </tr>
             <tr>
+                <td>
+                    <b><?php print _('Risk Assessment Templates') ?></b></br>
+                </td>
+                <td class='right'>
+                    <select name="riskAssessmentTemplates" id="riskAssessmentTemplates" style="width: 302px;" onchange="setTemplate()">
+                        <option value="">None</option>
+                        <?php
+                        $defaultRiskTemplate = getSettingByScope($connection2, "Trip Planner", "defaultRiskTemplate");
+                        print "<option value='0' ". ($defaultRiskTemplate == 0 ? "selected" : "") . ">Custom</option>";
+                        try {
+                            $sqlTemplates = "SELECT tripPlannerRiskTemplateID, name, body FROM tripPlannerRiskTemplates ORDER BY name ASC";
+                            $resultTemplates = $connection2->prepare($sqlTemplates);
+                            $resultTemplates->execute();
+                        } catch(PDOException $e) {
+                        }
+                        $templates = array("-1" => "", "0"=>getSettingByScope($connection2, "Trip Planner", "riskAssessmentTemplate"));
+                        while ($rowTemplate = $resultTemplates->fetch()) {
+                            $templates[$rowTemplate['tripPlannerRiskTemplateID']] = $rowTemplate['body'];
+                            echo "<option value='".$rowTemplate['tripPlannerRiskTemplateID']."' ". ($defaultRiskTemplate == $rowTemplate['tripPlannerRiskTemplateID'] ? "selected" : "") . ">" . $rowTemplate['name'].'</option>';
+                        }
+                        ?>
+                    </select>
+                    <script type="text/javascript">
+                        <?php print "var templates = " . json_encode($templates) . ";"; ?>
+                        function setTemplate() {
+                            var templateID = $("#riskAssessmentTemplates").val();
+                            if (templateID != "" && templateID >= 0) {
+                                if(confirm("Are you sure you want to use this template. Warning: This will overwrite any thing currently written.")) {
+                                    tinyMCE.get('riskAssessment').setContent(templates[templateID]);
+                                }
+                            }
+                        }
+                    </script>
+                </td>
+            </tr>
+            <tr>
                 <?php
                     try {
                         $sql = "SELECT value FROM gibbonSetting WHERE scope='Trip Planner' AND name='riskAssessmentTemplate'";
@@ -393,20 +429,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                             print "<span style='font-size: 90%'><i><?php print _('The Risk Assessment is not required until the trip is awaiting final approval.') ?><br/></i></span><br/>";
                         }
                     ?>
-                    <?php print getEditor($guid, TRUE, "riskAssessment", $row["value"], 25, true, $riskAssessmentApproval, false); ?>               
+                    <?php print getEditor($guid, TRUE, "riskAssessment", $templates[$defaultRiskTemplate], 25, true, $riskAssessmentApproval, false); ?>               
                 </td>
             </tr>
             <tr>
-                <?php
-                    try {
-                        $sql = "SELECT value FROM gibbonSetting WHERE scope='Trip Planner' AND name='riskAssessmentTemplate'";
-                        $result = $connection2->prepare($sql);
-                        $result->execute();
-                    } catch (PDOException $e) { 
-                        print "<div class='error'>" . $e->getMessage() . "</div>"; 
-                    }
-                    $row = $result->fetch();
-                ?>
                 <td colspan=2>
                     <b><?php print _('Letter to Parents') ?></b></br>
                     <?php print getEditor($guid, TRUE, "letterToParents", "", 25, true, true, false); ?>               
