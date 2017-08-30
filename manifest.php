@@ -88,7 +88,8 @@ VALUES
 (NULL, 'Trip Planner', 'riskAssessmentTemplate', 'Risk Assessment Template', 'The template for the Risk Assessment.', ''),
 (NULL, 'Trip Planner', 'missedClassWarningThreshold', 'Missed Class Warning Threshold', 'The threshold for displaying a warning that student has missed a class too many times. Set to 0 to disable warnings.', '5'),
 (NULL, 'Trip Planner', 'riskAssessmentApproval', 'Risk Assessment Approval', 'If this is enabled the Risk Assessment becomes an optional field until the trip has gone through approval. After this a Final Approval is required before the trip becomes approved.', '1'),
-(NULL, 'Trip Planner', 'requestEditing', 'Allow Requests to be Edited', 'If enabled Trip Requests may be edited by the owner, if edited the approval process is reset.', '0');";
+(NULL, 'Trip Planner', 'requestEditing', 'Allow Requests to be Edited', 'If enabled Trip Requests may be edited by the owner, if edited the approval process is reset.', '0'),
+(NULL, 'Trip Planner', 'defaultRiskTemplate', 'Default Risk Assessment Template', 'If selected then this template will be automatically applied to the form.', '0');";
 
 $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestPerson` (
     `tripPlannerRequestPersonID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
@@ -104,6 +105,13 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestCover` (
     `gibbonCourseClassID` int(8) unsigned zerofill NOT NULL,
     `requiresCover` boolean DEFAULT TRUE NOT NULL,
     PRIMARY KEY (`tripPlannerRequestCoverID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
+
+$moduleTables[$tables++] = "CREATE TABLE `tripPlannerRiskTemplates` (
+    `tripPlannerRiskTemplateID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
+    `name` varchar(30) NOT NULL,
+    `body` text NOT NULL,
+    PRIMARY KEY (`tripPlannerRiskTemplateID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
 
 //Actions
@@ -234,6 +242,23 @@ $actionRows[$actionCount]["category"] = "Settings";
 $actionRows[$actionCount]["description"] = "Manage Trip Planner Settings.";
 $actionRows[$actionCount]["URLList"] = "trips_manageSettings.php"; 
 $actionRows[$actionCount]["entryURL"] = "trips_manageSettings.php"; 
+$actionRows[$actionCount]["defaultPermissionAdmin"] = "Y";
+$actionRows[$actionCount]["defaultPermissionTeacher"] = "N";
+$actionRows[$actionCount]["defaultPermissionStudent"] = "N"; 
+$actionRows[$actionCount]["defaultPermissionParent"] = "N";
+$actionRows[$actionCount]["defaultPermissionSupport"] = "N"; 
+$actionRows[$actionCount]["categoryPermissionStaff"] = "Y"; 
+$actionRows[$actionCount]["categoryPermissionStudent"] = "N"; 
+$actionRows[$actionCount]["categoryPermissionParent"] = "N"; 
+$actionRows[$actionCount]["categoryPermissionOther"] = "N";
+$actionCount++; 
+
+$actionRows[$actionCount]["name"] = "Risk Assessment Templates"; 
+$actionRows[$actionCount]["precedence"] = "0"; 
+$actionRows[$actionCount]["category"] = "Settings";
+$actionRows[$actionCount]["description"] = "Manage Risk Assessment Templates.";
+$actionRows[$actionCount]["URLList"] = "trips_manageRiskTemplates.php"; 
+$actionRows[$actionCount]["entryURL"] = "trips_manageRiskTemplates.php"; 
 $actionRows[$actionCount]["defaultPermissionAdmin"] = "Y";
 $actionRows[$actionCount]["defaultPermissionTeacher"] = "N";
 $actionRows[$actionCount]["defaultPermissionStudent"] = "N"; 

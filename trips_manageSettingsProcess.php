@@ -22,11 +22,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     exit();
 } else {
 
-    $settings = array("requestApprovalType", "riskAssessmentTemplate", "missedClassWarningThreshold", "riskAssessmentApproval");
+    $settings = array("requestApprovalType", "riskAssessmentTemplate", "missedClassWarningThreshold", "riskAssessmentApproval", "defaultRiskTemplate");
 
     foreach ($settings as $setting) {
         $value = null;
         if (isset($_POST[$setting])) {
+            print $setting . "\n";
             if ($_POST[$setting] != null && $_POST[$setting] != "") {
                 if($setting == "missedClassWarningThreshold") {
                     $value = abs($_POST[$setting]);
@@ -34,11 +35,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                     $value = $_POST[$setting];
                 }
             }
-        } elseif($setting == "riskAssessmentApproval") {
+        } else if($setting == "riskAssessmentApproval") {
             $value = 0;
         }
 
-        if ($value == null) {
+        if ($value === null) {
             $URL .= "&return=error1";
             header("Location: {$URL}");
             exit();

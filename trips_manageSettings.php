@@ -48,6 +48,19 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     } catch(PDOException $e) {
     }
 
+    $templates = array("-1" => "None", "0" => "Custom");
+
+    try {
+        $sqlTemplates = "SELECT tripPlannerRiskTemplateID, name FROM tripPlannerRiskTemplates ORDER BY name ASC";
+        $resultTemplates = $connection2->prepare($sqlTemplates);
+        $resultTemplates->execute();
+    } catch(PDOException $e) {
+    }
+
+    while ($rowTemplates = $resultTemplates->fetch()) {
+        $templates[$rowTemplates["tripPlannerRiskTemplateID"]] = $rowTemplates["name"];
+    }
+
     $form = Form::create("tripPlannerSettings", $_SESSION[$guid]["absoluteURL"] . "/modules/Trip Planner/trips_manageSettingsProcess.php");
 
     while ($row = $result->fetch()) {
@@ -68,6 +81,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                 $fRow->addNumber($row["name"])->minimum(0)->setRequired(true)->decimalPlaces(0)->setValue($row["value"]);
             } else if ($row["name"] == "riskAssessmentApproval") {
                 $fRow->addCheckBox($row["name"])->checked($row["value"]);
+            } else if ($row['name'] == "defaultRiskTemplate") {
+                $fRow->addSelect($row["name"])->fromArray($templates)->selected($row["value"])->setRequired(true);
             }
     }
 
