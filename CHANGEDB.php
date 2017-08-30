@@ -68,6 +68,10 @@ CREATE TABLE tripPlannerRequestCover (`tripPlannerRequestCoverID` int(10) unsign
 
 $sql[$count][0]="0.1.01";
 $sql[$count++][1]="
+";
+
+$sql[$count][0]="0.1.10";
+$sql[$count++][1]="
 CREATE TABLE `tripPlannerRiskTemplates` (`tripPlannerRiskTemplateID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT, `name` varchar(30) NOT NULL, `body` text NOT NULL, PRIMARY KEY (`tripPlannerRiskTemplateID`)) ENGINE=MyISAM DEFAULT CHARSET=utf8;end
 INSERT INTO gibbonAction SET name='Risk Assessment Templates', precedence=0, category='Settings', description='Manage Risk Assessment Templates.', URLList='trips_manageRiskTemplates.php', entryURL='trips_manageRiskTemplates.php', defaultPermissionAdmin='Y', defaultPermissionTeacher='N', defaultPermissionStudent='N', defaultPermissionParent='N', defaultPermissionSupport='N', categoryPermissionStaff='Y', categoryPermissionStudent='N', categoryPermissionParent='N', categoryPermissionOther='N', gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='Trip Planner');end
 INSERT INTO `gibbonPermission` (`permissionID` ,`gibbonRoleID` ,`gibbonActionID`) VALUES (NULL , '1', (SELECT gibbonActionID FROM gibbonAction JOIN gibbonModule ON (gibbonAction.gibbonModuleID=gibbonModule.gibbonModuleID) WHERE gibbonModule.name='Trip Planner' AND gibbonAction.name='Risk Assessment Templates'));end
