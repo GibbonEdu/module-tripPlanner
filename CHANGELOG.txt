@@ -104,6 +104,9 @@ System cover reccomendations now state they are reccomended my the system.
 v0.1.01
 -------
 Fixed a typo when informing Approvers of a new request.
+
+v0.1.10
+-------
 Created tripPlannerRiskTemplates table
 Created Risk Assessment Templates Action
 Created trips_manageRiskTemplates.php, trips_addRiskTemplates.php, trips_addRiskTemplatesProcess.php and trips_deleteRiskTemplateProcess.php
