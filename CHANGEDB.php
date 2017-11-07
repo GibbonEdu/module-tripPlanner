@@ -78,4 +78,8 @@ INSERT INTO `gibbonPermission` (`permissionID` ,`gibbonRoleID` ,`gibbonActionID`
 INSERT INTO gibbonSetting SET scope='Trip Planner', name='defaultRiskTemplate', nameDisplay='Default Risk Assessment Template', description='If selected then this template will be automatically applied to the form.', value='0';end
 UPDATE gibbonSetting SET nameDisplay='Custom Risk Assessment Template', description='The custom template for the Risk Assessment.' WHERE scope='Trip Planner' AND name='riskAssessmentTemplate';end
 ";
+
+$sql[$count][0]="0.2.00";
+$sql[$count++][1]="
+CREATE TABLE `tripPlannerRequestDays` (`tripPlannerRequestDaysID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,`tripPlannerRequestID` int(7) unsigned zerofill NOT NULL,`startDate` date NOT NULL,`endDate` date NOT NULL,`allDay` boolean NOT NULL,`startTime` time NULL,`endTime` time NULL,PRIMARY KEY (`tripPlannerRequestDaysID`)) ENGINE=MyISAM DEFAULT CHARSET=utf8;end";
 ?>

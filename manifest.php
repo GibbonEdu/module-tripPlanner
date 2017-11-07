@@ -23,7 +23,7 @@ $description = "A trip planner module for Gibbon.";
 $entryURL = "trips_manage.php";
 $type = "Additional";
 $category = "Learn"; 
-$version = "0.1.10"; 
+$version = "0.2.00"; 
 $author = "Ray Clark"; 
 $url = "https://github.com/raynichc/Trip-Planner";
 
@@ -112,6 +112,17 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRiskTemplates` (
     `name` varchar(30) NOT NULL,
     `body` text NOT NULL,
     PRIMARY KEY (`tripPlannerRiskTemplateID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
+
+$moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestDays` (
+    `tripPlannerRequestDaysID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
+    `tripPlannerRequestID` int(7) unsigned zerofill NOT NULL,
+    `startDate` date NOT NULL,
+    `endDate` date NOT NULL,
+    `allDay` boolean NOT NULL,
+    `startTime` time NULL,
+    `endTime` time NULL,
+    PRIMARY KEY (`tripPlannerRequestDaysID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
 
 //Actions

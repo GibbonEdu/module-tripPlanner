@@ -112,3 +112,6 @@ Created Risk Assessment Templates Action
 Created trips_manageRiskTemplates.php, trips_addRiskTemplates.php, trips_addRiskTemplatesProcess.php and trips_deleteRiskTemplateProcess.php
 Added defaultRiskTemplate setting.
 Added Risk Assessment Templates to trips_submitRequest.php form.
+
+v0.2.00
+-------
