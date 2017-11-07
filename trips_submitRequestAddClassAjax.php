@@ -51,13 +51,20 @@ try {
     ?>
     <script type='text/javascript'>
         var students = <?php print $js_array ?>;
-        var type = <?php print $typeVal ?>;
-        for (var i = 0; i < allStudents.length; i++) {
-            if(students.indexOf(allStudents[i].gibbonPersonID) >= 0) {
-                allStudents[i].selected=type;
-            }
+        var source = $('#studentsSource');
+        var destination = $('#studentsDestination');
+        if (!<?php print $typeVal ?>) {
+            var temp = destination;
+            destination = source;
+            source = temp;
         }
-        resetArrays();
+        source.find("option").each(function(){
+            if (students.indexOf($(this).val()) >= 0) {
+                destination.append($(this).clone());
+                $(this).detach().remove();
+            }
+        });
+        sortSelects("students");
     </script>   
     <?php
 

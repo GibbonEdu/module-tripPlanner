@@ -21,21 +21,28 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     header("Location: {$URL}");
     exit();
 } else {    
+    print_r($_POST["days"]);
     $URL .= "trips_submitRequest.php";
     $date = new DateTime();
     $riskAssessmentApproval = getSettingByScope($connection2, "Trip Planner", "riskAssessmentApproval");
-    $items = array("title" => true, "description" => true, "location" => true, "date" => true, "endDate" => false, "startTime" => false, "endTime" => false, "riskAssessment" => !$riskAssessmentApproval, "letterToParents" => false, "teachersSelected" => true, "studentsSelected" => false, "order" => false);
+    $items = array("title" => true, "description" => true, "location" => true, "days" => true, "riskAssessment" => !$riskAssessmentApproval, "letterToParents" => false, "teachersSelected" => true, "studentsSelected" => false, "order" => false);
     $data = array("creatorPersonID" => $_SESSION[$guid]["gibbonPersonID"], "timestampCreation" => $date->format('Y-m-d H:i:s'), "gibbonSchoolYearID" => $_SESSION[$guid]["gibbonSchoolYearID"]);
     $sql = "INSERT INTO tripPlannerRequests SET creatorPersonID=:creatorPersonID, timestampCreation=:timestampCreation, gibbonSchoolYearID=:gibbonSchoolYearID, ";
     $people = array();
+    $days = array();
+    $costs = array();
 
     foreach ($items as $item => $required) {
         if (isset($_POST[$item])) {
             if ($_POST[$item] != null && $_POST[$item] != "") {
                 $key = $item;
-                if ($item == "date" || $item == "endDate") {
-                    $date = DateTime::createFromFormat("d/m/Y", $_POST[$item]);
-                    $data[$item] = $date->format("Y-m-d H:i:s");
+                if ($item == "days") {
+                    $key = null;
+                    foreach ($_POST[$item] as $day) {
+                        $date["startDate"] = DateTime::createFromFormat("d/m/Y", $date["startDate"])->format("Y-m-d");
+                        $date["endDate"] = DateTime::createFromFormat("d/m/Y", $date["endDate"])->format("Y-m-d");
+                        $days[] = $day;
+                    }
                 } elseif ($item == "teachersSelected" || $item == "studentsSelected") {
                     $key = null;
                     $role = "Teacher";
@@ -48,7 +55,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                     }
                 } elseif ($item == "order") {
                     $key = null;
-                    $costs = array();
                     $order = $_POST['order'];
                     foreach ($order as $cost) {
                         $costs[$cost]['name'] = $_POST['name'.$cost];
@@ -73,16 +79,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             $URL .= "&return=error1";
             header("Location: {$URL}");
             exit();
-        } else {
-            if ($item == "order") {
-                $costs = array();
-            }
         }
-    }
-
-    if (isset($_POST["allDay"])) {
-        $data["startTime"] = null;
-        $data["endTime"] = null;
     }
 
     $sql = substr($sql, 0, -2);
@@ -103,6 +100,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             $person['tripPlannerRequestID'] = $tripPlannerRequestID;
             $result2 = $connection2->prepare($sql2);
             $result2->execute($person);
+        }
+        $sql3 = "INSERT INTO tripPlannerRequestDays SET tripPlannerRequestID=:tripPlannerRequestID, startDate=:startDate, endDate=:endDate; allDay=:allDay, startTime=:startTime, endTime=:endTime";
+        foreach ($days as $day) {
+            $day['tripPlannerRequestID'] = $tripPlannerRequestID;
+            $result3 = $connection2->perpare($sql3);
+            $result3->execute($day);
         }
         notifyApprovers($guid, $connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"], $data["title"]);
     } catch (PDOException $e) {
