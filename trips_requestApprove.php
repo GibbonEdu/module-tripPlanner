@@ -39,7 +39,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     if (isset($_GET["tripPlannerRequestID"])) {
         $tripPlannerRequestID = $_GET["tripPlannerRequestID"];
         if (($approvalReturn = needsApproval($connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"])) == 0 || ($status == "Awaiting Final Approval" && isApprover($connection2, $_SESSION[$guid]["gibbonPersonID"], true))) {
-            renderTrip($guid, $connection2, $tripPlannerRequestID, "Approve");
+            renderTrip($guid, $connection2, $tripPlannerRequestID, true);
         } else {
             if($approvalReturn == 2 || $approvalReturn == 1) {
                 print "<div class='error'>";

@@ -53,7 +53,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             }
 
             if (isApprover($connection2, $gibbonPersonID) || isOwner($connection2, $tripPlannerRequestID, $gibbonPersonID) || isInvolved($connection2, $tripPlannerRequestID, $gibbonPersonID) || $isHOD || $highestAction == "Manage Trips_full") {
-                renderTrip($guid, $connection2, $tripPlannerRequestID, "View");
+                renderTrip($guid, $connection2, $tripPlannerRequestID, false);
             } else {
                 print "<div class='error'>";
                     print "You do not have access to this action.";
