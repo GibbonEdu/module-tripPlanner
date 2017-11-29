@@ -51,12 +51,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                     $result->execute($data);
                 } catch(PDOException $e) {
                     print $e;
-                    $URL .= "trips_requestEdit.php&tripPlannerRequestID=$tripPlannerRequestID&return=error2";
+                    $URL .= "trips_requestView.php&tripPlannerRequestID=$tripPlannerRequestID&return=error2";
                     header("Location: {$URL}");
                     exit();
                 }
 
-                $URL .= "trips_requestEdit.php&tripPlannerRequestID=$tripPlannerRequestID&return=success0";
+                $URL .= "trips_requestView.php&tripPlannerRequestID=$tripPlannerRequestID&return=success0";
                 header("Location: {$URL}");
                 exit();
             } else {
@@ -65,7 +65,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                 exit();
             }
         } else {    
-            $URL .= "trips_requestEdit.php&tripPlannerRequestID=$tripPlannerRequestID&return=error1";
+            $URL .= "trips_requestView.php&tripPlannerRequestID=$tripPlannerRequestID&return=error1";
             header("Location: {$URL}");
             exit();
         }

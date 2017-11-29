@@ -30,7 +30,7 @@ $connection2 = $pdo->getConnection();
 
 date_default_timezone_set($_SESSION[$guid]["timezone"]);
 
-$gibbonCourseClassID = $_GET["gibbonCourseClassID"];
+$addInfo = explode(":", $_GET["gibbonCourseClassID"]);
 $type = $_GET["type"];
 $typeVal = "false";
 if ($type == "Add") {
@@ -38,8 +38,9 @@ if ($type == "Add") {
 }
 
 try {
-    $data = array("gibbonCourseClassID" => $gibbonCourseClassID);
-    $sql = "SELECT gibbonPersonID FROM gibbonCourseClassPerson WHERE gibbonCourseClassID=:gibbonCourseClassID AND role='Student'";
+    $data = array("id" => $addInfo[1]);
+    if ($addInfo[0] == "Class") $sql = "SELECT gibbonPersonID FROM gibbonCourseClassPerson WHERE gibbonCourseClassID=:id AND role='Student'";
+    else $sql = "SELECT gibbonPersonID FROM gibbonActivityStudent WHERE gibbonActivityID=:id AND status='Accepted'";
     $result = $connection2->prepare($sql);
     $result->execute($data);
     $students = array();

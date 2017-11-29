@@ -31,6 +31,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         print "You do not have access to this action.";
     print "</div>";
 } else {
+
     if (isset($_GET['return'])) {
         returnProcess($guid, $_GET['return'], null, null);
     }

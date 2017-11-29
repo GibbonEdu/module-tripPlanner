@@ -25,19 +25,41 @@ use Gibbon\Forms\Form;
 //Module includes
 include "./modules/Trip Planner/moduleFunctions.php";
 
-if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submitRequest.php')) {
+$edit = false;
+if (isset($_GET['mode']) && isset($_GET['tripPlannerRequestID'])) {
+    $edit = true;
+    $tripPlannerRequestID = $_GET['tripPlannerRequestID'];
+}
+
+if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submitRequest.php') || ($edit && !isOwner($connection2, $tripPlannerRequestID, $_SESSION[$guid]['gibbonPersonID']))) {
     //Acess denied
     print "<div class='error'>";
         print "You do not have access to this action.";
     print "</div>";
 } else {
+
+    if ($edit) {
+        $trip = getTrip($connection2, $tripPlannerRequestID);
+        $tripTeachers = array();
+        $tripStudents = array();
+        foreach (explode(", ", $trip["people"]) as $person) {
+            $person = explode(";", $person);
+            if(count($person) != 2) continue;
+            if ($person[1] == "Student") {
+                $tripStudents[] = $person[0];
+            } else {
+                $tripTeachers[] = $person[0];
+            }
+        }
+    }
+
     print "<div class='trail'>";
-        print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . _("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . _(getModuleName($_GET["q"])) . "</a> > </div><div class='trailEnd'>" . _('Submit Trip Request') . "</div>";
+        print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . _("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . _(getModuleName($_GET["q"])) . "</a> > </div><div class='trailEnd'>" . _(($edit ? "Edit" : "Submit") . ' Trip Request') . "</div>";
     print "</div>";
 
     if (isset($_GET['return'])) {
         $editLink = null;
-        if(isset($_GET['tripPlannerRequestID'])) {
+        if(isset($_GET['tripPlannerRequestID']) && !$edit) {
             $editLink = $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID=" . $_GET['tripPlannerRequestID'];
         }
         returnProcess($guid, $_GET['return'], $editLink, null);
@@ -48,7 +70,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     <script type="text/javascript">
         function descReveal(id) {
             var descBlock = $("textarea[name=\"costDescription[" + id + "]\"]");
-            var descLabel = $("[for=\"costDescription\"]");
+            var descLabel = $("[for=\"costDescription[" + id + "]\"]");
             descLabel.css("display", descBlock.is(":visible") ? "none" : "block");
             descBlock.css("display", descBlock.is(":visible") ? "none" : "table-cell");
         }
@@ -71,7 +93,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             border:none !important;
         }
 
-        [for="costDescription"] { display: none; margin-top: 5px; margin-left: 0.4%; }
+        [for^="costDescription"] { display: none; margin-top: 5px; margin-left: 0.4%; }
     </style>
 
     <?php
@@ -119,8 +141,28 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
     $classes = array();
     while ($rowSelect = $resultSelect->fetch()) {
-        $classes[$rowSelect['gibbonCourseClassID']] = htmlPrep($rowSelect['course']).'.'.htmlPrep($rowSelect['class']).' - '.$rowSelect['name'];
+        $classes["Class:" . $rowSelect['gibbonCourseClassID']] = htmlPrep($rowSelect['course']).'.'.htmlPrep($rowSelect['class']).' - '.$rowSelect['name'];
     }
+
+    try {
+        if ($highestAction2 == 'Submit Request_all') {
+            $dataSelect = array('gibbonSchoolYearID' => $_SESSION[$guid]['gibbonSchoolYearID']);
+            $sqlSelect = 'SELECT gibbonActivityID, name FROM gibbonActivity WHERE gibbonSchoolYearID=:gibbonSchoolYearID ORDER BY name ASC';
+        } else {
+            $dataSelect = array('gibbonSchoolYearID' => $_SESSION[$guid]['gibbonSchoolYearID'], 'gibbonPersonID' => $_SESSION[$guid]['gibbonPersonID']);
+            $sqlSelect = "SELECT gibbonActivity.gibbonActivityID, gibbonActivity.name FROM gibbonActivity JOIN gibbonActivityStaff ON (gibbonActivity.gibbonActivityID=gibbonActivityStaff.gibbonActivityID) WHERE role='Organiser' AND gibbonSchoolYearID=:gibbonSchoolYearID AND gibbonPersonID=:gibbonPersonID ORDER BY name ASC";
+        }
+        $resultSelect = $connection2->prepare($sqlSelect);
+        $resultSelect->execute($dataSelect);
+    } catch (PDOException $e) {
+    }
+
+    $activities = array();
+    while ($rowSelect = $resultSelect->fetch()) {
+        $activities["Activity:" . $rowSelect['gibbonActivityID']] = htmlPrep($rowSelect['name']);
+    }
+
+    $groups = array("By Class" => $classes, "By Activity" => $activities);
     ?>
 
     <script type="text/javascript">
@@ -157,18 +199,32 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                 $('tr[id=timeRow]').each(function(){ 
                     $(this).css("display", enabled ? "none" : "table-row");
                 }); 
+                modifyDayList($(this), 2);
             });
 
             $("select[id=dayList]").on('change', function(){
                 var id = $(this).find(":selected").val();
-                if (id != dayID) {
+                if (isNaN(id)) {
+                    $("#startDate").val("");
+                    $("#endDate").val("");
+                    $("#allDay").prop("checked", "").change();
+                    $("#startTime").val("");
+                    $("#endTime").val("");
+                    $("#addDays").val("Add Days");
+                } else if (id != dayID) {
                     $("#startDate").val(daysList[id][0]);
                     $("#endDate").val(daysList[id][1]);
                     $("#allDay").prop("checked", daysList[id][2]).change();
                     $("#startTime").val(daysList[id][3]);
                     $("#endTime").val(daysList[id][4]);
+                    $("#addDays").val("Duplicate Days");
                 }
             });
+
+            $("input[name=startDate]").on('change', function() { modifyDayList($(this), 0); });
+            $("input[name=endDate]").on('change', function() { modifyDayList($(this), 1); });
+            $("input[name=startTime]").on('change', function() { modifyDayList($(this), 3); });
+            $("input[name=endTime]").on('change', function() { modifyDayList($(this), 4); });
 
             var form = $("#requestForm");
             form.submit(function(){
@@ -204,16 +260,26 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             var startTime = $("#startTime");
             var endTime = $("#endTime");
 
-            if(startDate.val() == "" || endDate.val() == "" || ((startTime.val() == "" || endTime.val() == "") && !allDay.prop("checked"))) return;
+            if (startDate.val() == "" || endDate.val() == "" || ((startTime.val() == "" || endTime.val() == "") && !allDay.prop("checked"))) return;
+            if ((new Date(startDate.val()) > new Date(endDate.val()))) {
+                alert(<?php print "'" . __("Start date must be before end date.") . "'"?>);
+                return;
+            }
+            if ((startTime.val() > endTime.val()) && !allDay.prop("checked")) {
+                alert(<?php print "'" . __("Start time must be before end time.") . "'"?>);
+                return;
+            }
+
             daysList[dayID] = [startDate.val(), endDate.val(), allDay.prop("checked"), startTime.val(), endTime.val()];
             dayList.append($("<option>", {value: dayID, text: startDate.val() + (startDate.val() != endDate.val() ? " - " + endDate.val() : "")}));
-            console.log(daysList);
 
             startDate.val("");
             endDate.val("");
             allDay.prop("checked", "").change();
             startTime.val("");
             endTime.val("");
+            $("#addDays").val("Add Days");
+            dayList.val("<?php print __("Add New Days")?>");
             dayID++;
         }
 
@@ -224,6 +290,20 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                 daysList[id] = null;
                 dayList.find("option[value=" + id + "]").detach().remove();
             }
+        }
+
+        function modifyDayList(selector, index) {
+            console.log(index);
+            var id = $("select[id=dayList]").find(":selected").val();
+            //TODO: proper validation
+            if (!isNaN(id)) {
+                daysList[id][index] = index == 2 ? selector.prop("checked") : selector.val();
+                if(index == 0 || index == 1) {
+                    $("select[id=dayList]").find(":selected").text(daysList[id][0] + (daysList[id][0] != daysList[id][1] ? " - " + daysList[id][1] : ""));
+                }
+            }
+
+            console.log(daysList);
         }
     </script>
 
@@ -263,23 +343,29 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         print "Request";
     print "</h3>";
 
-    $form = Form::create("requestForm", $_SESSION[$guid]["absoluteURL"] . "/modules/Trip Planner/trips_submitRequestProcess.php");
+    if ($edit) {
+        echo "<div class='linkTop'>";
+            echo "<a href='".$_SESSION[$guid]['absoluteURL']."/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID=$tripPlannerRequestID'>".__($guid, 'View')."<img style='margin-left: 5px' title='".__($guid, 'Edit')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/plus.png'/></a>";
+        echo '</div>';
+    }
+
+    $form = Form::create("requestForm", $_SESSION[$guid]["absoluteURL"] . "/modules/Trip Planner/trips_submitRequestProcess.php" . ($edit ? "?mode=edit&tripPlannerRequestID=" . $tripPlannerRequestID : ""));
 
     $row = $form->addRow();
         $row->addHeading("Basic Information");
 
     $row = $form->addRow();
         $row->addLabel("title", "Title");
-        $row->addTextfield("title")->setRequired(true);
+        $row->addTextfield("title")->setRequired(true)->setValue($edit ? $trip['title'] : '');
 
     $row = $form->addRow();
         $column = $row->addColumn();
         $column->addLabel("description", "Description");
-        $column->addEditor("description", $guid)->setRequired(true)->showMedia(true)->setRows(10);
+        $column->addEditor("description", $guid)->setRequired(true)->showMedia(true)->setRows(10)->setValue($edit ? $trip['description'] : '');
 
     $row = $form->addRow();
         $row->addLabel("location", "Location");
-        $row->addTextfield("location")->setRequired(true);
+        $row->addTextfield("location")->setRequired(true)->setValue($edit ? $trip['location'] : '');
 
     $row = $form->addRow();
         $row->addHeading("Date & Time");
@@ -291,7 +377,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     $row = $form->addRow("multipleRow");
         $row->addLabel("dayList", "Days");
         $column = $row->addColumn()->addClass("right");
-            $column->addSelect("dayList");
+            $column->addSelect("dayList")->placeholder(__("Add New Days"));
             $column->addButton("Add Days", "addDay()")->addClass("shortWidth")->setID("addDays");
             $column->addButton("Remove Days", "remDay()")->addClass("shortWidth")->setID("removeDays");
 
@@ -332,12 +418,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     $row = $form->addRow();
         $column = $row->addColumn();
             $column->addLabel("riskAssessment", "Risk Assessment");
-            $column->addEditor("riskAssessment", $guid)->setRequired(true)->showMedia(true)->setRows(25)->setValue($templates[$defaultRiskTemplate]);
+            $column->addEditor("riskAssessment", $guid)->setRequired(true)->showMedia(true)->setRows(25)->setValue($edit ? $trip["riskAssessment"] : $templates[$defaultRiskTemplate]);
 
     $row = $form->addRow();
         $column = $row->addColumn();
             $column->addLabel("letterToParents", "Letter to Parents");
-            $column->addEditor("letterToParents", $guid)->showMedia(true)->setRows(25);
+            $column->addEditor("letterToParents", $guid)->showMedia(true)->setRows(25)->setValue($edit ? $trip['letterToParents'] : '');
 
     $row = $form->addRow();
         $row->addHeading("Participants");
@@ -355,9 +441,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             $multiSelect->addSortableAttribute("Form", $studentsForm);
 
     $row = $form->addRow();
-        $row->addLabel("addStudentsByClass", "Add Class to Students");
+        $row->addLabel("addByGroup", "Add by Group");
         $column = $row->addColumn()->addClass("right");
-            $column->addSelect("addStudentsByClass")->fromArray($classes)->placeholder("No Class");
+            $column->addSelect("addStudentsByClass")->fromArray($groups)->placeholder("None");
             $column->addButton("Add", "addClass('Add')")->addClass("shortWidth")->setID("addButton");
             $column->addButton("Remove", "addClass('Remove')")->addClass("shortWidth")->setID("removeButton");
             
@@ -367,5 +453,79 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         $row->addSubmit();
 
     print $form->getOutput();
+
+    if ($edit) {
+
+        $daysList = array();
+        foreach (explode(", ", $trip["multiDay"]) as $day) {
+            $temp = explode(";", $day);
+            if(count($temp) != 5) continue;
+            $temp[0] = DateTime::createFromFormat("Y-m-d", $temp[0])->format("d/m/Y");
+            $temp[1] = DateTime::createFromFormat("Y-m-d", $temp[1])->format("d/m/Y");
+            $temp[2] = $temp[2] == 1;
+            $temp[3] = DateTime::createFromFormat("H:i:s", $temp[3])->format("H:i");
+            $temp[4] = DateTime::createFromFormat("H:i:s", $temp[4])->format("H:i");
+            $daysList[] = $temp;
+        }
+
+        try {
+            $dataCosts = array("tripPlannerRequestID" => $tripPlannerRequestID);
+            $sqlCosts = 'SELECT title, description, cost FROM tripPlannerCostBreakdown WHERE tripPlannerRequestID=:tripPlannerRequestID ORDER BY tripPlannerCostBreakdownID';
+            $resultCosts = $connection2->prepare($sqlCosts);
+            $resultCosts->execute($dataCosts);
+        } catch (PDOException $e) {
+        }
+
+        $costs = $resultCosts->fetchAll();
+
+    ?>
+    <script type="text/javascript">
+        function addOption(name, people) {
+            $('#' + name + "Source").find('option').each(function(){
+                if (people.indexOf($(this).val()) >= 0) {
+                    $('#' + name + "Destination").append($(this).clone());
+                    $(this).detach().remove();
+                }
+            });
+            sortSelects(name);
+        }
+
+        $(document).ready(function(){
+            addOption('teachers', <?php print json_encode($tripTeachers)?>);
+            addOption('students', <?php print json_encode($tripStudents)?>);
+
+            //Add Cost
+            var costs = <?php print json_encode($costs) ?>;
+            for (var i = 0; i < costs.length; i++) {
+                var cost = costs[i];
+
+                addcostBlock();
+                $("input[name='costName[" + (i+1) + "]']").val(cost["title"]);
+                $("input[name='costValue[" + (i+1) + "]']").val(cost["cost"]);
+                $("textarea[name='costDescription[" + (i+1) + "]']").text(cost["description"]);
+            }
+
+            //Days
+            var multiday = <?php empty($trip["multiDay"]) ? print "false" : print "true" ?>;
+            if (multiday) {
+                $("#multipleDays").attr("checked", "checked").change();
+                daysList = <?php print json_encode($daysList) ?>;
+                dayID = daysList.length;
+                for (var i = 0; i < daysList.length; i++) {
+                    if (daysList[i] != null) {
+                        $("#dayList").append($("<option>", {value: i, text: daysList[i][0] + (daysList[i][0] != daysList[i][1] ? " - " + daysList[i][1] : "")}));
+                    }
+                }
+            } else {
+                $("#startDate").val(<?php print $trip["date"]?>);
+                $("#endDate").val(<?php print $trip["endDate"]?>);
+                $("#allDay").attr("checked", <?php ($trip["startTime"] == null || $trip["endTime"] == null) ? print "'checked'" : print "''"?>);
+                $("#startTime").val(<?php print $trip["startTime"]?>);
+                $("#endTime").val(<?php print $trip["endTime"]?>);
+            }
+        });
+    </script>
+    <?php
+    }
 }   
 ?>

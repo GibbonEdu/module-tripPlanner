@@ -120,10 +120,12 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestDays` (
     `startDate` date NOT NULL,
     `endDate` date NOT NULL,
     `allDay` boolean NOT NULL,
-    `startTime` time NULL,
-    `endTime` time NULL,
+    `startTime` time NOT NULL DEFAULT '00:00:00',
+    `endTime` time NOT NULL DEFAULT '00:00:00',
     PRIMARY KEY (`tripPlannerRequestDaysID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
+
+$moduleTables[$tables++] = "ALTER TABLE `gibbonCourseClassPerson` ADD INDEX `tripCourseClassPersonID` (`gibbonPersonID`)";
 
 //Actions
 $actionCount = 0;

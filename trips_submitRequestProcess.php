@@ -15,7 +15,13 @@ $URL = $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/";
 $pdo = new Gibbon\sqlConnection();
 $connection2 = $pdo->getConnection();
 
-if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submitRequest.php')) {
+$edit = false;
+if (isset($_GET['mode']) && isset($_GET['tripPlannerRequestID'])) {
+    $edit = true;
+    $tripPlannerRequestID = $_GET['tripPlannerRequestID'];
+}
+
+if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submitRequest.php') || ($edit && !isOwner($connection2, $tripPlannerRequestID, $_SESSION[$guid]['gibbonPersonID']))) {
     //Acess denied
     $URL .= "trips_manage.php&return=error0";
     header("Location: {$URL}");
@@ -29,8 +35,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     $date = new DateTime();
     $riskAssessmentApproval = getSettingByScope($connection2, "Trip Planner", "riskAssessmentApproval");
     $items = array("title" => true, "description" => true, "location" => true, "days" => $multipleDays, "riskAssessment" => !$riskAssessmentApproval, "letterToParents" => false, "teachers" => true, "students" => false, "costOrder" => false);
-    $data = array("creatorPersonID" => $_SESSION[$guid]["gibbonPersonID"], "timestampCreation" => $date->format('Y-m-d H:i:s'), "gibbonSchoolYearID" => $_SESSION[$guid]["gibbonSchoolYearID"]);
-    $sql = "INSERT INTO tripPlannerRequests SET creatorPersonID=:creatorPersonID, timestampCreation=:timestampCreation, gibbonSchoolYearID=:gibbonSchoolYearID, ";
+    $data = array();
+    $sql = ($edit ? "UPDATE" : "INSERT INTO") . " tripPlannerRequests SET" . ($edit ? " " : "creatorPersonID=:creatorPersonID, timestampCreation=now(), gibbonSchoolYearID=:gibbonSchoolYearID, ");
 
     $people = array();
     $days = array();
@@ -87,7 +93,14 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         }
     }
 
-    $sql = substr($sql, 0, -2);
+    $sql = substr($sql, 0, -2) . ($edit ? " WHERE tripPlannerRequestID=:tripPlannerRequestID" : "");
+
+    if ($edit) {
+        $data["tripPlannerRequestID"] = $tripPlannerRequestID;
+    } else {
+        $data["creatorPersonID"] = $_SESSION[$guid]["gibbonPersonID"];
+        $data["gibbonSchoolYearID"] = $_SESSION[$guid]["gibbonSchoolYearID"];
+    }
 
     if (!$multipleDays) {
         if (!isset($_POST["startDate"]) || ((!isset($_POST["startTime"])) || !isset($_POST["endTime"]) && !isset($_POST["allDay"]))) {
@@ -101,8 +114,18 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     try {
         $result = $connection2->prepare($sql);
         $result->execute($data);
-        $tripPlannerRequestID = $connection2->lastInsertId();
-        logEvent($connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"], "Request");
+        if (!$edit) $tripPlannerRequestID = $connection2->lastInsertId();
+        logEvent($connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"], $edit ? "Edit" : "Request");
+    
+        if ($edit) {
+            $tables = array("tripPlannerCostBreakdown", "tripPlannerRequestPerson", "tripPlannerRequestDays");
+            foreach ($tables as $table) {
+                $dataEdit = array("tripPlannerRequestID" => $tripPlannerRequestID);
+                $sqlEdit = "DELETE FROM " . $table . " WHERE tripPlannerRequestID=:tripPlannerRequestID";
+                $resultEdit = $connection2->prepare($sqlEdit);
+                $resultEdit->execute($dataEdit);
+            }  
+        }
         $sql1 = "INSERT INTO tripPlannerCostBreakdown SET tripPlannerRequestID=:tripPlannerRequestID, title=:name, cost=:cost, description=:description";
         foreach ($costs as $cost) {
             $cost['tripPlannerRequestID'] = $tripPlannerRequestID;
@@ -121,14 +144,15 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             $result3 = $connection2->prepare($sql3);
             $result3->execute($day);
         }
-        notifyApprovers($guid, $connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"], $data["title"]);
+        if (!$edit) notifyApprovers($guid, $connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"], $data["title"]);
     } catch (PDOException $e) {
+        print $e;
         $URL .= "&return=error2";
-        header("Location: {$URL}");
+        // header("Location: {$URL}");
         exit();
     }
 
-    $URL .= "&return=success0&tripPlannerRequestID=" . $tripPlannerRequestID;
+    $URL .= "&return=success0&tripPlannerRequestID=" . $tripPlannerRequestID . ($edit ? "&mode=edit" : "");
     header("Location: {$URL}");
     exit();
 }   

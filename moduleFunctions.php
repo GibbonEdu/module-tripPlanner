@@ -186,7 +186,7 @@ function getTripStatus($connection2, $tripPlannerRequestID) {
 function getTrip($connection2, $tripPlannerRequestID) {
     try {
         $data = array("tripPlannerRequestID" => $tripPlannerRequestID);
-        $sql = "SELECT creatorPersonID, timestampCreation, title, description, teacherPersonIDs, studentPersonIDs, location, tripPlannerRequests.date, tripPlannerRequests.endDate, tripPlannerRequests.startTime, tripPlannerRequests.endTime, riskAssessment, letterToParents, status, (SELECT GROUP_CONCAT(CONCAT(tripPlannerRequestDays.startDate, ';', tripPlannerRequestDays.endDate, ';', tripPlannerRequestDays.allDay, ';', tripPlannerRequestDays.startTime, ';', tripPlannerRequestDays.endTime) SEPARATOR ', ') FROM tripPlannerRequestDays WHERE tripPlannerRequestDays.tripPlannerRequestID = tripPlannerRequests.tripPlannerRequestID) as multiDay, (SELECT GROUP_CONCAT(CONCAT(tripPlannerRequestPerson.gibbonPersonID, ';', tripPlannerRequestPerson.role) SEPARATOR ', ') FROM tripPlannerRequestPerson WHERE tripPlannerRequestPerson.tripPlannerRequestID = tripPlannerRequests.tripPlannerRequestID) as people FROM tripPlannerRequests WHERE tripPlannerRequests.tripPlannerRequestID=:tripPlannerRequestID";
+        $sql = "SELECT creatorPersonID, timestampCreation, title, description, teacherPersonIDs, studentPersonIDs, location, tripPlannerRequests.date, tripPlannerRequests.endDate, tripPlannerRequests.startTime, tripPlannerRequests.endTime, riskAssessment, letterToParents, status, (SELECT GROUP_CONCAT(CONCAT(tripPlannerRequestDays.startDate, ';', tripPlannerRequestDays.endDate, ';', tripPlannerRequestDays.allDay, ';', tripPlannerRequestDays.startTime, ';', tripPlannerRequestDays.endTime) SEPARATOR ', ') FROM tripPlannerRequestDays WHERE tripPlannerRequestDays.tripPlannerRequestID = tripPlannerRequests.tripPlannerRequestID ORDER BY tripPlannerRequestDays.startDate ASC) as multiDay, (SELECT GROUP_CONCAT(CONCAT(tripPlannerRequestPerson.gibbonPersonID, ';', tripPlannerRequestPerson.role) SEPARATOR ', ') FROM tripPlannerRequestPerson WHERE tripPlannerRequestPerson.tripPlannerRequestID = tripPlannerRequests.tripPlannerRequestID) as people FROM tripPlannerRequests WHERE tripPlannerRequests.tripPlannerRequestID=:tripPlannerRequestID";
         $result = $connection2->prepare($sql);
         $result->execute($data);
         if($result->rowCount() == 1) {
@@ -652,40 +652,62 @@ function getPlannerOverlaps($connection2, $tripPlannerRequestID, $startDates, $e
     return $result;
 }
 
-function getStudentsInClass($connection2, $classes) {
+//TODO: Do this
+function sendToParents($guid, $conection2, $tripPlannerRequestID, $schoolWide) {
+    require $_SESSION[$guid]["absolutePath"] . '/lib/PHPMailer/PHPMailerAutoload.php';
 
-    if(!is_array($classes) || empty($classes)) {
-        return null;
+    $bodyFin = "<p style='font-style: italic'>" . sprintf(__($guid, 'Email sent via %1$s at %2$s.'), $_SESSION[$guid]["systemName"], $_SESSION[$guid]["organisationName"]) ."</p>" ;
+
+    $emailCount=0 ;
+    $mail=getGibbonMailer($guid);
+    if ($schoolWide)
+        $mail->SetFrom($from, $_SESSION[$guid]["organisationName"]);
+    else
+        $mail->SetFrom($from, $_SESSION[$guid]["preferredName"] . " " . $_SESSION[$guid]["surname"]);
+    $mail->CharSet="UTF-8";
+    $mail->Encoding="base64" ;
+    $mail->IsHTML(true);
+    $mail->Subject=$subject ;
+    $mail->Body = $body.$bodyFin ;
+    $mail->AltBody = emailBodyConvert($body.$bodyFin) ;
+
+    //Send to sender, if not in recipient list
+    $includeSender = true ;
+    foreach ($report as $reportEntry) {
+        if ($reportEntry[3] == 'Email') {
+            if ($reportEntry[4] == $from) {
+                $includeSender = false ;
+            }
+        }
     }
 
-    try {
-        $data = array();
-        $sql = "SELECT gibbonCourseClassID, gibbonPerson.gibbonPersonID, preferredName, surname FROM gibbonCourseClassPerson JOIN gibbonPerson ON (gibbonCourseClassPerson.gibbonPersonID = gibbonPerson.gibbonPersonID) WHERE role='Student' AND (";
-        foreach ($classes as $key => $class) {
-            $cData = "class" . $key;
-            $data[$cData] = $class;
-            $sql .= "gibbonCourseClassID=:" . $cData . " OR ";
+    //Send to each recipient
+    foreach ($report as $reportEntry) {
+        if ($reportEntry[3] == 'Email') {
+            $emailCount ++;
+            $mail->ClearAddresses();
+            $mail->AddAddress($reportEntry[4]);
+            //Deal with email receipt and body finalisation
+            if ($emailReceipt == 'Y') {
+                $bodyReadReceipt = "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/index.php?q=/modules/Messenger/messenger_emailReceiptConfirm.php&gibbonMessengerID=$AI&gibbonPersonID=".$reportEntry[0]."&key=".$reportEntry[5]."'>".$emailReceiptText."</a>";
+                if (is_numeric(strpos($body, '[confirmLink]'))) {
+                    $bodyOut = str_replace('[confirmLink]', $bodyReadReceipt, $body).$bodyFin;
+                }
+                else {
+                    $bodyOut = $body.$bodyReadReceipt.$bodyFin;
+                }
+            }
+            else {
+                $bodyOut = $body.$bodyFin;
+            }
+            $mail->Body = $bodyOut ;
+            $mail->AltBody = emailBodyConvert($bodyOut);
+            if(!$mail->Send()) {
+                $partialFail = TRUE ;
+            }
         }
-        $sql = substr($sql, 0, -4) . ")";
-        $result = $connection2->prepare($sql);
-        $result->execute($data);
-    } catch (PDOException $e) {
-    }   
-
-    return $result;
-}
-
-function getTeachersOfClass($connection2, $gibbonCourseClassID) {
-    try {
-        $data = array("gibbonCourseClassID" => $gibbonCourseClassID);
-        $sql = "SELECT gibbonCourseClassPerson.gibbonPersonID FROM gibbonCourseClassPerson WHERE gibbonCourseClassID=:gibbonCourseClassID AND role='Teacher'";
-        $result = $connection2->prepare($sql);
-        $result->execute($data);
-    } catch (PDOException $e) {
-    }   
-
-    return $result;
-}
+    }
+} 
 
 function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
     if(!isset($guid) || !isset($connection2) || !isset($tripPlannerRequestID)) {
@@ -713,6 +735,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
             $students = array();
             foreach (explode(", ", $request["people"]) as $person) {
                 $person = explode(";", $person);
+                if(count($person) != 2) continue;
                 if ($person[1] == "Student") {
                     $students[] = $person[0];
                 } else {
@@ -724,7 +747,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
 
             if (isOwner($connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"])) {
                 echo "<div class='linkTop'>";
-                    echo "<a href='".$_SESSION[$guid]['absoluteURL']."/index.php?q=/modules/Trip Planner/trips_requestEdit.php&tripPlannerRequestID=$tripPlannerRequestID'>".__($guid, 'Edit')."<img style='margin-left: 5px' title='".__($guid, 'Edit')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/config.png'/></a>";
+                    echo "<a href='".$_SESSION[$guid]['absoluteURL']."/index.php?q=/modules/Trip Planner/trips_submitRequest.php&mode=edit&tripPlannerRequestID=$tripPlannerRequestID'>".__($guid, 'Edit')."<img style='margin-left: 5px' title='".__($guid, 'Edit')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/config.png'/></a>";
                 echo '</div>';
             } else {
                 echo "<div class='linkTop'>";
@@ -826,7 +849,9 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                                     <?php
                                     $count = "even";
                                     if (!empty($request["multiDay"])) {
-                                        foreach (explode(", ", $request["multiDay"]) as $day) {
+                                        $days = explode(", ", $request["multiDay"]);
+                                        asort($days);
+                                        foreach ($days as $day) {
                                             $day = explode(";", $day);
                                             $days[] = $day;
                                             print "<tr class=$count>";
@@ -853,7 +878,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                                                 print "<td>" . DateTime::createFromFormat("H:i:s", $request["endTime"])->format("H:i") . "</td>";
                                             }
                                         print "</tr>";
-                                        $days[] = array($request["startDate"], $endDate, $request["startTime"], $request["endTime"]);
+                                        $days[] = array($request["date"], $endDate, $request["startTime"], $request["endTime"]);
                                     }
                                     ?>
                                 </table>
@@ -898,7 +923,14 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                         <tr>
                             <td colspan=2> 
                                 <b><?php echo __($guid, 'Letter To Parents') ?></b>
-                                <?php 
+                                <?php
+                                    //TODO: make buttons works
+                                    echo "<div class='linkTop' style='margin-top:-20px'>";
+                                        if(isActionAccessible($guid, $connection2, "/modules/Messenger/messenger_post.php", "New Message_readReceipts")) {
+                                            echo "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/modules/Trip Planner/trips_requestExternalReportProcess.php?tripPlannerRequestID=$tripPlannerRequestID&report=medical'>".__($guid, 'Send to Parents')."<img style='margin-right: 10px;margin-left: 5px' title='".__($guid, 'Send to Parents')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/delivery2.png'/></a>";
+                                        }
+                                        echo "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/report.php?q=/modules/Trip Planner/trips_reportTripPeople.php&tripPlannerRequestID=$tripPlannerRequestID'>".__($guid, 'Print')."<img style='margin-left: 5px' title='".__($guid, 'Print')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/print.png'/></a>";
+                                    echo '</div>';
                                     echo '<p>';
                                     echo $request['letterToParents'];
                                     echo '</p>';
@@ -990,7 +1022,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                                     </tr>
                                 </table>
                                 <?php } else {
-                                    //TODO: No Students Meesage
+                                    print __("No students on this trip.");
                                 } ?>
                             </td>
                         </tr>
@@ -1128,7 +1160,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                                     <?php
                                         try {
                                             $data = array();
-                                            $sql = "SELECT gibbonCourse.gibbonCourseID, gibbonCourse.nameShort, (SELECT GROUP_CONCAT(gibbonCourseClassPerson.gibbonPersonID SEPARATOR ', ') FROM gibbonCourseClassPerson WHERE gibbonCourseClassPerson.gibbonCourseClassID = gibbonCourseClass.gibbonCourseClassID AND role='Student') FROM gibbonTTDayRowClass JOIN gibbonTTColumnRow ON (gibbonTTDayRowClass.gibbonTTColumnRowID = gibbonTTColumnRow.gibbonTTColumnRowID) JOIN gibbonCourseClassPerson ON (gibbonTTDayRowClass.gibbonCourseClassID = gibbonCourseClassPerson.gibbonCourseClassID) JOIN gibbonCourseClass ON (gibbonCourseClass.gibbonCourseClassID = gibbonTTDayRowClass.gibbonCourseClassID) JOIN gibbonCourse ON (gibbonCourse.gibbonCourseID = gibbonCourseClass.gibbonCourseID) LEFT JOIN gibbonTTDayDate ON (gibbonTTDayDate.gibbonTTDayID=gibbonTTDayRowClass.gibbonTTDayID) WHERE (";
+                                            $sql = "SELECT DISTINCT gibbonCourseClass.gibbonCourseClassID, gibbonCourse.gibbonCourseID, gibbonCourse.nameShort, requiresCover, (SELECT GROUP_CONCAT(CONCAT(gibbonCourseClassPerson.gibbonPersonID, ';', preferredName, ';', surname) SEPARATOR ', ') FROM gibbonCourseClassPerson JOIN gibbonPerson ON gibbonPerson.gibbonPersonID=gibbonCourseClassPerson.gibbonPersonID WHERE gibbonCourseClassPerson.gibbonCourseClassID = gibbonCourseClass.gibbonCourseClassID AND role='Student') as students, (SELECT GROUP_CONCAT(gibbonCourseClassPerson.gibbonPersonID SEPARATOR ', ') FROM gibbonCourseClassPerson WHERE gibbonCourseClassPerson.gibbonCourseClassID = gibbonCourseClass.gibbonCourseClassID AND role='Teacher') as teachers, gibbonTTDayDate.date, gibbonTTColumnRow.timeStart, gibbonTTColumnRow.timeEnd FROM gibbonTTDayRowClass JOIN gibbonTTColumnRow ON (gibbonTTDayRowClass.gibbonTTColumnRowID = gibbonTTColumnRow.gibbonTTColumnRowID) JOIN gibbonCourseClassPerson ON (gibbonTTDayRowClass.gibbonCourseClassID = gibbonCourseClassPerson.gibbonCourseClassID) JOIN gibbonCourseClass ON (gibbonCourseClass.gibbonCourseClassID = gibbonTTDayRowClass.gibbonCourseClassID) JOIN gibbonCourse ON (gibbonCourse.gibbonCourseID = gibbonCourseClass.gibbonCourseID) LEFT JOIN tripPlannerRequestCover ON tripPlannerRequestCover.gibbonCourseClassID=gibbonCourseClass.gibbonCourseClassID LEFT JOIN gibbonTTDayDate ON (gibbonTTDayDate.gibbonTTDayID=gibbonTTDayRowClass.gibbonTTDayID) WHERE (";
                                             foreach ($days as $id=>$day) {
                                                 $sDayData = "startDate" . $id;
                                                 $eDayData = "endDate" . $id;
@@ -1137,14 +1169,14 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                                                 $data[$sDayData] = $day[0];
                                                 $data[$eDayData] = $day[1];
                                                 if ($day[2] == 0) {
-                                                    $data[$eTimeData] = $day[3];
-                                                    $data[$sTimeData] = $day[4];
+                                                    $data[$sTimeData] = $day[3];
+                                                    $data[$eTimeData] = $day[4];
                                                 }
                                                 $sql .= "(";
-                                                    $sql .= "gibbonTTDayDate.date >=:" . $sDayData . " AND gibbonTTDayDate.date <=:" . $eDayData;
+                                                    $sql .= "gibbonTTDayDate.date BETWEEN :" . $sDayData . " AND :" . $eDayData;
 
                                                 if ($day[2] == 0) {
-                                                    $sql .= " AND timeStart <:" . $eTimeData . " AND timeEnd >:" . $sTimeData;
+                                                    $sql .= " AND gibbonTTColumnRow.timeStart <:" . $eTimeData . " AND gibbonTTColumnRow.timeEnd >:" . $sTimeData;
                                                 }
 
                                                 $sql .= ") OR ";
@@ -1156,210 +1188,153 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                                                 $sql .= ":" . $pData . ",";
                                             }
                                             $sql = substr($sql, 0, -1) . ")"; 
-                                            $sql .= " ORDER BY gibbonCourse.nameShort ASC";
-                                            print $sql;
+                                            $sql .= " ORDER BY gibbonCourse.nameShort ASC, gibbonTTDayDate.date ASC";
                                             $result = $connection2->prepare($sql);
                                             $result->execute($data);
-                                            print $result->rowCount();
-                                            while ($row = $result->fetch()) {
-                                                print_r($row);
-                                                print "\n";
+
+                                            $dataTrips = array();
+                                            $sqlTrips = "SELECT tripPLannerRequestDays.tripPlannerRequestID, GROUP_CONCAT(tripPLannerRequestDays.startDate SEPARATOR ', ') as startDates, GROUP_CONCAT(tripPLannerRequestDays.endDate SEPARATOR ', ') as endDates, GROUP_CONCAT(tripPLannerRequestDays.allDay SEPARATOR ', ') as allDays, GROUP_CONCAT(tripPLannerRequestDays.startTime SEPARATOR ', ') as startTimes, GROUP_CONCAT(tripPLannerRequestDays.endTime SEPARATOR ', ') as endTimes, (SELECT GROUP_CONCAT(gibbonPersonID SEPARATOR ', ') FROM tripPlannerRequestPerson WHERE tripPlannerRequestPerson.tripPlannerRequestID=tripPlannerRequests.tripPlannerRequestID AND role='Student') as students FROM tripPLannerRequestDays JOIN tripPlannerRequests ON tripPlannerRequests.tripPlannerRequestID = tripPlannerRequestDays.tripPlannerRequestID WHERE tripPlannerRequestDays.tripPlannerRequestID IN (SELECT tripPlannerRequestID FROM tripPlannerRequestPerson WHERE gibbonPersonID IN (";
+                                            foreach ($students as $key => $id) {
+                                                $pData = "people" . $key;
+                                                $dataTrips[$pData] = $id;
+                                                $sqlTrips .= ":" . $pData . ",";
                                             }
+                                            $sqlTrips = substr($sqlTrips, 0, -1);
+                                            $sqlTrips .= ") AND role='Student') AND status='Approved'";
+
+                                            $resultsTrip = $connection2->prepare($sqlTrips);
+                                            $resultsTrip->execute($dataTrips);
+                                            $prevTrips = $resultsTrip->fetchAll();
+
+                                            $dataClasses = array();
+                                            $sqlClasses = "SELECT DISTINCT gibbonCourseClassPerson.gibbonPersonID as student, (SELECT GROUP_CONCAT(gibbonCourse.gibbonCourseID SEPARATOR ', ') FROM gibbonCourse JOIN gibbonCourseClass ON (gibbonCourse.gibbonCourseID = gibbonCourseClass.gibbonCourseID) JOIN gibbonCourseClassPerson ON gibbonCourseClass.gibbonCourseClassID = gibbonCourseClassPerson.gibbonCourseClassID JOIN gibbonTTDayRowClass ON (gibbonCourseClass.gibbonCourseClassID = gibbonTTDayRowClass.gibbonCourseClassID) JOIN gibbonTTColumnRow ON (gibbonTTDayRowClass.gibbonTTColumnRowID = gibbonTTColumnRow.gibbonTTColumnRowID) LEFT JOIN gibbonTTDayDate ON (gibbonTTDayDate.gibbonTTDayID=gibbonTTDayRowClass.gibbonTTDayID) WHERE gibbonCourseClassPerson.gibbonPersonID = student AND (";
+                                            foreach ($prevTrips as $id=>$day) {
+                                                $startDates = explode(", ", $day["startDates"]);
+                                                $endDates = explode(", ", $day["endDates"]);
+                                                $allDays = explode(", ", $day["endDates"]);
+                                                $startTimes = explode(", ", $day["startTimes"]);
+                                                $endTimes = explode(", ", $day["endTimes"]);
+                                                for ($i = 0; $i < count($startDates); $i++) {
+                                                    $sDayData = "startDate" . $id . $i;
+                                                    $eDayData = "endDate" . $id . $i;
+                                                    $eTimeData = "endTime" . $id . $i;
+                                                    $sTimeData = "startTime" . $id . $i;
+                                                    $dataClasses[$sDayData] = $startDates[$i];
+                                                    $dataClasses[$eDayData] = $endDates[$i];
+                                                    if ($allDays[$i] == 0) {
+                                                        $dataClasses[$sTimeData] = $startTimes[$i];
+                                                        $dataClasses[$eTimeData] = $endTimes[$i];
+                                                    }
+                                                    $sqlClasses .= "(";
+                                                        $sqlClasses .= "gibbonTTDayDate.date BETWEEN :" . $sDayData . " AND :" . $eDayData;
+
+                                                    if ($allDays[$i] == 0) {
+                                                        $sqlClasses .= " AND gibbonTTColumnRow.timeStart <:" . $eTimeData . " AND gibbonTTColumnRow.timeEnd >:" . $sTimeData;
+                                                    }
+
+                                                    $sqlClasses .= ") OR ";
+                                                }
+                                            }
+                                            $sqlClasses = substr($sqlClasses, 0, -4) . ")) as classes FROM gibbonCourseClassPerson WHERE gibbonCourseClassPerson.gibbonPersonID IN (";
+                                            foreach (explode(", ", implode(", ", array_column($prevTrips, "students"))) as $key => $student) {
+                                                $pData = "people" . $key;
+                                                if (!in_array($student, $dataClasses)) {
+                                                    $dataClasses[$pData] = $student;
+                                                    $sqlClasses .= ":" . $pData . ",";
+                                                }
+                                            }
+                                            $sqlClasses = substr($sqlClasses, 0, -1) . ") AND role='Student'"; 
+                                            $resultClasses = $connection2->prepare($sqlClasses);
+                                            $resultClasses->execute($dataClasses);
+
                                         } catch (PDOException $e) {
-                                            print $e;
                                         }
-                                        // $missedClasses = array();
-                                        // $pastTrips = getPastTrips($guid, $connection2, $students);
-                                        // if ($pastTrips != null) {
-                                        //     if($pastTrips->rowCount() > 0) {
-                                        //         $trips = array();
-                                        //         $startDates = array();
-                                        //         $endDates = array();
-                                        //         $startTimes = array();
-                                        //         $endTimes = array();
-                                        //         $tripStudents = array();
 
-                                        //         while ($row = $pastTrips->fetch()) {
-                                        //             $trips[] = $row['tripPlannerRequestID'];
-                                        //             $startDates[] = $row['date'];
-                                        //             $endDates[] = $row['endDate'];
-                                        //             $startTimes[] = $row['startTime'];
-                                        //             $endTimes[] = $row['endTime'];
-                                        //         }
+                                        $studentMissed = array();
 
-                                        //         $classesMissed = getPlannerOverlaps($connection2, null, $startDates, $endDates, $startTimes, $endTimes, $students);
-                                        //         if ($classesMissed != null) {
-                                        //             if($classesMissed->rowCount() > 0) {
-                                        //                 $classes = array();
-                                        //                 $courses = array();
+                                        while ($row = $resultClasses->fetch()) {
+                                            $missedClasses = array();
 
-                                        //                 while ($row = $classesMissed->fetch()) {
-                                        //                     for ($i = 0; $i < count($startDates); $i++) {
-                                        //                         $withinDate = $endDates[$i] == null ? $withinDate = ($row["date"] == $startDates[$i]) : $withinDate = ($row['date'] >= $startDates[$i] && $endDates[$i] <= $row['date']);
-                                        //                         if ($withinDate) {
-                                        //                             if($row['timeStart'] < $endTimes[$i] && $row['timeEnd'] > $startTimes[$i]) {
-                                        //                                 $classes[] = array("arrayIndex" => $i, "gibbonCourseID" => $row['gibbonCourseID'], "nameShort" => $row['nameShort'], "gibbonCourseClassID" => $row['gibbonCourseClassID']);
-                                        //                                 $courses[] = $row['gibbonCourseClassID'];
-                                        //                             }
-                                        //                         }
-                                        //                     }
-                                        //                 }
+                                            foreach (explode(", ", $row["classes"]) as $class)
+                                                $missedClasses[$class] = (isset($missedClasses[$class]) ? $missedClasses[$class] : 0) + 1;
+                                            
+                                            $studentMissed[$row["student"]] = $missedClasses;
+                                        } 
 
-                                        //                 if(!empty($courses)) {
-                                        //                     $peopleInTrips = getPeopleInTrip($connection2, $trips, "Student");
+                                        try {
+                                            $sqlSetting = "SELECT value FROM gibbonSetting WHERE scope='Trip Planner' AND name='missedClassWarningThreshold'";
+                                            $resultSetting = $connection2->prepare($sqlSetting);
+                                            $resultSetting->execute();
+                                        } catch (PDOException $e) { 
+                                        }
 
-                                        //                     while ($row = $peopleInTrips->fetch()) {
-                                        //                         $arrayIndex = array_search($row['tripPlannerRequestID'], $trips);
-                                        //                         if ($arrayIndex !== null) {
-                                        //                             if (isset($tripStudents[$arrayIndex])) {
-                                        //                                 $tempArray = $tripStudents[$arrayIndex];
-                                        //                                 array_push($tempArray, $row['gibbonPersonID']);
-                                        //                                 $tripStudents[$arrayIndex] = $tempArray;
-                                        //                             } else {
-                                        //                                 $tempArray = array($row['gibbonPersonID']);
-                                        //                                 $tripStudents[$arrayIndex] = $tempArray;
-                                        //                             }
-                                        //                         }
-                                        //                     }
+                                        $missedClassWarningThreshold = 0;
+                                        if($resultSetting->rowCount() == 1) {
+                                            $missedClassWarningThreshold = $resultSetting->fetch()['value'];
+                                        }
 
-                                        //                     $peopleInClasses = getStudentsInClass($connection2, $courses);
+                                        while ($row = $result->fetch()) {
+                                            $allStudentOnTrip = true;
+                                            print "<tr>";
+                                                print "<td>";
+                                                    print $row["nameShort"];
+                                                    print "<br/>";
+                                                    print "<span style='font-size: 90%'>";
+                                                        print dateConvertBack($guid, $row["date"]);
+                                                    print "</span>";
+                                                print "</td>";
+                                                print "<td>";
+                                                    $studentsInvolved = "";
+                                                    foreach (explode(", ", $row["students"]) as $student) {
+                                                        $student = explode(";", $student);
+                                                        if (array_key_exists($student[0], $studentMissed)) {
+                                                            $warning = false;
+                                                            if ($missedClassWarningThreshold > 0 && !empty($studentMissed[$student[0]])) {
+                                                                if (isset($studentMissed[$student[0]][$row['gibbonCourseID']])) {
+                                                                    $warning = $missedClassWarningThreshold <= $studentMissed[$student[0]][$row['gibbonCourseID']];
+                                                                }
+                                                            }
+                                                            if ($warning) {
+                                                                //$studentsInvolved .= "<a class='thickbox' href='".$_SESSION[$guid]['absoluteURL']."/fullscreen.php?q=/modules/Trip Planner/trips_requestStudentInformation.php&tripPlannerRequestID=$tripPlannerRequestID&gibbonCourseID=" . $row["gibbonCourseID"] . "&gibbonPersonID=" . $student["gibbonPersonID"] . "&width=1000&height=550'>";
+                                                                $studentsInvolved .= "<b style='color:#F50000'>";
+                                                            }
+                                                            $studentsInvolved .= $student[1] . " " . $student[2];
+                                                            if ($warning) {
+                                                                $studentsInvolved .= "</b>";
+                                                                //$studentsInvolved .= "</a>";
+                                                            }
+                                                            $studentsInvolved .= ", ";
+                                                        } else {
+                                                            $allStudentOnTrip = false;
+                                                        }
+                                                    }
+                                                    print substr($studentsInvolved, 0, -2);
+                                                print "</td>";
+                                                print "<td>";
+                                                    $systemMessage = "";
+                                                    $requiresCover = $row["requiresCover"];
+                                                    if ($requiresCover == null) {
+                                                        // print_r(explode(", ", $row["teachers"]));
+                                                        $allTeachersOnTrip = empty(array_intersect(explode(", ", $row["teachers"]), $teachers));
+                                                        $requiresCover = !$allStudentOnTrip && $allTeachersOnTrip;
+                                                        $systemMessage = " (This is an Automated Suggestion)";
+                                                    }
 
-                                        //                     while ($row = $peopleInClasses->fetch()) {
-                                        //                         $keys = array_keys(array_column($classes, 'gibbonCourseClassID'), $row['gibbonCourseClassID']);
-                                        //                         foreach ($keys as $key) {
-                                        //                             if ($key !== null) {
-                                        //                                 if (isset($classes[$key]["students"])) {
-                                        //                                     $tempArray = $classes[$key]["students"];
-                                        //                                     array_push($tempArray, $row['gibbonPersonID']);
-                                        //                                     $classes[$key]["students"] = $tempArray;
-                                        //                                 } else {
-                                        //                                     $tempArray = array($row['gibbonPersonID']);
-                                        //                                     $classes[$key]["students"] = $tempArray;
-                                        //                                 }
-                                        //                             }
-                                        //                         }
-                                        //                     }
-
-                                        //                     foreach ($classes as $key => $class) {
-                                        //                         $cStudents = $class["students"];
-                                        //                         $tStudents = $tripStudents[$class["arrayIndex"]];
-                                        //                         $gibbonCourseID = $class["gibbonCourseID"];
-                                        //                         foreach ($cStudents as $cStudent) {
-                                        //                             if(in_array($cStudent, $tStudents)) {
-                                        //                                 if(!isset($missedClasses[$cStudent])) {
-                                        //                                     $missedClasses[$cStudent] = array();
-                                        //                                 }
-
-                                        //                                 if(isset($missedClasses[$cStudent][$gibbonCourseID])) {
-                                        //                                     $missedClasses[$cStudent][$gibbonCourseID] = ++$missedClasses[$cStudent][$gibbonCourseID];   
-                                        //                                 } else {
-                                        //                                     $missedClasses[$cStudent][$gibbonCourseID] = 1;   
-                                        //                                 }
-                                        //                             }
-                                        //                         }
-                                        //                     }
-                                        //                 }
-                                        //             }
-                                        //         }
-                                        //     }
-                                        // }
-
-                                        // try {
-                                        //     $sqlSetting = "SELECT value FROM gibbonSetting WHERE scope='Trip Planner' AND name='missedClassWarningThreshold'";
-                                        //     $resultSetting = $connection2->prepare($sqlSetting);
-                                        //     $resultSetting->execute();
-                                        // } catch (PDOException $e) { 
-                                        // }
-
-                                        // $missedClassWarningThreshold = 0;
-                                        // if($resultSetting->rowCount() == 1) {
-                                        //     $missedClassWarningThreshold = $resultSetting->fetch()['value'];
-                                        // }
-
-                                        // $overlapStartDate = array($request["date"]);
-                                        // $overlapEndDate = array();
-                                        // if ($multiDay) {
-                                        //     $overlapEndDate[] = $request["endDate"];
-                                        // }
-                                        // $overlapStartTime = array();
-                                        // $overlapEndTime = array();
-                                        // if (!$allDay) {
-                                        //     $overlapStartTime[] = $request["startTime"];
-                                        //     $overlapEndTime[] = $request["endTime"];
-                                        // }
-
-                                        // $overlaps = getPlannerOverlaps($connection2, $tripPlannerRequestID, $overlapStartDate, $overlapEndDate, $overlapStartTime, $overlapEndTime, array_merge($students, $teachers));
-                                        // if ($overlaps != null) {
-                                        //     while ($row = $overlaps->fetch()) {
-                                        //         $classStudents = getStudentsInClass($connection2, array($row["gibbonCourseClassID"]));
-                                        //         $classTeachers = getTeachersOfClass($connection2, $row["gibbonCourseClassID"]);
-                                        //         $allStudentOnTrip = true;
-                                        //         print "<tr>";
-                                        //             print "<td>";
-                                        //                 print $row["nameShort"];
-                                        //                 print "<br/>";
-                                        //                 print "<span style='font-size: 90%'>";
-                                        //                     print dateConvertBack($guid, $row["date"]);
-                                        //                 print "</span>";
-                                        //             print "</td>";
-                                        //             print "<td>";
-                                        //                 $studentsInvolved = "";
-                                        //                 while ($student = $classStudents->fetch()) {
-                                        //                     if (in_array($student["gibbonPersonID"], $students)) {
-                                        //                         $warning = false;
-                                        //                         if ($missedClassWarningThreshold > 0 && !empty($missedClasses)) {
-                                        //                             if (isset($missedClasses[$student["gibbonPersonID"]])) {
-                                        //                                 if (isset($missedClasses[$student["gibbonPersonID"]][$row['gibbonCourseID']])) {
-                                        //                                     $warning = $missedClassWarningThreshold <= $missedClasses[$student["gibbonPersonID"]][$row['gibbonCourseID']];
-                                        //                                 }
-                                        //                             }
-                                        //                         }
-                                        //                         if ($warning) {
-                                        //                             //$studentsInvolved .= "<a class='thickbox' href='".$_SESSION[$guid]['absoluteURL']."/fullscreen.php?q=/modules/Trip Planner/trips_requestStudentInformation.php&tripPlannerRequestID=$tripPlannerRequestID&gibbonCourseID=" . $row["gibbonCourseID"] . "&gibbonPersonID=" . $student["gibbonPersonID"] . "&width=1000&height=550'>";
-                                        //                             $studentsInvolved .= "<b style='color:#F50000'>";
-                                        //                         }
-                                        //                         $studentsInvolved .= $student["preferredName"] . " " . $student["surname"];
-                                        //                         if ($warning) {
-                                        //                             $studentsInvolved .= "</b>";
-                                        //                             //$studentsInvolved .= "</a>";
-                                        //                         }
-                                        //                         $studentsInvolved .= ", ";
-                                        //                     } else {
-                                        //                         $allStudentOnTrip = false;
-                                        //                     }
-                                        //                 }
-                                        //                 print substr($studentsInvolved, 0, -2);
-                                        //             print "</td>";
-                                        //             print "<td>";
-                                        //                 $systemMessage = "";
-                                        //                 $requiresCover = $row["requiresCover"];
-                                        //                 if ($requiresCover == null) {
-                                        //                     $allTeachersOnTrip = true;
-                                        //                     while ($teacher = $classTeachers->fetch()) {
-                                        //                         if (!in_array($teacher['gibbonPersonID'], $teachers)) {
-                                        //                             $allTeachersOnTrip = false;
-                                        //                             break;
-                                        //                         }
-                                        //                     }
-                                        //                     $requiresCover = !$allStudentOnTrip && $allTeachersOnTrip;
-                                        //                     $systemMessage = " (This is an Automated Suggestion)";
-                                        //                 }
-
-                                        //                 print ($requiresCover ? "Yes" : "No") . $systemMessage;
-                                        //             print "</td>";
-                                        //             print "<td>";
-                                        //                 // if ($mode == "Edit") {
-                                        //                 //     echo "<a class='thickbox' href='".$_SESSION[$guid]['absoluteURL']."/fullscreen.php?q=/modules/Trip Planner/trips_requestCoverStatus.php&tripPlannerRequestID=$tripPlannerRequestID&gibbonCourseClassID=" . $row["gibbonCourseClassID"] . "&requiresCover=$requiresCover&width=1000&height=550'><img title='".__($guid, 'Change Cover Status')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/config.png'/></a> ";
-                                        //                 // }
-                                                        
-                                        //                 if ($requiresCover) {
-                                        //                     echo "<a class='thickbox' href='".$_SESSION[$guid]['absoluteURL']."/fullscreen.php?q=/modules/Trip Planner/trips_requestCoverTeachers.php&tripPlannerRequestID=$tripPlannerRequestID&date=" . $row["date"] . "&timeStart=" . $row["timeStart"] . "&timeEnd=" . $row["timeEnd"] . "&width=1000&height=550'><img title='".__($guid, 'View Possible Cover Teachers')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/plus.png'/></a> ";
-                                        //                 }
-                                        //                 //print "<a><img title='" . _('View') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/plus.png'/></a> ";
-                                        //             print "</td>";
-                                        //         print "</tr>";
-                                        //     }
-                                        // }
+                                                    print ($requiresCover ? "Yes" : "No") . $systemMessage;
+                                                print "</td>";
+                                                print "<td>";
+                                                    //TODO: Fix, such that it does it based on date and courseClassID
+                                                    if (isOwner($connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"])) {
+                                                        echo "<a class='thickbox' href='".$_SESSION[$guid]['absoluteURL']."/fullscreen.php?q=/modules/Trip Planner/trips_requestCoverStatus.php&tripPlannerRequestID=$tripPlannerRequestID&gibbonCourseClassID=" . $row["gibbonCourseClassID"] . "&requiresCover=$requiresCover&width=1000&height=550'><img title='".__($guid, 'Change Cover Status')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/config.png'/></a> ";
+                                                    }
+                                                    
+                                                    if ($requiresCover) {
+                                                        echo "<a class='thickbox' href='".$_SESSION[$guid]['absoluteURL']."/fullscreen.php?q=/modules/Trip Planner/trips_requestCoverTeachers.php&tripPlannerRequestID=$tripPlannerRequestID&date=" . $row["date"] . "&timeStart=" . $row["timeStart"] . "&timeEnd=" . $row["timeEnd"] . "&width=1000&height=550'><img title='".__($guid, 'View Possible Cover Teachers')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/plus.png'/></a> ";
+                                                    }
+                                                    //print "<a><img title='" . _('View') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/plus.png'/></a> ";
+                                                print "</td>";
+                                            print "</tr>";
+                                        }
                                     ?>
                                 </table>
                             </td>
