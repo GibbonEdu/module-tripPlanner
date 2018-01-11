@@ -282,7 +282,4 @@ $actionRows[$actionCount]["categoryPermissionStudent"] = "N";
 $actionRows[$actionCount]["categoryPermissionParent"] = "N"; 
 $actionRows[$actionCount]["categoryPermissionOther"] = "N";
 $actionCount++; 
-
-//Hooks
-//$hooks[0] = ""; //Serialised array to create hook and set options. See Hooks documentation online.
 ?>
