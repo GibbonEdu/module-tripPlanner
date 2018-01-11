@@ -441,7 +441,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             $multiSelect->addSortableAttribute("Form", $studentsForm);
 
     $row = $form->addRow();
-        $row->addLabel("addByGroup", "Add by Group");
+        $row->addLabel("addByGroup", "Add by Group")->description("Add or remove students to trip by Class or Activity (scroll down for activities).");
         $column = $row->addColumn()->addClass("right");
             $column->addSelect("addStudentsByClass")->fromArray($groups)->placeholder("None");
             $column->addButton("Add", "addClass('Add')")->addClass("shortWidth")->setID("addButton");
