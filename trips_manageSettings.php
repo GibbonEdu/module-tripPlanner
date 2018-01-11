@@ -73,6 +73,25 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                 $fRow->addLabel($row["name"] . "Label", $row["nameDisplay"])->description($row["description"]);
             }
 
+            switch($row["name"]) {
+                case "requestApprovalType":
+                    $fRow->addSelect($row["name"])->fromArray(array("One Of", "Two Of", "Chain Of All"))->selected($row["value"])->setRequired(true);
+                    break;
+                case "riskAssessmentTemplate":
+                    $col->addEditor($row["name"], $guid)->setValue($row["value"])->setRows(25);
+                    break;
+                case "missedClassWarningThreshold":
+                    $fRow->addNumber($row["name"])->minimum(0)->setRequired(true)->decimalPlaces(0)->setValue($row["value"]);
+                    break;
+                case "riskAssessmentApproval":
+                    $fRow->addCheckBox($row["name"])->checked($row["value"]);
+                    break;
+                case "defaultRiskTemplate":
+                    $fRow->addSelect($row["name"])->fromArray($templates)->selected($row["value"])->setRequired(true);
+                    break;
+                default:
+                    break;
+            }
             if ($row["name"] == "requestApprovalType") {
                 $fRow->addSelect($row["name"])->fromArray(array("One Of", "Two Of", "Chain Of All"))->selected($row["value"])->setRequired(true);
             } else if ($row["name"] == "riskAssessmentTemplate") {
