@@ -590,125 +590,6 @@ function getPastTrips($guid, $connection2, $people)
     return $result;
 }
 
-function getPlannerOverlaps($connection2, $tripPlannerRequestID, $startDates, $endDates = array(), $startTimes = array(), $endTimes = array(), $people)
-{
-    if (!is_array($people) || empty($people) || !is_array($startDates) || empty($startDates) || !is_array($endDates) || !is_array($startTimes) || !is_array($endTimes)) {
-        return null;
-    }
-
-    try {
-        $data = array();
-        if ($tripPlannerRequestID != "" && $tripPlannerRequestID != null) {
-            $data["tripPlannerRequestID"] = $tripPlannerRequestID;
-        }
-        $sql = "SELECT DISTINCT gibbonCourse.gibbonCourseID, gibbonCourse.nameShort, gibbonCourseClass.gibbonCourseClassID, gibbonTTDayDate.date, timeStart, timeEnd" . ($tripPlannerRequestID != "" && $tripPlannerRequestID != null ? ", requiresCover" : "") . " FROM gibbonTTDayRowClass JOIN gibbonTTColumnRow ON (gibbonTTDayRowClass.gibbonTTColumnRowID = gibbonTTColumnRow.gibbonTTColumnRowID) JOIN gibbonCourseClassPerson ON (gibbonTTDayRowClass.gibbonCourseClassID = gibbonCourseClassPerson.gibbonCourseClassID) JOIN gibbonCourseClass ON (gibbonCourseClass.gibbonCourseClassID = gibbonTTDayRowClass.gibbonCourseClassID) JOIN gibbonCourse ON (gibbonCourse.gibbonCourseID = gibbonCourseClass.gibbonCourseID)" . ($tripPlannerRequestID != "" && $tripPlannerRequestID != null ? " LEFT JOIN tripPlannerRequestCover ON (tripPlannerRequestCover.gibbonCourseClassID = gibbonCourseClass.gibbonCourseClassID AND tripPlannerRequestID=:tripPlannerRequestID)" : "") . " LEFT JOIN gibbonTTDayDate ON (gibbonTTDayDate.gibbonTTDayID=gibbonTTDayRowClass.gibbonTTDayID) WHERE (";
-        for ($i = 0; $i < count($startDates); $i++) {
-            $sDayData = "startDate" . $i;
-            $eDayData = "endDate" . $i;
-            $eTimeData = "endTime" . $i;
-            $sTimeData = "startTime" . $i;
-            $data[$sDayData] = $startDates[$i];
-            if (isset($endDates[$i])) {
-                if ($endDates[$i] != null) {
-                    $data[$eDayData] = $endDates[$i];
-                }
-            }
-
-            if (isset($endTimes[$i]) && isset($startTimes[$i])) {
-                if ($endTimes[$i] != null && $startTimes[$i] != null) {
-                    $data[$eTimeData] = $endTimes[$i];
-                    $data[$sTimeData] = $startTimes[$i];
-                }
-            }
-
-            $sql .= "(";
-            if (isset($data[$eDayData])) {
-                $sql .= "gibbonTTDayDate.date >=:" . $sDayData . " AND gibbonTTDayDate.date <=:" . $eDayData;
-            } else {
-                $sql .= "gibbonTTDayDate.date =:" . $sDayData;
-            }
-
-            if (isset($data[$eTimeData]) && isset($data[$sTimeData])) {
-                $sql .= " AND timeStart <:" . $eTimeData . " AND timeEnd >:" . $sTimeData;
-            }
-
-            $sql .= ") OR ";
-        }
-        $sql = substr($sql, 0, -4) . ") AND gibbonPersonID IN (";
-        foreach ($people as $key => $id) {
-            $pData = "people" . $key;
-            $data[$pData] = $id;
-            $sql .= ":" . $pData . ",";
-        }
-        $sql = substr($sql, 0, -1) . ")"; 
-        $sql .= " ORDER BY gibbonCourse.nameShort ASC, gibbonTTDayDate.date ASC";
-        //print $sql;
-        $result = $connection2->prepare($sql);
-        $result->execute($data);
-    } catch (PDOException $e) {
-        print $e;
-    }
-
-    return $result;
-}
-
-//TODO: Do this
-function sendToParents($guid, $conection2, $tripPlannerRequestID, $schoolWide) {
-    require $_SESSION[$guid]["absolutePath"] . '/lib/PHPMailer/PHPMailerAutoload.php';
-
-    $bodyFin = "<p style='font-style: italic'>" . sprintf(__($guid, 'Email sent via %1$s at %2$s.'), $_SESSION[$guid]["systemName"], $_SESSION[$guid]["organisationName"]) ."</p>" ;
-
-    $emailCount=0 ;
-    $mail=getGibbonMailer($guid);
-    if ($schoolWide)
-        $mail->SetFrom($from, $_SESSION[$guid]["organisationName"]);
-    else
-        $mail->SetFrom($from, $_SESSION[$guid]["preferredName"] . " " . $_SESSION[$guid]["surname"]);
-    $mail->CharSet="UTF-8";
-    $mail->Encoding="base64" ;
-    $mail->IsHTML(true);
-    $mail->Subject=$subject ;
-    $mail->Body = $body.$bodyFin ;
-    $mail->AltBody = emailBodyConvert($body.$bodyFin) ;
-
-    //Send to sender, if not in recipient list
-    $includeSender = true ;
-    foreach ($report as $reportEntry) {
-        if ($reportEntry[3] == 'Email') {
-            if ($reportEntry[4] == $from) {
-                $includeSender = false ;
-            }
-        }
-    }
-
-    //Send to each recipient
-    foreach ($report as $reportEntry) {
-        if ($reportEntry[3] == 'Email') {
-            $emailCount ++;
-            $mail->ClearAddresses();
-            $mail->AddAddress($reportEntry[4]);
-            //Deal with email receipt and body finalisation
-            if ($emailReceipt == 'Y') {
-                $bodyReadReceipt = "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/index.php?q=/modules/Messenger/messenger_emailReceiptConfirm.php&gibbonMessengerID=$AI&gibbonPersonID=".$reportEntry[0]."&key=".$reportEntry[5]."'>".$emailReceiptText."</a>";
-                if (is_numeric(strpos($body, '[confirmLink]'))) {
-                    $bodyOut = str_replace('[confirmLink]', $bodyReadReceipt, $body).$bodyFin;
-                }
-                else {
-                    $bodyOut = $body.$bodyReadReceipt.$bodyFin;
-                }
-            }
-            else {
-                $bodyOut = $body.$bodyFin;
-            }
-            $mail->Body = $bodyOut ;
-            $mail->AltBody = emailBodyConvert($bodyOut);
-            if(!$mail->Send()) {
-                $partialFail = TRUE ;
-            }
-        }
-    }
-} 
-
 function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
     if(!isset($guid) || !isset($connection2) || !isset($tripPlannerRequestID)) {
         print "<div class='error'>";
@@ -925,12 +806,12 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                                 <b><?php echo __($guid, 'Letter To Parents') ?></b>
                                 <?php
                                     //TODO: make buttons works
-                                    echo "<div class='linkTop' style='margin-top:-20px'>";
-                                        if(isActionAccessible($guid, $connection2, "/modules/Messenger/messenger_post.php", "New Message_readReceipts")) {
-                                            echo "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/modules/Trip Planner/trips_requestExternalReportProcess.php?tripPlannerRequestID=$tripPlannerRequestID&report=medical'>".__($guid, 'Send to Parents')."<img style='margin-right: 10px;margin-left: 5px' title='".__($guid, 'Send to Parents')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/delivery2.png'/></a>";
-                                        }
-                                        echo "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/report.php?q=/modules/Trip Planner/trips_reportTripPeople.php&tripPlannerRequestID=$tripPlannerRequestID'>".__($guid, 'Print')."<img style='margin-left: 5px' title='".__($guid, 'Print')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/print.png'/></a>";
-                                    echo '</div>';
+                                    // echo "<div class='linkTop' style='margin-top:-20px'>";
+                                    //     if(isActionAccessible($guid, $connection2, "/modules/Messenger/messenger_post.php", "New Message_readReceipts")) {
+                                    //         echo "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/modules/Trip Planner/trips_requestExternalReportProcess.php?tripPlannerRequestID=$tripPlannerRequestID&report=medical'>".__($guid, 'Send to Parents')."<img style='margin-right: 10px;margin-left: 5px' title='".__($guid, 'Send to Parents')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/delivery2.png'/></a>";
+                                    //     }
+                                    //     echo "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/report.php?q=/modules/Trip Planner/trips_letterToParents.php&tripPlannerRequestID=$tripPlannerRequestID'>".__($guid, 'Print')."<img style='margin-left: 5px' title='".__($guid, 'Print')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/print.png'/></a>";
+                                    // echo '</div>';
                                     echo '<p>';
                                     echo $request['letterToParents'];
                                     echo '</p>';
@@ -1160,7 +1041,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                                     <?php
                                         try {
                                             $data = array();
-                                            $sql = "SELECT DISTINCT gibbonCourseClass.gibbonCourseClassID, gibbonCourse.gibbonCourseID, gibbonCourse.nameShort, requiresCover, (SELECT GROUP_CONCAT(CONCAT(gibbonCourseClassPerson.gibbonPersonID, ';', preferredName, ';', surname) SEPARATOR ', ') FROM gibbonCourseClassPerson JOIN gibbonPerson ON gibbonPerson.gibbonPersonID=gibbonCourseClassPerson.gibbonPersonID WHERE gibbonCourseClassPerson.gibbonCourseClassID = gibbonCourseClass.gibbonCourseClassID AND role='Student') as students, (SELECT GROUP_CONCAT(gibbonCourseClassPerson.gibbonPersonID SEPARATOR ', ') FROM gibbonCourseClassPerson WHERE gibbonCourseClassPerson.gibbonCourseClassID = gibbonCourseClass.gibbonCourseClassID AND role='Teacher') as teachers, gibbonTTDayDate.date, gibbonTTColumnRow.timeStart, gibbonTTColumnRow.timeEnd FROM gibbonTTDayRowClass JOIN gibbonTTColumnRow ON (gibbonTTDayRowClass.gibbonTTColumnRowID = gibbonTTColumnRow.gibbonTTColumnRowID) JOIN gibbonCourseClassPerson ON (gibbonTTDayRowClass.gibbonCourseClassID = gibbonCourseClassPerson.gibbonCourseClassID) JOIN gibbonCourseClass ON (gibbonCourseClass.gibbonCourseClassID = gibbonTTDayRowClass.gibbonCourseClassID) JOIN gibbonCourse ON (gibbonCourse.gibbonCourseID = gibbonCourseClass.gibbonCourseID) LEFT JOIN tripPlannerRequestCover ON tripPlannerRequestCover.gibbonCourseClassID=gibbonCourseClass.gibbonCourseClassID LEFT JOIN gibbonTTDayDate ON (gibbonTTDayDate.gibbonTTDayID=gibbonTTDayRowClass.gibbonTTDayID) WHERE (";
+                                            $sql = "SELECT DISTINCT gibbonCourseClass.gibbonCourseClassID, gibbonCourse.gibbonCourseID, gibbonCourse.nameShort, requiresCover, (SELECT GROUP_CONCAT(CONCAT(gibbonCourseClassPerson.gibbonPersonID, ';', preferredName, ';', surname) SEPARATOR ', ') FROM gibbonCourseClassPerson JOIN gibbonPerson ON gibbonPerson.gibbonPersonID=gibbonCourseClassPerson.gibbonPersonID WHERE gibbonCourseClassPerson.gibbonCourseClassID = gibbonCourseClass.gibbonCourseClassID AND role='Student') as students, (SELECT GROUP_CONCAT(gibbonCourseClassPerson.gibbonPersonID SEPARATOR ', ') FROM gibbonCourseClassPerson WHERE gibbonCourseClassPerson.gibbonCourseClassID = gibbonCourseClass.gibbonCourseClassID AND role='Teacher') as teachers, gibbonTTDayDate.date, gibbonTTColumnRow.timeStart, gibbonTTColumnRow.timeEnd FROM gibbonTTDayRowClass JOIN gibbonTTColumnRow ON (gibbonTTDayRowClass.gibbonTTColumnRowID = gibbonTTColumnRow.gibbonTTColumnRowID) JOIN gibbonCourseClassPerson ON (gibbonTTDayRowClass.gibbonCourseClassID = gibbonCourseClassPerson.gibbonCourseClassID) JOIN gibbonCourseClass ON (gibbonCourseClass.gibbonCourseClassID = gibbonTTDayRowClass.gibbonCourseClassID) JOIN gibbonCourse ON (gibbonCourse.gibbonCourseID = gibbonCourseClass.gibbonCourseID) LEFT JOIN gibbonTTDayDate ON (gibbonTTDayDate.gibbonTTDayID=gibbonTTDayRowClass.gibbonTTDayID) LEFT JOIN tripPlannerRequestCover ON (tripPlannerRequestCover.gibbonCourseClassID=gibbonCourseClass.gibbonCourseClassID AND tripPlannerRequestCover.date = gibbonTTDayDate.date) WHERE (";
                                             foreach ($days as $id=>$day) {
                                                 $sDayData = "startDate" . $id;
                                                 $eDayData = "endDate" . $id;
@@ -1323,9 +1204,8 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                                                     print ($requiresCover ? "Yes" : "No") . $systemMessage;
                                                 print "</td>";
                                                 print "<td>";
-                                                    //TODO: Fix, such that it does it based on date and courseClassID
                                                     if (isOwner($connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"])) {
-                                                        echo "<a class='thickbox' href='".$_SESSION[$guid]['absoluteURL']."/fullscreen.php?q=/modules/Trip Planner/trips_requestCoverStatus.php&tripPlannerRequestID=$tripPlannerRequestID&gibbonCourseClassID=" . $row["gibbonCourseClassID"] . "&requiresCover=$requiresCover&width=1000&height=550'><img title='".__($guid, 'Change Cover Status')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/config.png'/></a> ";
+                                                        echo "<a class='thickbox' href='".$_SESSION[$guid]['absoluteURL']."/fullscreen.php?q=/modules/Trip Planner/trips_requestCoverStatus.php&tripPlannerRequestID=$tripPlannerRequestID&gibbonCourseClassID=" . $row["gibbonCourseClassID"] . "&date=" . $row["date"] . "&requiresCover=$requiresCover&width=1000&height=550'><img title='".__($guid, 'Change Cover Status')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/config.png'/></a> ";
                                                     }
                                                     
                                                     if ($requiresCover) {

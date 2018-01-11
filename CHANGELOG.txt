@@ -119,5 +119,4 @@ Added Sumbit button to trips_manage.php
 OOifed trips_submitRequest.php form
 Made trips 100% editable.
 Added multiple non consecutive days support to trips_submitRequest.php
-TODO: Added Print and Send to Parents button to Letter to Parents when viewing trip request.
 Added ability to add students by activity as well as classes.
