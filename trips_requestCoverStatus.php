@@ -32,8 +32,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
 } else {
     if (isset($_GET["tripPlannerRequestID"])) {
         $tripPlannerRequestID = $_GET["tripPlannerRequestID"];
-        if(isset($_GET["gibbonCourseClassID"])) {
+        if(isset($_GET["gibbonCourseClassID"]) && isset($_GET["date"])) {
             $gibbonCourseClassID = $_GET["gibbonCourseClassID"];
+            $date = $_GET["date"];
             if (isOwner($connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"])) {
                 $requiresCover = false;
                 if (isset($_GET["requiresCover"])) {
@@ -44,7 +45,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                     print "Change Class Cover Status";
                 print "</h3>";
 
-                $form = Form::create("editCoverStatus", $_SESSION[$guid]["absoluteURL"] . "/modules/Trip Planner/trips_requestCoverStatusProcess.php?tripPlannerRequestID=$tripPlannerRequestID&gibbonCourseClassID=$gibbonCourseClassID");
+                $form = Form::create("editCoverStatus", $_SESSION[$guid]["absoluteURL"] . "/modules/Trip Planner/trips_requestCoverStatusProcess.php?tripPlannerRequestID=$tripPlannerRequestID&gibbonCourseClassID=$gibbonCourseClassID&date=$date");
 
                 $row = $form->addRow();
                     $row->addLabel("requiresCoverLabel", "Requires Cover?");

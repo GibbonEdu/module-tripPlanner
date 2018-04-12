@@ -30,7 +30,7 @@ $connection2 = $pdo->getConnection();
 
 date_default_timezone_set($_SESSION[$guid]["timezone"]);
 
-$gibbonCourseClassID = $_GET["gibbonCourseClassID"];
+$addInfo = explode(":", $_GET["gibbonCourseClassID"]);
 $type = $_GET["type"];
 $typeVal = "false";
 if ($type == "Add") {
@@ -38,8 +38,9 @@ if ($type == "Add") {
 }
 
 try {
-    $data = array("gibbonCourseClassID" => $gibbonCourseClassID);
-    $sql = "SELECT gibbonPersonID FROM gibbonCourseClassPerson WHERE gibbonCourseClassID=:gibbonCourseClassID AND role='Student'";
+    $data = array("id" => $addInfo[1]);
+    if ($addInfo[0] == "Class") $sql = "SELECT gibbonPersonID FROM gibbonCourseClassPerson WHERE gibbonCourseClassID=:id AND role='Student'";
+    else $sql = "SELECT gibbonPersonID FROM gibbonActivityStudent WHERE gibbonActivityID=:id AND status='Accepted'";
     $result = $connection2->prepare($sql);
     $result->execute($data);
     $students = array();
@@ -51,13 +52,20 @@ try {
     ?>
     <script type='text/javascript'>
         var students = <?php print $js_array ?>;
-        var type = <?php print $typeVal ?>;
-        for (var i = 0; i < allStudents.length; i++) {
-            if(students.indexOf(allStudents[i].gibbonPersonID) >= 0) {
-                allStudents[i].selected=type;
-            }
+        var source = $('#studentsSource');
+        var destination = $('#studentsDestination');
+        if (!<?php print $typeVal ?>) {
+            var temp = destination;
+            destination = source;
+            source = temp;
         }
-        resetArrays();
+        source.find("option").each(function(){
+            if (students.indexOf($(this).val()) >= 0) {
+                destination.append($(this).clone());
+                $(this).detach().remove();
+            }
+        });
+        sortSelects("students");
     </script>   
     <?php
 

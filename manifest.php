@@ -23,7 +23,7 @@ $description = "A trip planner module for Gibbon.";
 $entryURL = "trips_manage.php";
 $type = "Additional";
 $category = "Learn"; 
-$version = "0.1.10"; 
+$version = "0.2.00"; 
 $author = "Ray Clark"; 
 $url = "https://github.com/raynichc/Trip-Planner";
 
@@ -113,6 +113,19 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRiskTemplates` (
     `body` text NOT NULL,
     PRIMARY KEY (`tripPlannerRiskTemplateID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
+
+$moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestDays` (
+    `tripPlannerRequestDaysID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
+    `tripPlannerRequestID` int(7) unsigned zerofill NOT NULL,
+    `startDate` date NOT NULL,
+    `endDate` date NOT NULL,
+    `allDay` boolean NOT NULL,
+    `startTime` time NOT NULL DEFAULT '00:00:00',
+    `endTime` time NOT NULL DEFAULT '00:00:00',
+    PRIMARY KEY (`tripPlannerRequestDaysID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
+
+$moduleTables[$tables++] = "ALTER TABLE `gibbonCourseClassPerson` ADD INDEX `tripCourseClassPersonID` (`gibbonPersonID`)";
 
 //Actions
 $actionCount = 0;
@@ -269,7 +282,4 @@ $actionRows[$actionCount]["categoryPermissionStudent"] = "N";
 $actionRows[$actionCount]["categoryPermissionParent"] = "N"; 
 $actionRows[$actionCount]["categoryPermissionOther"] = "N";
 $actionCount++; 
-
-//Hooks
-//$hooks[0] = ""; //Serialised array to create hook and set options. See Hooks documentation online.
 ?>

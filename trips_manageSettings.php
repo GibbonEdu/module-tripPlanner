@@ -68,21 +68,29 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         $fRow = $form->addRow();
             if ($row["name"] == "riskAssessmentTemplate") {
                 $col = $fRow->addColumn();
-                $col->addLabel($row["name"] . "Label", $row["nameDisplay"])->description($row["description"]);
+                $col->addLabel($row["name"], $row["nameDisplay"])->description($row["description"]);
             } else {
-                $fRow->addLabel($row["name"] . "Label", $row["nameDisplay"])->description($row["description"]);
+                $fRow->addLabel($row["name"], $row["nameDisplay"])->description($row["description"]);
             }
 
-            if ($row["name"] == "requestApprovalType") {
-                $fRow->addSelect($row["name"])->fromArray(array("One Of", "Two Of", "Chain Of All"))->selected($row["value"])->setRequired(true);
-            } else if ($row["name"] == "riskAssessmentTemplate") {
-                $col->addEditor($row["name"], $guid)->setValue($row["value"])->setRows(25);
-            } else if ($row["name"] == "missedClassWarningThreshold") {
-                $fRow->addNumber($row["name"])->minimum(0)->setRequired(true)->decimalPlaces(0)->setValue($row["value"]);
-            } else if ($row["name"] == "riskAssessmentApproval") {
-                $fRow->addCheckBox($row["name"])->checked($row["value"]);
-            } else if ($row['name'] == "defaultRiskTemplate") {
-                $fRow->addSelect($row["name"])->fromArray($templates)->selected($row["value"])->setRequired(true);
+            switch($row["name"]) {
+                case "requestApprovalType":
+                    $fRow->addSelect($row["name"])->fromArray(array("One Of", "Two Of", "Chain Of All"))->selected($row["value"])->setRequired(true);
+                    break;
+                case "riskAssessmentTemplate":
+                    $col->addEditor($row["name"], $guid)->setValue($row["value"])->setRows(25);
+                    break;
+                case "missedClassWarningThreshold":
+                    $fRow->addNumber($row["name"])->minimum(0)->setRequired(true)->decimalPlaces(0)->setValue($row["value"]);
+                    break;
+                case "riskAssessmentApproval":
+                    $fRow->addCheckBox($row["name"])->checked((int)$row["value"]);
+                    break;
+                case "defaultRiskTemplate":
+                    $fRow->addSelect($row["name"])->fromArray($templates)->selected($row["value"])->setRequired(true);
+                    break;
+                default:
+                    break;
             }
     }
 

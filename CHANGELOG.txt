@@ -112,3 +112,11 @@ Created Risk Assessment Templates Action
 Created trips_manageRiskTemplates.php, trips_addRiskTemplates.php, trips_addRiskTemplatesProcess.php and trips_deleteRiskTemplateProcess.php
 Added defaultRiskTemplate setting.
 Added Risk Assessment Templates to trips_submitRequest.php form.
+
+v0.2.00
+-------
+Added Sumbit button to trips_manage.php
+OOifed trips_submitRequest.php form
+Made trips 100% editable.
+Added multiple non consecutive days support to trips_submitRequest.php
+Added ability to add students by activity as well as classes.

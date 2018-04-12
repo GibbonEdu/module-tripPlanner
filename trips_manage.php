@@ -170,6 +170,16 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         <h3>
             Requests
         </h3>
+
+        <div class="linkTop">
+            <a style='position:relative; bottom:10px; float:right;' href='<?php print $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_submitRequest.php" ?>'>
+                <?php
+                    print __($guid, "Submit Request");
+                ?>
+                <img style='margin-left: -2px' title='<?php print __($guid, "Sumbit") ?>' src='<?php print $_SESSION[$guid]["absoluteURL"] . "/themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/page_new.png" ?>'/>
+            </a>
+        </div>
+
         <table cellspacing = '0' style = 'width: 100% !important'>
             <tr>
                 <th>
@@ -182,8 +192,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                     Owner
                 </th>
                 <th>
-                    Status<br/>
-                    <span style='font-size: 85%; font-style: italic'><?php print _('Date'); ?></span>
+                    Status
                 </th>
                 <th>
                     Action
@@ -223,12 +232,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                         print "<td style='width:20%'>" . $row['preferredName'] . " " . $row["surname"] . "</td>";
                         print "<td style='width:12%'>";
                             print $row['status'] . "</br>";
-                            print "<span style='font-size: 85%; font-style: italic'>" . dateConvertBack($guid, $row['timestampCreation']) . "</span>";          
+                            //print "<span style='font-size: 85%; font-style: italic'>" . dateConvertBack($guid, $row['timestampCreation']) . "</span>";          
                         print "</td>";
                         print "<td style='width:16.5%'>";
                             print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID=" . $row["tripPlannerRequestID"] . "'><img title='" . _('View') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/plus.png'/></a> ";
                             if ($row["status"] != "Cancelled" && $row["status"] != "Rejected") {
-                                print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_requestEdit.php&tripPlannerRequestID=" . $row["tripPlannerRequestID"] . "'><img title='" . _('Edit') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/config.png'/></a> ";
+                                print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_submitRequest.php&mode=edit&tripPlannerRequestID=" . $row["tripPlannerRequestID"] . "'><img title='" . _('Edit') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/config.png'/></a> ";
                             }
                             if (($row["status"] == "Requested" && needsApproval($connection2, $row["tripPlannerRequestID"], $_SESSION[$guid]["gibbonPersonID"])) == 0 || ($row["status"] == "Awaiting Final Approval" && isApprover($connection2, $_SESSION[$guid]["gibbonPersonID"], true))) {
                                 print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_requestApprove.php&tripPlannerRequestID=" . $row["tripPlannerRequestID"] . "'><img title='" . __($guid, 'Approve/Reject') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/iconTick.png'/></a> ";

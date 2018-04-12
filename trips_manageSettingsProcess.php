@@ -27,7 +27,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     foreach ($settings as $setting) {
         $value = null;
         if (isset($_POST[$setting])) {
-            print $setting . "\n";
             if ($_POST[$setting] != null && $_POST[$setting] != "") {
                 if($setting == "missedClassWarningThreshold") {
                     $value = abs($_POST[$setting]);
