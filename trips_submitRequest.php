@@ -265,8 +265,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                 alert(<?php print "'" . __("Start date must be before end date.") . "'"?>);
                 return;
             }
-            if ((startTime.val() > endTime.val()) && !allDay.prop("checked")) {
-                alert(<?php print "'" . __("Start time must be before end time.") . "'"?>);
+            if (!(new Date(startDate.val()) == new Date(endDate.val())) && (startTime.val() > endTime.val()) && !allDay.prop("checked")) {
+                alert(<?php print "'" . __("Start time must be before end time for one day times.") . "'"?>);
                 return;
             }
 
@@ -295,8 +295,34 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         function modifyDayList(selector, index) {
             console.log(index);
             var id = $("select[id=dayList]").find(":selected").val();
-            //TODO: proper validation
             if (!isNaN(id)) {
+                if (index == 0) {
+                    if (selector.val()>daysList[id][1]) {
+                        alert(<?php print "'" . __("Start date must be before end date.") . "'"?>);
+                        selector.val(daysList[id][index]);
+                        return;
+                    }
+                } else if (index == 1) {
+                    if (selector.val()<daysList[id][0]) {
+                        alert(<?php print "'" . __("End date must be after start date.") . "'"?>);
+                        selector.val(daysList[id][index]);
+                        return;
+                    }
+                } else if (index == 3) {
+                    if (selector.val()>daysList[id][4] && daysList[id][0]==daysList[id][1]) {
+                        alert(<?php print "'" . __("Start time must be before end time for one day times.") . "'"?>);
+                        //TODO: Make this actually revert time
+                        selector.val(daysList[id][index]);
+                        return;
+                    }
+                } else if (index == 4) {
+                    if (selector.val()<daysList[id][3] && daysList[id][0]==daysList[id][1]) {
+                        alert(<?php print "'" . __("End time must be after start time for one day times.") . "'"?>);
+                        //TODO: Make this actually revert time
+                        selector.val(daysList[id][index]);
+                        return;
+                    }
+                }
                 daysList[id][index] = index == 2 ? selector.prop("checked") : selector.val();
                 if(index == 0 || index == 1) {
                     $("select[id=dayList]").find(":selected").text(daysList[id][0] + (daysList[id][0] != daysList[id][1] ? " - " + daysList[id][1] : ""));
@@ -399,6 +425,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
     $row = $form->addRow("timeRow");
         $row->addLabel("endTime", "End Time")->description("Format: hh:mm (24hr)");
+        //TODO:Consider if ->chainedTo("startTime"); will work for this
         $row->addTime("endTime");
 
     $row = $form->addRow();
