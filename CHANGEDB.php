@@ -84,4 +84,9 @@ $sql[$count++][1]="
 CREATE TABLE `tripPlannerRequestDays` (`tripPlannerRequestDaysID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,`tripPlannerRequestID` int(7) unsigned zerofill NOT NULL,`startDate` date NOT NULL,`endDate` date NOT NULL,`allDay` boolean NOT NULL,`startTime` time NOT NULL DEFAULT '00:00:00',`endTime` time NOT NULL DEFAULT '00:00:00',PRIMARY KEY (`tripPlannerRequestDaysID`)) ENGINE=MyISAM DEFAULT CHARSET=utf8;end
 ALTER TABLE `gibbonCourseClassPerson` ADD INDEX `tripCourseClassPersonID` (`gibbonPersonID`);end
 ALTER TABLE `tripPlannerRequestCover` ADD COLUMN `date` date NOT NULL;end";
+
+$sql[$count][0]="0.2.01";
+$sql[$count++][1]="
+
+";
 ?>
