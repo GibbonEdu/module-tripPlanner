@@ -590,6 +590,73 @@ function getPastTrips($guid, $connection2, $people)
     return $result;
 }
 
+function getPlannerOverlaps($connection2, $tripPlannerRequestID, $startDates, $endDates = array(), $startTimes = array(), $endTimes = array(), $people)
+{
+    if (!is_array($people) || empty($people) || !is_array($startDates) || empty($startDates) || !is_array($endDates) || !is_array($startTimes) || !is_array($endTimes)) {
+        return null;
+    }
+    try {
+        $data = array();
+        if ($tripPlannerRequestID != "" && $tripPlannerRequestID != null) {
+            $data["tripPlannerRequestID"] = $tripPlannerRequestID;
+        }
+        $sql = "SELECT DISTINCT gibbonCourse.gibbonCourseID, gibbonCourse.nameShort, gibbonCourseClass.gibbonCourseClassID, gibbonTTDayDate.date, timeStart, timeEnd" . ($tripPlannerRequestID != "" && $tripPlannerRequestID != null ? ", requiresCover" : "") . " FROM gibbonTTDayRowClass JOIN gibbonTTColumnRow ON (gibbonTTDayRowClass.gibbonTTColumnRowID = gibbonTTColumnRow.gibbonTTColumnRowID) JOIN gibbonCourseClassPerson ON (gibbonTTDayRowClass.gibbonCourseClassID = gibbonCourseClassPerson.gibbonCourseClassID) JOIN gibbonCourseClass ON (gibbonCourseClass.gibbonCourseClassID = gibbonTTDayRowClass.gibbonCourseClassID) JOIN gibbonCourse ON (gibbonCourse.gibbonCourseID = gibbonCourseClass.gibbonCourseID)" . ($tripPlannerRequestID != "" && $tripPlannerRequestID != null ? " LEFT JOIN tripPlannerRequestCover ON (tripPlannerRequestCover.gibbonCourseClassID = gibbonCourseClass.gibbonCourseClassID AND tripPlannerRequestID=:tripPlannerRequestID)" : "") . " LEFT JOIN gibbonTTDayDate ON (gibbonTTDayDate.gibbonTTDayID=gibbonTTDayRowClass.gibbonTTDayID) WHERE (";
+        for ($i = 0; $i < count($startDates); $i++) {
+            $sDayData = "startDate" . $i;
+            $eDayData = "endDate" . $i;
+            $eTimeData = "endTime" . $i;
+            $sTimeData = "startTime" . $i;
+            $data[$sDayData] = $startDates[$i];
+            if (isset($endDates[$i])) {
+                if ($endDates[$i] != null) {
+                    $data[$eDayData] = $endDates[$i];
+                }
+            }
+            if (isset($endTimes[$i]) && isset($startTimes[$i])) {
+                if ($endTimes[$i] != null && $startTimes[$i] != null) {
+                    $data[$eTimeData] = $endTimes[$i];
+                    $data[$sTimeData] = $startTimes[$i];
+                }
+            }
+            $sql .= "(";
+            if (isset($data[$eDayData])) {
+                $sql .= "gibbonTTDayDate.date >=:" . $sDayData . " AND gibbonTTDayDate.date <=:" . $eDayData;
+            } else {
+                $sql .= "gibbonTTDayDate.date =:" . $sDayData;
+            }
+            if (isset($data[$eTimeData]) && isset($data[$sTimeData])) {
+                $sql .= " AND timeStart <:" . $eTimeData . " AND timeEnd >:" . $sTimeData;
+            }
+            $sql .= ") OR ";
+        }
+        $sql = substr($sql, 0, -4) . ") AND gibbonPersonID IN (";
+        foreach ($people as $key => $id) {
+            $pData = "people" . $key;
+            $data[$pData] = $id;
+            $sql .= ":" . $pData . ",";
+        }
+        $sql = substr($sql, 0, -1) . ")"; 
+        $sql .= " ORDER BY gibbonCourse.nameShort ASC, gibbonTTDayDate.date ASC";
+        //print $sql;
+        $result = $connection2->prepare($sql);
+        $result->execute($data);
+    } catch (PDOException $e) {
+        print $e;
+    }
+    return $result;
+}
+
+function getTeachersOfClass($connection2, $gibbonCourseClassID) {
+    try {
+        $data = array("gibbonCourseClassID" => $gibbonCourseClassID);
+        $sql = "SELECT gibbonCourseClassPerson.gibbonPersonID FROM gibbonCourseClassPerson WHERE gibbonCourseClassID=:gibbonCourseClassID AND role='Teacher'";
+        $result = $connection2->prepare($sql);
+        $result->execute($data);
+    } catch (PDOException $e) {
+    }   
+    return $result;
+}
+
 function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
     if(!isset($guid) || !isset($connection2) || !isset($tripPlannerRequestID)) {
         print "<div class='error'>";
@@ -1117,14 +1184,16 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                                                 }
                                             }
                                             $sqlClasses = substr($sqlClasses, 0, -4) . ")) as classes FROM gibbonCourseClassPerson WHERE gibbonCourseClassPerson.gibbonPersonID IN (";
+                                            $first = true;
                                             foreach (explode(", ", implode(", ", array_column($prevTrips, "students"))) as $key => $student) {
                                                 $pData = "people" . $key;
                                                 if (!in_array($student, $dataClasses)) {
                                                     $dataClasses[$pData] = $student;
-                                                    $sqlClasses .= ":" . $pData . ",";
+                                                    $sqlClasses .= ($first ? "" : ",") . ":" . $pData;
+                                                    $first = false;
                                                 }
                                             }
-                                            $sqlClasses = substr($sqlClasses, 0, -1) . ") AND role='Student'"; 
+                                            $sqlClasses = ($first ? substr($sqlClasses, 0, -43) : $sqlClasses . ") AND") . " role='Student'"; 
                                             $resultClasses = $connection2->prepare($sqlClasses);
                                             $resultClasses->execute($dataClasses);
 

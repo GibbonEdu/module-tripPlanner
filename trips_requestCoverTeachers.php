@@ -67,6 +67,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                         } catch(PDOException $e) {
                         }
 
+                        //TODO: Fix
                         $overlap = getPlannerOverlaps($connection2, null, array($date), array(), array($timeStart), array($timeEnd), array_column($teachers, "gibbonPersonID"));
 
                         $keys = array();

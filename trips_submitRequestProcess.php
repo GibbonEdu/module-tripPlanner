@@ -36,7 +36,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     $riskAssessmentApproval = getSettingByScope($connection2, "Trip Planner", "riskAssessmentApproval");
     $items = array("title" => true, "description" => true, "location" => true, "days" => $multipleDays, "riskAssessment" => !$riskAssessmentApproval, "letterToParents" => false, "teachers" => true, "students" => false, "costOrder" => false);
     $data = array();
-    $sql = ($edit ? "UPDATE" : "INSERT INTO") . " tripPlannerRequests SET" . ($edit ? " " : "creatorPersonID=:creatorPersonID, timestampCreation=now(), gibbonSchoolYearID=:gibbonSchoolYearID, ");
+    $sql = ($edit ? "UPDATE" : "INSERT INTO") . " tripPlannerRequests SET" . ($edit ? " " : " creatorPersonID=:creatorPersonID, timestampCreation=now(), gibbonSchoolYearID=:gibbonSchoolYearID, ");
 
     $people = array();
     $days = array();
