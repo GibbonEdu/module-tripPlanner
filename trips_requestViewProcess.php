@@ -1,19 +1,11 @@
 <?php
 
-@session_start();
-
 //Module includes
-include "../../functions.php";
-include "../../config.php";
+include '../../gibbon.php';
 
 include "./moduleFunctions.php";
 
-date_default_timezone_set($_SESSION[$guid]["timezone"]);
-
 $URL = $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/";
-
-$pdo = new Gibbon\sqlConnection();
-$connection2 = $pdo->getConnection();
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php')) {
     //Acess denied
