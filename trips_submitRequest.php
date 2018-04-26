@@ -98,19 +98,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
     <?php
 
-    $costBlock = Form::create("costBlock", null);
-
-    $row = $costBlock->addRow();
-        $row->addTextfield("costName")->setRequired(false)->placeholder("Cost Name");
-
-    $row = $costBlock->addRow();
-        $row->addNumber("costValue")->minimum(0)->decimalPlaces(2)->placeholder("Value" . (($_SESSION[$guid]["currency"]!="") ? " (" . $_SESSION[$guid]["currency"] . ")" : ""));
-
-    $row = $costBlock->addRow();
-        $column = $row->addColumn();
-            $column->addLabel("costDescription", "Description");
-            $column->addTextArea("costDescription")->setRows(2);
-
     $defaultRiskTemplate = getSettingByScope($connection2, "Trip Planner", "defaultRiskTemplate");
     try {
         $sqlTemplates = "SELECT tripPlannerRiskTemplateID, name, body FROM tripPlannerRiskTemplates ORDER BY name ASC";
@@ -431,9 +418,47 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     $row = $form->addRow();
         $row->addHeading("Costs");
 
+    // Block template
+    $costBlock = $form->getFactory()->createTable()->setClass('blank');
+        $row = $costBlock->addRow();
+            $row->addTextfield("costName")->isRequired()->placeholder("Cost Name")->addClass('floatNone');
+
+        $row = $costBlock->addRow();
+            $row->addNumber("costValue")->isRequired()->addClass('floatNone')->minimum(0)->decimalPlaces(2)
+                ->placeholder("Value" . (($_SESSION[$guid]["currency"]!="") ? " (" . $_SESSION[$guid]["currency"] . ")" : ""));
+
+        $row = $costBlock->addRow()->addClass('showHide');
+            $column = $row->addColumn();
+                $column->addLabel("costDescription", "Description");
+                $column->addTextArea("costDescription")->setRows(2)->setClass('fullWidth floatNone');
+
+    // Tool Button
+    $addBlockButton = $form->getFactory()->createButton(__("Add Block"))->addClass('addBlock');
+
+    // Custom Blocks
     $row = $form->addRow();
-        $column = $row->addColumn();
-            $column->addCustomBlocks("cost", $costBlock, $gibbon->session)->addBlockButton("Show/Hide", $_SESSION[$guid]["absoluteURL"] . "/themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/plus.png", "descReveal");
+        $costBlocks = $row->addCustomBlocks("cost", $gibbon->session)
+            ->fromTemplate($costBlock)
+            ->settings(array('sortable' => true))
+            ->addBlockButton('showHide', 'Show/Hide', 'plus.png')
+            ->addToolInput($addBlockButton);
+
+    // Add existing costs in edit mode
+    if ($edit) {
+        try {
+            $dataCosts = array("tripPlannerRequestID" => $tripPlannerRequestID);
+            $sqlCosts = 'SELECT title as costName, description as costDescription, cost as costValue FROM tripPlannerCostBreakdown WHERE tripPlannerRequestID=:tripPlannerRequestID ORDER BY tripPlannerCostBreakdownID';
+            $resultCosts = $connection2->prepare($sqlCosts);
+            $resultCosts->execute($dataCosts);
+        } catch (PDOException $e) {
+        }
+
+        $costs = $resultCosts->fetchAll();
+
+        foreach ($costs as $index => $cost) {
+            $costBlocks->addBlock($index+1, $cost);
+        }
+    }
 
     $row = $form->addRow();
         $row->addHeading("Risk Assessment & Communication");
@@ -495,16 +520,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             $daysList[] = $temp;
         }
 
-        try {
-            $dataCosts = array("tripPlannerRequestID" => $tripPlannerRequestID);
-            $sqlCosts = 'SELECT title, description, cost FROM tripPlannerCostBreakdown WHERE tripPlannerRequestID=:tripPlannerRequestID ORDER BY tripPlannerCostBreakdownID';
-            $resultCosts = $connection2->prepare($sqlCosts);
-            $resultCosts->execute($dataCosts);
-        } catch (PDOException $e) {
-        }
-
-        $costs = $resultCosts->fetchAll();
-
     ?>
     <script type="text/javascript">
         function addOption(name, people) {
@@ -520,17 +535,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         $(document).ready(function(){
             addOption('teachers', <?php print json_encode($tripTeachers)?>);
             addOption('students', <?php print json_encode($tripStudents)?>);
-
-            //Add Cost
-            var costs = <?php print json_encode($costs) ?>;
-            for (var i = 0; i < costs.length; i++) {
-                var cost = costs[i];
-
-                addcostBlock();
-                $("input[name='costName[" + (i+1) + "]']").val(cost["title"]);
-                $("input[name='costValue[" + (i+1) + "]']").val(cost["cost"]);
-                $("textarea[name='costDescription[" + (i+1) + "]']").text(cost["description"]);
-            }
 
             //Days
             var multiday = <?php empty($trip["multiDay"]) ? print "false" : print "true" ?>;
