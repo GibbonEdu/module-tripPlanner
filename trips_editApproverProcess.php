@@ -42,9 +42,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_editAp
         exit();
     }
 
-    $pdo = new Gibbon\sqlConnection();
-    $connection2 = $pdo->getConnection();
-
     $expenseApprovalType = getSettingByScope($connection2, "Trip Planner", "requestApprovalType");
     if ($expenseApprovalType == "Chain Of All") {
         $sequenceNumber = null;
