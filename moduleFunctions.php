@@ -698,7 +698,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                 echo "<div class='linkTop'>";
                     echo "<a href='".$_SESSION[$guid]['absoluteURL']."/index.php?q=/modules/Trip Planner/trips_submitRequest.php&mode=edit&tripPlannerRequestID=$tripPlannerRequestID'>".__($guid, 'Edit')."<img style='margin-left: 5px' title='".__($guid, 'Edit')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/config.png'/></a>";
                 echo '</div>';
-            } else {
+            } else if ($approveMode) {
                 echo "<div class='linkTop'>";
                     echo "<a href='".$_SESSION[$guid]['absoluteURL']."/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID=$tripPlannerRequestID'>".__($guid, 'View')."<img style='margin-left: 5px' title='".__($guid, 'View')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/plus.png'/></a>";
                 echo '</div>';
@@ -1142,7 +1142,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                                             $result->execute($data);
 
                                             $dataTrips = array();
-                                            $sqlTrips = "SELECT tripPLannerRequestDays.tripPlannerRequestID, GROUP_CONCAT(tripPLannerRequestDays.startDate SEPARATOR ', ') as startDates, GROUP_CONCAT(tripPLannerRequestDays.endDate SEPARATOR ', ') as endDates, GROUP_CONCAT(tripPLannerRequestDays.allDay SEPARATOR ', ') as allDays, GROUP_CONCAT(tripPLannerRequestDays.startTime SEPARATOR ', ') as startTimes, GROUP_CONCAT(tripPLannerRequestDays.endTime SEPARATOR ', ') as endTimes, (SELECT GROUP_CONCAT(gibbonPersonID SEPARATOR ', ') FROM tripPlannerRequestPerson WHERE tripPlannerRequestPerson.tripPlannerRequestID=tripPlannerRequests.tripPlannerRequestID AND role='Student') as students FROM tripPLannerRequestDays JOIN tripPlannerRequests ON tripPlannerRequests.tripPlannerRequestID = tripPlannerRequestDays.tripPlannerRequestID WHERE tripPlannerRequestDays.tripPlannerRequestID IN (SELECT tripPlannerRequestID FROM tripPlannerRequestPerson WHERE gibbonPersonID IN (";
+                                            $sqlTrips = "SELECT tripPlannerRequestDays.tripPlannerRequestID, GROUP_CONCAT(tripPlannerRequestDays.startDate SEPARATOR ', ') as startDates, GROUP_CONCAT(tripPlannerRequestDays.endDate SEPARATOR ', ') as endDates, GROUP_CONCAT(tripPlannerRequestDays.allDay SEPARATOR ', ') as allDays, GROUP_CONCAT(tripPlannerRequestDays.startTime SEPARATOR ', ') as startTimes, GROUP_CONCAT(tripPlannerRequestDays.endTime SEPARATOR ', ') as endTimes, (SELECT GROUP_CONCAT(gibbonPersonID SEPARATOR ', ') FROM tripPlannerRequestPerson WHERE tripPlannerRequestPerson.tripPlannerRequestID=tripPlannerRequests.tripPlannerRequestID AND role='Student') as students FROM tripPlannerRequestDays JOIN tripPlannerRequests ON tripPlannerRequests.tripPlannerRequestID = tripPlannerRequestDays.tripPlannerRequestID WHERE tripPlannerRequestDays.tripPlannerRequestID IN (SELECT tripPlannerRequestID FROM tripPlannerRequestPerson WHERE gibbonPersonID IN (";
                                             foreach ($students as $key => $id) {
                                                 $pData = "people" . $key;
                                                 $dataTrips[$pData] = $id;
