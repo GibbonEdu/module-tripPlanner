@@ -44,14 +44,14 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         $isHOD = $departments->rowCount() > 0;
 
         $data = array();
-        $sql = "SELECT tripPlannerRequests.tripPlannerRequestID, tripPlannerRequests.timestampCreation, tripPlannerRequests.title, tripPlannerRequests.description, tripPlannerRequests.status, gibbonPerson.preferredName, gibbonPerson.surname, gibbonPerson.gibbonPersonID FROM tripPlannerRequests JOIN gibbonPerson ON tripPlannerRequests.creatorPersonID = gibbonPerson.gibbonPersonID";
+        $sql = "SELECT tripPlannerRequests.tripPlannerRequestID, tripPlannerRequests.timestampCreation, tripPlannerRequests.title, tripPlannerRequests.description, tripPlannerRequests.status, gibbonPerson.preferredName, gibbonPerson.surname, gibbonPerson.gibbonPersonID FROM tripPlannerRequests" . (isApprover($connection2, $_SESSION[$guid]["gibbonPersonID"]) ? " LEFT" : "") . " JOIN gibbonPerson ON tripPlannerRequests.creatorPersonID = gibbonPerson.gibbonPersonID";
         $connector = " WHERE ";
 
         $relations = array();
         $relationFilter = "MR";
 
         if ($highestAction == "Manage Trips_full") {
-            $relations[] = "All Requests";
+            $relations[""] = "All Requests";
             $relationFilter = "";
         }
 
