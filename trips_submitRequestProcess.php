@@ -26,7 +26,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     $URL .= "trips_submitRequest.php";
     $date = new DateTime();
     $riskAssessmentApproval = getSettingByScope($connection2, "Trip Planner", "riskAssessmentApproval");
-    $items = array("title" => true, "description" => true, "location" => true, "days" => $multipleDays, "riskAssessment" => !$riskAssessmentApproval, "letterToParents" => false, "teachers" => true, "students" => false, "costOrder" => false);
+    $items = array("title" => true, "description" => true, "location" => true, "days" => $multipleDays, "riskAssessment" => !$riskAssessmentApproval, "letterToParents" => false, "teachers" => true, "students" => false, "order" => false);
     $data = array();
     $sql = ($edit ? "UPDATE" : "INSERT INTO") . " tripPlannerRequests SET" . ($edit ? " " : " creatorPersonID=:creatorPersonID, timestampCreation=now(), gibbonSchoolYearID=:gibbonSchoolYearID, ");
 
@@ -56,13 +56,13 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                     foreach ($_POST[$item] as $person) {
                         $people[] = array("role" => $role, "gibbonPersonID" => $person);
                     }
-                } elseif ($item == "costOrder") {
+                } elseif ($item == "order") {
                     $key = null;
                     $order = $_POST[$item];
                     foreach ($order as $cost) {
-                        $costs[$cost]['name'] = $_POST['costName'][$cost];
-                        $costs[$cost]['cost'] = $_POST['costValue'][$cost];
-                        $costs[$cost]['description'] = $_POST['costDescription'][$cost];
+                        $costs[$cost]['name'] = $_POST['cost'][$cost]['costName'];
+                        $costs[$cost]['cost'] = $_POST['cost'][$cost]['costValue'];
+                        $costs[$cost]['description'] = $_POST['cost'][$cost]['costDescription'];
 
                         if ($costs[$cost]['name'] == '' || $costs[$cost]['cost'] == '' || is_numeric($costs[$cost]['cost']) == false) {
                             $URL .= "&return=error1";
@@ -100,7 +100,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             header("Location: {$URL}");
             exit();
         }
-        $days[] = array("startDate" => DateTime::createFromFormat("d/m/Y", $_POST["startDate"])->format("Y-m-d"), "endDate" => DateTime::createFromFormat("d/m/Y", $_POST["startDate"])->format("Y-m-d"), "allDay" => (isset($_POST["allDay"]) ? 1 : 0), "startTime" => (!isset($_POST["allDay"]) ? $_POST["startTime"] : null), "endTime" => (!isset($_POST["allDay"]) ? $_POST["endTime"] : null));
+        $days[] = array("startDate" => DateTime::createFromFormat("d/m/Y", $_POST["startDate"])->format("Y-m-d"), "endDate" => DateTime::createFromFormat("d/m/Y", $_POST["startDate"])->format("Y-m-d"), "allDay" => (isset($_POST["allDay"]) ? 1 : 0), "startTime" => (!isset($_POST["allDay"]) ? $_POST["startTime"] : 0), "endTime" => (!isset($_POST["allDay"]) ? $_POST["endTime"] : 0));
     }
 
     try {
