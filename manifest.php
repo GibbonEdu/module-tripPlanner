@@ -126,8 +126,6 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestDays` (
     PRIMARY KEY (`tripPlannerRequestDaysID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
 
-$moduleTables[$tables++] = "ALTER TABLE `gibbonCourseClassPerson` ADD INDEX `tripCourseClassPersonID` (`gibbonPersonID`)";
-
 //Actions
 $actionCount = 0;
 
