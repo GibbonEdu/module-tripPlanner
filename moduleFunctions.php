@@ -590,6 +590,7 @@ function getPastTrips($guid, $connection2, $people)
     return $result;
 }
 
+//TODO: Depricate these functions
 function getPlannerOverlaps($connection2, $tripPlannerRequestID, $startDates, $endDates = array(), $startTimes = array(), $endTimes = array(), $people)
 {
     if (!is_array($people) || empty($people) || !is_array($startDates) || empty($startDates) || !is_array($endDates) || !is_array($startTimes) || !is_array($endTimes)) {
