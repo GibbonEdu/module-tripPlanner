@@ -95,7 +95,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     }
 
     if (!$multipleDays) {
-        if (!isset($_POST["startDate"]) || ((!isset($_POST["startTime"])) || !isset($_POST["endTime"]) && !isset($_POST["allDay"]))) {
+        if (!isset($_POST["startDate"]) || $_POST["startDate"] == "" || ((!isset($_POST["startTime"])) || !isset($_POST["endTime"]) && !isset($_POST["allDay"]))) {
             $URL .= "&return=error1";
             header("Location: {$URL}");
             exit();
