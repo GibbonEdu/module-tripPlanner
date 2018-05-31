@@ -104,7 +104,7 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestCover` (
     `tripPlannerRequestID` int(7) unsigned zerofill NOT NULL,
     `gibbonCourseClassID` int(8) unsigned zerofill NOT NULL,
     `requiresCover` boolean DEFAULT TRUE NOT NULL,
-    `date` date NOT NULL
+    `date` date NOT NULL,
     PRIMARY KEY (`tripPlannerRequestCoverID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
 
