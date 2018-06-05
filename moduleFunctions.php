@@ -248,6 +248,16 @@ function getTrip($connection2, $tripPlannerRequestID) {
     return null;
 }
 
+function getFirstDayOfTrip($connection2, $tripPlannerRequestID)
+{
+    $data = array("tripPlannerRequestID" => $tripPlannerRequestID);
+    $sql = "SELECT startDate FROM tripPlannerRequestDays WHERE tripPlannerRequestID=:tripPlannerRequestID ORDER BY startDate ASC";
+    $result = $connection2->prepare($sql);
+    $result->execute($data);
+
+    return $result->fetch()["startDate"];
+}
+
 function getPeopleInTrip($connection2, $trips, $role=null)
 {
     if(!is_array($trips) || empty($trips)) {

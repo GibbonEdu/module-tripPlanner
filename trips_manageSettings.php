@@ -81,6 +81,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                 case "missedClassWarningThreshold":
                     $fRow->addNumber($row["name"])->minimum(0)->setRequired(true)->decimalPlaces(0)->setValue($row["value"]);
                     break;
+                case "expiredUnapprovedFilter":
                 case "riskAssessmentApproval":
                     $fRow->addCheckBox($row["name"])->checked((int)$row["value"]);
                     break;

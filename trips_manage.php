@@ -84,6 +84,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             $relationFilter = $_POST["relationFilter"];
         }
 
+        $eutFilter = getSettingByScope($connection2, "Trip Planner", "expiredUnapprovedFilter");
+
         //This must be the FIRST filter check!
         if ($relationFilter == "I") {
             $data["teacherPersonID"] = $_SESSION[$guid]["gibbonPersonID"];
@@ -212,6 +214,13 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                 $show = true;
                 if ($relationFilter == "AMA" && $ama) {
                     if (!($row["status"] == "Requested" && needsApproval($connection2, $row["tripPlannerRequestID"], $_SESSION[$guid]["gibbonPersonID"])) == 0 && !($row["status"] == "Awaiting Final Approval" && isApprover($connection2, $_SESSION[$guid]["gibbonPersonID"], true))) {
+                        $show = false;
+                    }
+                }
+
+                if ($eutFilter) {
+                    $startDate = getFirstDayOfTrip($connection2, $row["tripPlannerRequestID"]);
+                    if (strtotime($startDate) < mktime(0, 0, 0) && $row["status"] != "Approved") {
                         $show = false;
                     }
                 }

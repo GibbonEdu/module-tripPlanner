@@ -420,7 +420,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
 
     $row = $form->addRow("multipleRow");
-        $row->addLabel("dayList", "Days");
+        //Not showing required symbol
+        $row->addLabel("dayList", "Days *");
         $column = $row->addColumn()->addClass("right");
             $column->addSelect("dayList")->placeholder(__("Add New Days"))->isRequired();
             $column->addButton("Add Days", "addDay()")->addClass("shortWidth")->setID("addDays");
