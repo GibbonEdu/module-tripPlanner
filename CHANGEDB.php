@@ -95,5 +95,4 @@ $sql[$count++][1]="
 ALTER TABLE `tripPlannerRequests` ADD COLUMN `messengerGroupID` int(8) unsigned zerofill NULL;end
 ";
 
-
 ?>

@@ -133,3 +133,4 @@ Added validation to teachers
 Removed multiday button on trips_submitRequest.php
 Fixed various bugs regarding editing trips.
 Trip Planner now creates messenger groups on add and edit.
+Various bug fixes
