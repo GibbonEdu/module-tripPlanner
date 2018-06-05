@@ -327,6 +327,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
             $("select[id=dayList]").find(":selected").text(startDate.val() + (startDate.val() != endDate.val() ? " - " + endDate.val() : "") + " (" + (allDay.prop("checked") ? "All Day" : startTime.val() + "-" + endTime.val()) + ")");
         }
+
+        $("input[type=\'Submit\']", form).click(function() {
+            $("select[id=dayList] option:last").attr("selected", "selected");
+        });
+
     </script>
 
     <div id="addClassDiv"></div>
@@ -417,7 +422,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     $row = $form->addRow("multipleRow");
         $row->addLabel("dayList", "Days");
         $column = $row->addColumn()->addClass("right");
-            $column->addSelect("dayList")->placeholder(__("Add New Days"));
+            $column->addSelect("dayList")->placeholder(__("Add New Days"))->isRequired();
             $column->addButton("Add Days", "addDay()")->addClass("shortWidth")->setID("addDays");
             $column->addButton("Remove Days", "remDay()")->addClass("shortWidth")->setID("removeDays");
 

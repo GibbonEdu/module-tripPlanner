@@ -182,7 +182,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     }
 
     if (!$edit || $groupNotFound) {
-        //TODO: Set up better name
         $data = array('gibbonPersonIDOwner' => $_SESSION[$guid]['gibbonPersonID'], 'gibbonSchoolYearID' => $_SESSION[$guid]['gibbonSchoolYearID'], 'name' => $data["title"] . " (Trip Planner)");
         $groupID = $groupGateway->insertGroup($data);
 

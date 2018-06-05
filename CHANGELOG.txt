@@ -136,3 +136,4 @@ Trip Planner now creates messenger groups on add and edit.
 Various bug fixes
 Fixed trips_managesettings.php always returning error1, dispite working correctly.
 Reworked the multiday selection input to be more user friendly.
+Added validation to multi day input.
