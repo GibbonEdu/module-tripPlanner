@@ -212,6 +212,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             $("input[name=startTime]").on('change', function() { modifyDayList($(this), 3); });
             $("input[name=endTime]").on('change', function() { modifyDayList($(this), 4); });
 
+            $("input[type=\'Submit\']", $("select[id=dayList]").parents('form')).click(function() {
+                $("select[id=dayList] option:last").attr("selected", "selected");
+            });
+
             var form = $("#requestForm");
             form.submit(function(){
                 var names = ["startDate", "endDate", "allDay", "startTime", "endTime"];
@@ -327,10 +331,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
             $("select[id=dayList]").find(":selected").text(startDate.val() + (startDate.val() != endDate.val() ? " - " + endDate.val() : "") + " (" + (allDay.prop("checked") ? "All Day" : startTime.val() + "-" + endTime.val()) + ")");
         }
-
-        $("input[type=\'Submit\']", form).click(function() {
-            $("select[id=dayList] option:last").attr("selected", "selected");
-        });
 
     </script>
 
