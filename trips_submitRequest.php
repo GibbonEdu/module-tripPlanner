@@ -176,6 +176,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                 modifyDayList($(this), 2);
             });
 
+            $("#removeDays").attr("disabled", "");
+
             $("select[id=dayList]").on('change', function(){
                 var id = $(this).find(":selected").val();
                 if (isNaN(id)) {
@@ -184,16 +186,28 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                     $("#allDay").prop("checked", "").change();
                     $("#startTime").val("");
                     $("#endTime").val("");
+                    $("#addDays").removeAttr("disabled");
+                    $("#removeDays").attr("disabled", "disabled");
                 } else if (id != dayID) {
                     $("#startDate").val(daysList[id][0]);
                     $("#endDate").val(daysList[id][1]);
                     $("#allDay").prop("checked", daysList[id][2]).change();
                     $("#startTime").val(daysList[id][3]);
                     $("#endTime").val(daysList[id][4]);
+                    $("#addDays").attr("disabled", "disabled");
+                    $("#removeDays").removeAttr("disabled");
+                    updateSelectedDayList();
                 }
             });
 
-            $("input[name=startDate]").on('change', function() { modifyDayList($(this), 0); });
+            $("input[name=startDate]").on('change', function() {
+                var endDate = $("input[name=endDate]");
+                if (endDate.val() == "" || (new Date($(this).val()) > new Date(endDate.val()))) {
+                    endDate.val($(this).val());
+                }
+                modifyDayList($(this), 0); 
+
+             });
             $("input[name=endDate]").on('change', function() { modifyDayList($(this), 1); });
             $("input[name=startTime]").on('change', function() { modifyDayList($(this), 3); });
             $("input[name=endTime]").on('change', function() { modifyDayList($(this), 4); });
@@ -232,7 +246,13 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             var startTime = $("#startTime");
             var endTime = $("#endTime");
 
-            if (startDate.val() == "" || endDate.val() == "" || ((startTime.val() == "" || endTime.val() == "") && !allDay.prop("checked"))) return;
+            if (startDate.val() == "" || endDate.val() == "") {
+                alert(<?php print "'" . __("Please set a start date and end date.") . "'"?>);
+                return;
+            } else if((startTime.val() == "" || endTime.val() == "") && !allDay.prop("checked")) {
+                alert(<?php print "'" . __("Please set a start time and end time or check the all day box.") . "'"?>);
+                return;
+            }
             if ((new Date(startDate.val()) > new Date(endDate.val()))) {
                 alert(<?php print "'" . __("Start date must be before end date.") . "'"?>);
                 return;
@@ -243,9 +263,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             }
 
             daysList[dayID] = [startDate.val(), endDate.val(), allDay.prop("checked"), startTime.val(), endTime.val()];
-            dayList.append($("<option>", {value: dayID, text: startDate.val() + (startDate.val() != endDate.val() ? " - " + endDate.val() : "")}));
+            dayList.append($("<option>", {value: dayID, text: startDate.val() + (startDate.val() != endDate.val() ? " - " + endDate.val() : "") + " (" + (allDay.prop("checked") ? "All Day" : startTime.val() + "-" + endTime.val()) + ")"}));
 
             dayList.val(dayID);
+            $("#addDays").attr("disabled", "disabled");
+            $("#removeDays").removeAttr("disabled");
             dayID++;
         }
 
@@ -255,11 +277,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                 var id = dayList.find(":selected").val();
                 daysList[id] = null;
                 dayList.find("option[value=" + id + "]").detach().remove();
+                $("#addDays").removeAttr("disabled");
+                $("#removeDays").attr("disabled", "disabled");
             }
         }
 
         function modifyDayList(selector, index) {
-            console.log(index);
             var id = $("select[id=dayList]").find(":selected").val();
             if (!isNaN(id)) {
                 if (index == 0) {
@@ -290,12 +313,19 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                     }
                 }
                 daysList[id][index] = index == 2 ? selector.prop("checked") : selector.val();
-                if(index == 0 || index == 1) {
-                    $("select[id=dayList]").find(":selected").text(daysList[id][0] + (daysList[id][0] != daysList[id][1] ? " - " + daysList[id][1] : ""));
-                }
+                updateSelectedDayList();
             }
+        }
 
-            console.log(daysList);
+        function updateSelectedDayList() {
+            var dayList = $("#dayList");
+            var startDate = $("#startDate");
+            var endDate = $("#endDate");
+            var allDay = $("#allDay");
+            var startTime = $("#startTime");
+            var endTime = $("#endTime");
+
+            $("select[id=dayList]").find(":selected").text(startDate.val() + (startDate.val() != endDate.val() ? " - " + endDate.val() : "") + " (" + (allDay.prop("checked") ? "All Day" : startTime.val() + "-" + endTime.val()) + ")");
         }
     </script>
 
@@ -360,21 +390,14 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         $row->addTextfield("location")->setRequired(true)->setValue($edit ? $trip['location'] : '');
 
     $row = $form->addRow();
-        $row->addHeading("Date & Time");
-
-    $row = $form->addRow("multipleRow");
-        $row->addLabel("dayList", "Days");
-        $column = $row->addColumn()->addClass("right");
-            $column->addSelect("dayList")->placeholder(__("Add New Days"));
-            $column->addButton("Add Days", "addDay()")->addClass("shortWidth")->setID("addDays");
-            $column->addButton("Remove Days", "remDay()")->addClass("shortWidth")->setID("removeDays");
+        $row->addHeading("Date & Time")->append(__("To add a new day to the trip request, select the Add New Days option in the dropdown menu and fill in the the boxs below and click the Add Days button. To edit or remove an existing day, select the day from the dropdown menu and either change the details or click the Remove Days button."));
 
     $row = $form->addRow();
-        $row->addLabel("startDate", "Date")->description($_SESSION[$guid]["i18n"]["dateFormat"]);
+        $row->addLabel("startDate", "Start Date");
         $row->addDate("startDate");
 
     $row = $form->addRow("multipleRow");
-        $row->addLabel("endDate", "End Date")->description($_SESSION[$guid]["i18n"]["dateFormat"]);
+        $row->addLabel("endDate", "End Date");
         $row->addDate("endDate");
 
     $row = $form->addRow();
@@ -389,6 +412,14 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         $row->addLabel("endTime", "End Time")->description("Format: hh:mm (24hr)");
         //TODO:Consider if ->chainedTo("startTime"); will work for this
         $row->addTime("endTime");
+
+
+    $row = $form->addRow("multipleRow");
+        $row->addLabel("dayList", "Days");
+        $column = $row->addColumn()->addClass("right");
+            $column->addSelect("dayList")->placeholder(__("Add New Days"));
+            $column->addButton("Add Days", "addDay()")->addClass("shortWidth")->setID("addDays");
+            $column->addButton("Remove Days", "remDay()")->addClass("shortWidth")->setID("removeDays");
 
     $row = $form->addRow();
         $row->addHeading("Costs");

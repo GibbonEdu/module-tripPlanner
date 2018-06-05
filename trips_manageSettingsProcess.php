@@ -30,7 +30,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             $value = 0;
         }
 
-        if ($value === null) {
+        if ($value === null && $setting != "riskAssessmentTemplate") {
             $URL .= "&return=error1";
             header("Location: {$URL}");
             exit();
