@@ -126,3 +126,10 @@ v0.2.01
 Added date column to trip_tripPlannerRequestCover in manifest.php
 Fixed bug where students wouldn't show up in timetable overlaps, if no previous trips had occured.
 Fixed Teacher Cover recommendations not showing up.
+
+v0.2.10
+-------
+Added validation to teachers
+Removed multiday button on trips_submitRequest.php
+Fixed various bugs regarding editing trips.
+Trip Planner now creates messenger groups on add and edit.

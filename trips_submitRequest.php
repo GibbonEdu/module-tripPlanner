@@ -159,10 +159,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             $('input[id=removeDays]').parent().css("display", "inline-block");
             $('input[id=addDays]').parent().css("display", "inline-block");
 
-            $('tr[id=multipleRow]').each(function(){ 
-                    $(this).css("display", "none");
-            }); 
-
             $("select[name=riskAssessmentTemplates]").on('change', function(){
                 var templateID = $(this).val();
                 if (templateID != "" && templateID >= 0) {
@@ -170,13 +166,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                         tinyMCE.get("riskAssessment").setContent(templates[templateID]);
                     }
                 }
-            });
-
-            $("input[name=multipleDays]").on('change', function(){
-                $('tr[id=multipleRow]').each(function(){ 
-                    $(this).css("display", $(this).is(":visible") ? "none" : "table-row");
-                }); 
-                $("[for=startDate]").text($("tr[id=multipleRow]").is(":visible") ? "Start Date" : "Date").css({ 'font-weight': 'bold' });
             });
 
             $("input[name=allDay]").on('change', function(){
@@ -195,14 +184,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                     $("#allDay").prop("checked", "").change();
                     $("#startTime").val("");
                     $("#endTime").val("");
-                    $("#addDays").val("Add Days");
                 } else if (id != dayID) {
                     $("#startDate").val(daysList[id][0]);
                     $("#endDate").val(daysList[id][1]);
                     $("#allDay").prop("checked", daysList[id][2]).change();
                     $("#startTime").val(daysList[id][3]);
                     $("#endTime").val(daysList[id][4]);
-                    $("#addDays").val("Duplicate Days");
                 }
             });
 
@@ -258,13 +245,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             daysList[dayID] = [startDate.val(), endDate.val(), allDay.prop("checked"), startTime.val(), endTime.val()];
             dayList.append($("<option>", {value: dayID, text: startDate.val() + (startDate.val() != endDate.val() ? " - " + endDate.val() : "")}));
 
-            startDate.val("");
-            endDate.val("");
-            allDay.prop("checked", "").change();
-            startTime.val("");
-            endTime.val("");
-            $("#addDays").val("Add Days");
-            dayList.val("<?php print __("Add New Days")?>");
+            dayList.val(dayID);
             dayID++;
         }
 
@@ -381,10 +362,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     $row = $form->addRow();
         $row->addHeading("Date & Time");
 
-    $row = $form->addRow();
-        $row->addLabel("multipleDays","Multiple Days");
-        $row->addCheckbox("multipleDays");
-
     $row = $form->addRow("multipleRow");
         $row->addLabel("dayList", "Days");
         $column = $row->addColumn()->addClass("right");
@@ -480,8 +457,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
     $row = $form->addRow();
         $column = $row->addColumn();
-            $column->addLabel("teachers", "Teachers *");
-            $column->addMultiSelect("teachers")->source()->fromArray($teachers);
+            $column->addLabel("teachers", "Teachers");
+            $column->addMultiSelect("teachers")->isRequired()->source()->fromArray($teachers);
 
     $row = $form->addRow();
         $column = $row->addColumn()->addClass("borderNone");
@@ -523,7 +500,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         function addOption(name, people) {
             $('#' + name + "Source").find('option').each(function(){
                 if (people.indexOf($(this).val()) >= 0) {
-                    $('#' + name + "Destination").append($(this).clone());
+                    $('#' + name).append($(this).clone());
                     $(this).detach().remove();
                 }
             });
@@ -534,23 +511,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             addOption('teachers', <?php print json_encode($tripTeachers)?>);
             addOption('students', <?php print json_encode($tripStudents)?>);
 
-            //Days
-            var multiday = <?php empty($trip["multiDay"]) ? print "false" : print "true" ?>;
-            if (multiday) {
-                $("#multipleDays").attr("checked", "checked").change();
-                daysList = <?php print json_encode($daysList) ?>;
-                dayID = daysList.length;
-                for (var i = 0; i < daysList.length; i++) {
-                    if (daysList[i] != null) {
-                        $("#dayList").append($("<option>", {value: i, text: daysList[i][0] + (daysList[i][0] != daysList[i][1] ? " - " + daysList[i][1] : "")}));
-                    }
+            daysList = <?php print json_encode($daysList) ?>;
+            dayID = daysList.length;
+            for (var i = 0; i < daysList.length; i++) {
+                if (daysList[i] != null) {
+                    $("#dayList").append($("<option>", {value: i, text: daysList[i][0] + (daysList[i][0] != daysList[i][1] ? " - " + daysList[i][1] : "")}));
                 }
-            } else {
-                $("#startDate").val(<?php print $trip["date"]?>);
-                $("#endDate").val(<?php print $trip["endDate"]?>);
-                $("#allDay").attr("checked", <?php ($trip["startTime"] == null || $trip["endTime"] == null) ? print "'checked'" : print "''"?>);
-                $("#startTime").val(<?php print $trip["startTime"]?>);
-                $("#endTime").val(<?php print $trip["endTime"]?>);
             }
         });
     </script>

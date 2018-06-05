@@ -89,4 +89,11 @@ $sql[$count][0]="0.2.01";
 $sql[$count++][1]="
 
 ";
+
+$sql[$count][0]="0.2.10";
+$sql[$count++][1]="
+ALTER TABLE `tripPlannerRequests` ADD COLUMN `messengerGroupID` int(8) unsigned zerofill NULL;end
+";
+
+
 ?>

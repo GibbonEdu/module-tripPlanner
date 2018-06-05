@@ -44,7 +44,7 @@ try {
     <script type='text/javascript'>
         var students = <?php print $js_array ?>;
         var source = $('#studentsSource');
-        var destination = $('#studentsDestination');
+        var destination = $('#students');
         if (!<?php print $typeVal ?>) {
             var temp = destination;
             destination = source;
