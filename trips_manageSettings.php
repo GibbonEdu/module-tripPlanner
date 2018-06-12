@@ -17,8 +17,6 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-@session_start();
-
 include "./modules/Trip Planner/moduleFunctions.php";
 
 use Gibbon\Forms\Form;
@@ -83,6 +81,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                 case "missedClassWarningThreshold":
                     $fRow->addNumber($row["name"])->minimum(0)->setRequired(true)->decimalPlaces(0)->setValue($row["value"]);
                     break;
+                case "expiredUnapprovedFilter":
                 case "riskAssessmentApproval":
                     $fRow->addCheckBox($row["name"])->checked((int)$row["value"]);
                     break;

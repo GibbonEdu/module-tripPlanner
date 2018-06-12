@@ -17,8 +17,6 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-@session_start();
-
 //Module includes
 include "./modules/Trip Planner/moduleFunctions.php";
 
@@ -67,7 +65,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                         } catch(PDOException $e) {
                         }
 
-                        //TODO: Fix
+                        //TODO: don't use these functions
                         $overlap = getPlannerOverlaps($connection2, null, array($date), array(), array($timeStart), array($timeEnd), array_column($teachers, "gibbonPersonID"));
 
                         $keys = array();

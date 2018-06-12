@@ -1,19 +1,13 @@
 <?php
 
-@session_start();
-
 //Module includes
-include "../../functions.php";
-include "../../config.php";
+include '../../gibbon.php';
 
 include "./moduleFunctions.php";
 
-date_default_timezone_set($_SESSION[$guid]["timezone"]);
+use Gibbon\Domain\Messenger\GroupGateway;
 
 $URL = $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/";
-
-$pdo = new Gibbon\sqlConnection();
-$connection2 = $pdo->getConnection();
 
 $edit = false;
 if (isset($_GET['mode']) && isset($_GET['tripPlannerRequestID'])) {
@@ -34,7 +28,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     $URL .= "trips_submitRequest.php";
     $date = new DateTime();
     $riskAssessmentApproval = getSettingByScope($connection2, "Trip Planner", "riskAssessmentApproval");
-    $items = array("title" => true, "description" => true, "location" => true, "days" => $multipleDays, "riskAssessment" => !$riskAssessmentApproval, "letterToParents" => false, "teachers" => true, "students" => false, "costOrder" => false);
+    $items = array("title" => true, "description" => true, "location" => true, "days" => $multipleDays, "riskAssessment" => !$riskAssessmentApproval, "letterToParents" => false, "teachers" => true, "students" => false, "order" => false);
     $data = array();
     $sql = ($edit ? "UPDATE" : "INSERT INTO") . " tripPlannerRequests SET" . ($edit ? " " : " creatorPersonID=:creatorPersonID, timestampCreation=now(), gibbonSchoolYearID=:gibbonSchoolYearID, ");
 
@@ -64,13 +58,13 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                     foreach ($_POST[$item] as $person) {
                         $people[] = array("role" => $role, "gibbonPersonID" => $person);
                     }
-                } elseif ($item == "costOrder") {
+                } elseif ($item == "order") {
                     $key = null;
                     $order = $_POST[$item];
                     foreach ($order as $cost) {
-                        $costs[$cost]['name'] = $_POST['costName'][$cost];
-                        $costs[$cost]['cost'] = $_POST['costValue'][$cost];
-                        $costs[$cost]['description'] = $_POST['costDescription'][$cost];
+                        $costs[$cost]['name'] = $_POST['cost'][$cost]['costName'];
+                        $costs[$cost]['cost'] = $_POST['cost'][$cost]['costValue'];
+                        $costs[$cost]['description'] = $_POST['cost'][$cost]['costDescription'];
 
                         if ($costs[$cost]['name'] == '' || $costs[$cost]['cost'] == '' || is_numeric($costs[$cost]['cost']) == false) {
                             $URL .= "&return=error1";
@@ -102,16 +96,51 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         $data["gibbonSchoolYearID"] = $_SESSION[$guid]["gibbonSchoolYearID"];
     }
 
-    if (!$multipleDays) {
-        if (!isset($_POST["startDate"]) || ((!isset($_POST["startTime"])) || !isset($_POST["endTime"]) && !isset($_POST["allDay"]))) {
-            $URL .= "&return=error1";
-            header("Location: {$URL}");
-            exit();
-        }
-        $days[] = array("startDate" => DateTime::createFromFormat("d/m/Y", $_POST["startDate"])->format("Y-m-d"), "endDate" => DateTime::createFromFormat("d/m/Y", $_POST["startDate"])->format("Y-m-d"), "allDay" => (isset($_POST["allDay"]) ? 1 : 0), "startTime" => (!isset($_POST["allDay"]) ? $_POST["startTime"] : null), "endTime" => (!isset($_POST["allDay"]) ? $_POST["endTime"] : null));
-    }
+    // if (!$multipleDays) {
+    //     if (!isset($_POST["startDate"]) || $_POST["startDate"] == "" || ((!isset($_POST["startTime"])) || !isset($_POST["endTime"]) && !isset($_POST["allDay"]))) {
+    //         $URL .= "&return=error1";
+    //         header("Location: {$URL}");
+    //         exit();
+    //     }
+    //     $days[] = array("startDate" => DateTime::createFromFormat("d/m/Y", $_POST["startDate"])->format("Y-m-d"), "endDate" => DateTime::createFromFormat("d/m/Y", $_POST["startDate"])->format("Y-m-d"), "allDay" => (isset($_POST["allDay"]) ? 1 : 0), "startTime" => (!isset($_POST["allDay"]) ? $_POST["startTime"] : 0), "endTime" => (!isset($_POST["allDay"]) ? $_POST["endTime"] : 0));
+    // }
+
+    $groupGateway = $container->get(GroupGateway::class);
+    $groupNotFound = false;
 
     try {
+
+        if ($edit) {
+            $dataGroup = array("tripPlannerRequestID" => $tripPlannerRequestID);
+            $sqlGroup = "SELECT messengerGroupID FROM tripPlannerRequests WHERE tripPlannerRequestID=:tripPlannerRequestID";
+            $resultGroup = $connection2->prepare($sqlGroup);
+            $resultGroup->execute($dataGroup);
+
+            if ($resultGroup->rowCount() == 1 && ($groupID = $resultGroup->fetch()["messengerGroupID"]) != null) {
+                $sqlStudents = "SELECT gibbonPersonID FROM tripPlannerRequestPerson WHERE tripPlannerRequestID=:tripPlannerRequestID";
+                $resultStudents = $connection2->prepare($sqlStudents);
+                $resultStudents->execute($dataGroup);
+
+                $peopleInTrip = array();
+
+                while($row = $resultStudents->fetch()) {
+                    $peopleInTrip[] = $row["gibbonPersonID"];
+                    if(!in_array($row["gibbonPersonID"], array_column($people, "gibbonPersonID"))) {
+                        $deleted = $groupGateway->deleteGroupPerson($groupID, $row["gibbonPersonID"]);
+                    }
+                }
+
+                foreach ($people as $person) {
+                    if(!in_array($person["gibbonPersonID"], $peopleInTrip)) {
+                        $dataGroup = array('gibbonGroupID' => $groupID, 'gibbonPersonID' => $person["gibbonPersonID"]);
+                        $inserted = $groupGateway->insertGroupPerson($dataGroup);
+                    }
+                }
+            } else {
+                $groupNotFound = true;
+            }
+        }
+
         $result = $connection2->prepare($sql);
         $result->execute($data);
         if (!$edit) $tripPlannerRequestID = $connection2->lastInsertId();
@@ -148,8 +177,26 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     } catch (PDOException $e) {
         print $e;
         $URL .= "&return=error2";
-        // header("Location: {$URL}");
+        //header("Location: {$URL}");
         exit();
+    }
+
+    if (!$edit || $groupNotFound) {
+        $data = array('gibbonPersonIDOwner' => $_SESSION[$guid]['gibbonPersonID'], 'gibbonSchoolYearID' => $_SESSION[$guid]['gibbonSchoolYearID'], 'name' => $data["title"] . " (Trip Planner)");
+        $groupID = $groupGateway->insertGroup($data);
+
+        if($groupID) {
+            foreach ($people as $person) {
+                $data = array('gibbonGroupID' => $groupID, 'gibbonPersonID' => $person["gibbonPersonID"]);
+                $inserted = $groupGateway->insertGroupPerson($data);
+                //$partialFail &= !$inserted;
+            }  
+
+            $dataGroup = array("tripPlannerRequestID" => $tripPlannerRequestID, "groupID" => $groupID);
+            $sqlGroup = "UPDATE tripPlannerRequests SET messengerGroupID=:groupID WHERE tripPlannerRequestID=:tripPlannerRequestID";
+            $resultGroup = $connection2->prepare($sqlGroup);
+            $resultGroup->execute($dataGroup);
+        }
     }
 
     $URL .= "&return=success0&tripPlannerRequestID=" . $tripPlannerRequestID . ($edit ? "&mode=edit" : "");

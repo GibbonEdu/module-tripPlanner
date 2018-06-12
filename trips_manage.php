@@ -17,8 +17,6 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-@session_start();
-
 include "./modules/Trip Planner/moduleFunctions.php";
 
 use Gibbon\Forms\Form;
@@ -46,14 +44,14 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         $isHOD = $departments->rowCount() > 0;
 
         $data = array();
-        $sql = "SELECT tripPlannerRequests.tripPlannerRequestID, tripPlannerRequests.timestampCreation, tripPlannerRequests.title, tripPlannerRequests.description, tripPlannerRequests.status, gibbonPerson.preferredName, gibbonPerson.surname FROM tripPlannerRequests JOIN gibbonPerson ON tripPlannerRequests.creatorPersonID = gibbonPerson.gibbonPersonID";
+        $sql = "SELECT tripPlannerRequests.tripPlannerRequestID, tripPlannerRequests.timestampCreation, tripPlannerRequests.title, tripPlannerRequests.description, tripPlannerRequests.status, gibbonPerson.preferredName, gibbonPerson.surname, gibbonPerson.gibbonPersonID FROM tripPlannerRequests LEFT JOIN gibbonPerson ON tripPlannerRequests.creatorPersonID = gibbonPerson.gibbonPersonID";
         $connector = " WHERE ";
 
         $relations = array();
         $relationFilter = "MR";
 
         if ($highestAction == "Manage Trips_full") {
-            $relations[] = "All Requests";
+            $relations[""] = "All Requests";
             $relationFilter = "";
         }
 
@@ -85,6 +83,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         if (isset($_POST["relationFilter"])) {
             $relationFilter = $_POST["relationFilter"];
         }
+
+        $eutFilter = getSettingByScope($connection2, "Trip Planner", "expiredUnapprovedFilter");
 
         //This must be the FIRST filter check!
         if ($relationFilter == "I") {
@@ -217,6 +217,13 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                         $show = false;
                     }
                 }
+
+                if ($eutFilter) {
+                    $startDate = getFirstDayOfTrip($connection2, $row["tripPlannerRequestID"]);
+                    if (strtotime($startDate) < mktime(0, 0, 0) && $row["status"] != "Approved") {
+                        $show = false;
+                    }
+                }
                 if ($show) {
                     $class = "odd";
                     if ($rowCount % 2 == 0) {
@@ -235,8 +242,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                             //print "<span style='font-size: 85%; font-style: italic'>" . dateConvertBack($guid, $row['timestampCreation']) . "</span>";          
                         print "</td>";
                         print "<td style='width:16.5%'>";
+                            //TODO: Add duplicate function
                             print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID=" . $row["tripPlannerRequestID"] . "'><img title='" . _('View') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/plus.png'/></a> ";
-                            if ($row["status"] != "Cancelled" && $row["status"] != "Rejected") {
+                            if ($row["status"] != "Cancelled" && $row["status"] != "Rejected" && $row['gibbonPersonID'] == $_SESSION[$guid]['gibbonPersonID']) {
                                 print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_submitRequest.php&mode=edit&tripPlannerRequestID=" . $row["tripPlannerRequestID"] . "'><img title='" . _('Edit') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/config.png'/></a> ";
                             }
                             if (($row["status"] == "Requested" && needsApproval($connection2, $row["tripPlannerRequestID"], $_SESSION[$guid]["gibbonPersonID"])) == 0 || ($row["status"] == "Awaiting Final Approval" && isApprover($connection2, $_SESSION[$guid]["gibbonPersonID"], true))) {

@@ -23,7 +23,7 @@ $description = "A trip planner module for Gibbon.";
 $entryURL = "trips_manage.php";
 $type = "Additional";
 $category = "Learn"; 
-$version = "0.2.01"; 
+$version = "0.2.11"; 
 $author = "Ray Clark"; 
 $url = "https://github.com/raynichc/Trip-Planner";
 
@@ -60,6 +60,7 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequests` (
     `timestampUpdate` timestamp NULL,
     `endDate` date NULL DEFAULT NULL,
     `letterToParents` text NOT NULL,
+    `messengerGroupID` int(8) unsigned zerofill NULL,
     PRIMARY KEY (`tripPlannerRequestID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
 
@@ -89,7 +90,8 @@ VALUES
 (NULL, 'Trip Planner', 'missedClassWarningThreshold', 'Missed Class Warning Threshold', 'The threshold for displaying a warning that student has missed a class too many times. Set to 0 to disable warnings.', '5'),
 (NULL, 'Trip Planner', 'riskAssessmentApproval', 'Risk Assessment Approval', 'If this is enabled the Risk Assessment becomes an optional field until the trip has gone through approval. After this a Final Approval is required before the trip becomes approved.', '1'),
 (NULL, 'Trip Planner', 'requestEditing', 'Allow Requests to be Edited', 'If enabled Trip Requests may be edited by the owner, if edited the approval process is reset.', '0'),
-(NULL, 'Trip Planner', 'defaultRiskTemplate', 'Default Risk Assessment Template', 'If selected then this template will be automatically applied to the form.', '0');";
+(NULL, 'Trip Planner', 'defaultRiskTemplate', 'Default Risk Assessment Template', 'If selected then this template will be automatically applied to the form.', '0'),
+(NULL, 'Trip Planner', 'expiredUnapprovedFilter', 'Disable View of Exipired Unapproved Requests', 'If selected then any trip which has not been approved and has passed the initial start date will no longer be shown.', '0');";
 
 $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestPerson` (
     `tripPlannerRequestPersonID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
@@ -104,7 +106,7 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestCover` (
     `tripPlannerRequestID` int(7) unsigned zerofill NOT NULL,
     `gibbonCourseClassID` int(8) unsigned zerofill NOT NULL,
     `requiresCover` boolean DEFAULT TRUE NOT NULL,
-    `date` date NOT NULL
+    `date` date NOT NULL,
     PRIMARY KEY (`tripPlannerRequestCoverID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
 
@@ -125,8 +127,6 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestDays` (
     `endTime` time NOT NULL DEFAULT '00:00:00',
     PRIMARY KEY (`tripPlannerRequestDaysID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
-
-$moduleTables[$tables++] = "ALTER TABLE `gibbonCourseClassPerson` ADD INDEX `tripCourseClassPersonID` (`gibbonPersonID`)";
 
 //Actions
 $actionCount = 0;

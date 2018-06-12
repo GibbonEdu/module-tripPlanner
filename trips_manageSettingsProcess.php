@@ -1,19 +1,11 @@
 <?php
 
-@session_start();
-
 //Module includes
-include "../../functions.php";
-include "../../config.php";
+include '../../gibbon.php';
 
 include "./moduleFunctions.php";
 
-date_default_timezone_set($_SESSION[$guid]["timezone"]);
-
 $URL = $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_manageSettings.php";
-
-$pdo = new Gibbon\sqlConnection();
-$connection2 = $pdo->getConnection();
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manageSettings.php')) {
     //Acess denied
@@ -22,7 +14,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     exit();
 } else {
 
-    $settings = array("requestApprovalType", "riskAssessmentTemplate", "missedClassWarningThreshold", "riskAssessmentApproval", "defaultRiskTemplate");
+    $settings = array("requestApprovalType", "riskAssessmentTemplate", "missedClassWarningThreshold", "riskAssessmentApproval", "defaultRiskTemplate", "expiredUnapprovedFilter");
 
     foreach ($settings as $setting) {
         $value = null;
@@ -30,15 +22,19 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             if ($_POST[$setting] != null && $_POST[$setting] != "") {
                 if($setting == "missedClassWarningThreshold") {
                     $value = abs($_POST[$setting]);
+                } else if($setting == "riskAssessmentApproval" || $setting == "expiredUnapprovedFilter") {
+                    $value = 1;
                 } else {
                     $value = $_POST[$setting];
                 }
             }
-        } else if($setting == "riskAssessmentApproval") {
+        } else if($setting == "riskAssessmentApproval" || $setting == "expiredUnapprovedFilter") {
             $value = 0;
         }
 
-        if ($value === null) {
+        print $setting . " " . $value;
+
+        if ($value === null && $setting != "riskAssessmentTemplate") {
             $URL .= "&return=error1";
             header("Location: {$URL}");
             exit();
