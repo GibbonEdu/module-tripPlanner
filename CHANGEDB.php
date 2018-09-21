@@ -86,9 +86,7 @@ ALTER TABLE `gibbonCourseClassPerson` ADD INDEX `tripCourseClassPersonID` (`gibb
 ALTER TABLE `tripPlannerRequestCover` ADD COLUMN `date` date NOT NULL;end";
 
 $sql[$count][0]="0.2.01";
-$sql[$count++][1]="
-
-";
+$sql[$count++][1]="";
 
 $sql[$count][0]="0.2.10";
 $sql[$count++][1]="
@@ -98,6 +96,11 @@ ALTER TABLE `tripPlannerRequests` ADD COLUMN `messengerGroupID` int(8) unsigned 
 $sql[$count][0]="0.2.11";
 $sql[$count++][1]="
 INSERT INTO gibbonSetting SET scope='Trip Planner', name='expiredUnapprovedFilter', nameDisplay='Disable View of Exipired Unapproved Requests', description='If selected then any trip which has not been approved and has passed the initial start date will no longer be shown.', value='0';end
+";
+
+$sql[$count][0]="0.2.12";
+$sql[$count++][1]="
+INSERT INTO gibbonSetting SET scope='Trip Planner', name='letterToParentsTemplate', nameDisplay='Letter To Parents Template', description='Template text for Letter To Parents for new trips.', value='';end
 ";
 
 ?>

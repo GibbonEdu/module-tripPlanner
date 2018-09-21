@@ -14,7 +14,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     exit();
 } else {
 
-    $settings = array("requestApprovalType", "riskAssessmentTemplate", "missedClassWarningThreshold", "riskAssessmentApproval", "defaultRiskTemplate", "expiredUnapprovedFilter");
+    $settings = array("requestApprovalType", "riskAssessmentTemplate", "missedClassWarningThreshold", "riskAssessmentApproval", "defaultRiskTemplate", "expiredUnapprovedFilter", "letterToParentsTemplate");
 
     foreach ($settings as $setting) {
         $value = null;
@@ -32,9 +32,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             $value = 0;
         }
 
-        print $setting . " " . $value;
-
-        if ($value === null && $setting != "riskAssessmentTemplate") {
+        if ($value === null && ($setting != "riskAssessmentTemplate" && $setting != "letterToParentsTemplate")) {
             $URL .= "&return=error1";
             header("Location: {$URL}");
             exit();

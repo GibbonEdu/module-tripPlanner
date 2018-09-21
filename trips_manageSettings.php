@@ -64,7 +64,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     while ($row = $result->fetch()) {
         if ($row["name"] == "requestEditing") continue;
         $fRow = $form->addRow();
-            if ($row["name"] == "riskAssessmentTemplate") {
+            if ($row["name"] == "riskAssessmentTemplate" || $row["name"] == "letterToParentsTemplate") {
                 $col = $fRow->addColumn();
                 $col->addLabel($row["name"], $row["nameDisplay"])->description($row["description"]);
             } else {
@@ -76,7 +76,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                     $fRow->addSelect($row["name"])->fromArray(array("One Of", "Two Of", "Chain Of All"))->selected($row["value"])->setRequired(true);
                     break;
                 case "riskAssessmentTemplate":
-                    $col->addEditor($row["name"], $guid)->setValue($row["value"])->setRows(25);
+                    $col->addEditor($row["name"], $guid)->setValue($row["value"])->setRows(15);
                     break;
                 case "missedClassWarningThreshold":
                     $fRow->addNumber($row["name"])->minimum(0)->setRequired(true)->decimalPlaces(0)->setValue($row["value"]);
@@ -87,6 +87,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                     break;
                 case "defaultRiskTemplate":
                     $fRow->addSelect($row["name"])->fromArray($templates)->selected($row["value"])->setRequired(true);
+                    break;
+                case "letterToParentsTemplate":
+                    $col->addEditor($row["name"], $guid)->setValue($row["value"])->setRows(15);
                     break;
                 default:
                     break;

@@ -141,3 +141,7 @@ Added validation to multi day input.
 v0.2.11
 -------
 Added setting to disable the view of expired unapproved trips.
+
+v0.2.12
+-------
+Added template for parent letter

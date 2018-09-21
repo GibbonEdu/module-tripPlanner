@@ -23,7 +23,7 @@ $description = "A trip planner module for Gibbon.";
 $entryURL = "trips_manage.php";
 $type = "Additional";
 $category = "Learn"; 
-$version = "0.2.11"; 
+$version = "0.2.12"; 
 $author = "Ray Clark"; 
 $url = "https://github.com/raynichc/Trip-Planner";
 
@@ -91,7 +91,8 @@ VALUES
 (NULL, 'Trip Planner', 'riskAssessmentApproval', 'Risk Assessment Approval', 'If this is enabled the Risk Assessment becomes an optional field until the trip has gone through approval. After this a Final Approval is required before the trip becomes approved.', '1'),
 (NULL, 'Trip Planner', 'requestEditing', 'Allow Requests to be Edited', 'If enabled Trip Requests may be edited by the owner, if edited the approval process is reset.', '0'),
 (NULL, 'Trip Planner', 'defaultRiskTemplate', 'Default Risk Assessment Template', 'If selected then this template will be automatically applied to the form.', '0'),
-(NULL, 'Trip Planner', 'expiredUnapprovedFilter', 'Disable View of Exipired Unapproved Requests', 'If selected then any trip which has not been approved and has passed the initial start date will no longer be shown.', '0');";
+(NULL, 'Trip Planner', 'expiredUnapprovedFilter', 'Disable View of Exipired Unapproved Requests', 'If selected then any trip which has not been approved and has passed the initial start date will no longer be shown.', '0'),
+(NULL, 'Trip Planner', 'letterToParentsTemplate', 'Letter To Parents Template', 'Template text for Letter To Parents for new trips.', '')";
 
 $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestPerson` (
     `tripPlannerRequestPersonID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,

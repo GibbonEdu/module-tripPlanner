@@ -484,10 +484,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             $column->addLabel("riskAssessment", "Risk Assessment");
             $column->addEditor("riskAssessment", $guid)->setRequired(true)->showMedia(true)->setRows(25)->setValue($edit ? $trip["riskAssessment"] : $templates[$defaultRiskTemplate]);
 
+    $letterToParentsTemplate = getSettingByScope($connection2, "Trip Planner", "letterToParentsTemplate");
     $row = $form->addRow();
         $column = $row->addColumn();
             $column->addLabel("letterToParents", "Letter to Parents");
-            $column->addEditor("letterToParents", $guid)->showMedia(true)->setRows(25)->setValue($edit ? $trip['letterToParents'] : '');
+            $column->addEditor("letterToParents", $guid)->showMedia(true)->setRows(25)->setValue($edit ? $trip['letterToParents'] : $letterToParentsTemplate);
 
     $row = $form->addRow();
         $row->addHeading("Participants");
