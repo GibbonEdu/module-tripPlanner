@@ -24,9 +24,7 @@ $page->breadcrumbs->add(__('Manage Trip Requests'), 'trips_manage.php');
 $page->breadcrumbs->add(__('View Request'));
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php')) {
-    print "<div class='error'>";
-        print "You do not have access to this action.";
-    print "</div>";
+    $page->addError(__("You do not have access to this action."));
 } else {
 
     if (isset($_GET['return'])) {
@@ -53,14 +51,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             if (isApprover($connection2, $gibbonPersonID) || isOwner($connection2, $tripPlannerRequestID, $gibbonPersonID) || isInvolved($connection2, $tripPlannerRequestID, $gibbonPersonID) || $isHOD || $highestAction == "Manage Trips_full") {
                 renderTrip($guid, $connection2, $tripPlannerRequestID, false);
             } else {
-                print "<div class='error'>";
-                    print "You do not have access to this action.";
-                print "</div>";
+                $page->addError(__('You do not have access to this action.'));
             }
         } else {    
             print "<div class='error'>";
-                print "No request selected.";
-            print "</div>";
+            $page->addError(__('No request selected.'));
         }
     }
 }   

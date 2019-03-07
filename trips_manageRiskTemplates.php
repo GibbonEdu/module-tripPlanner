@@ -21,9 +21,7 @@ include "./modules/Trip Planner/moduleFunctions.php";
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manageRiskTemplates.php')) {
     //Acess denied
-    print "<div class='error'>";
-        print "You do not have access to this action.";
-    print "</div>";
+    $page->addError(__("You do not have access to this action."));
 } else {
     $page->breadcrumbs->add(__('Risk Assessment Templates'));
 

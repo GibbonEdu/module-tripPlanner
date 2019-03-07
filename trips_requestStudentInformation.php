@@ -23,9 +23,7 @@ include "./modules/Trip Planner/moduleFunctions.php";
 use Gibbon\Forms\Form;
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php')) {
-    print "<div class='error'>";
-        print "You do not have access to this action.";
-    print "</div>";
+    $page->addError(__("You do not have access to this action."));
 } else {
     if (isset($_GET['return'])) {
         returnProcess($guid, $_GET['return'], null, null);
@@ -59,16 +57,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                         
 
                     } else {
-                        print "<div class='error'>";
-                            print "You do not have access to this action.";
-                        print "</div>";
+                        $page->addError(__('You do not have access to this action.'));
                     }
                 }
             }
         } else {    
-            print "<div class='error'>";
-                print "No request selected.";
-            print "</div>";
+            $page->addError(__('No request selected.'));
         }
     }
 }   

@@ -22,9 +22,7 @@ include "./modules/Trip Planner/moduleFunctions.php";
 use Gibbon\Forms\Form;
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php')) {
-    print "<div class='error'>";
-        print "You do not have access to this action.";
-    print "</div>";
+    $page->addError(__("You do not have access to this action."));
 } else {
     $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
     if ($highestAction != false) {
@@ -268,9 +266,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         </table>
         <?php
     } else {
-        print "<div class='error'>";
-            print "Highest grouped action could not be determined.";
-        print "</div>";
+        $page->addError(__("Highest grouped action could not be determined."));
     }
 }   
 ?>

@@ -31,9 +31,7 @@ if (isset($_GET['mode']) && isset($_GET['tripPlannerRequestID'])) {
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submitRequest.php') || ($edit && !isOwner($connection2, $tripPlannerRequestID, $_SESSION[$guid]['gibbonPersonID']))) {
     //Acess denied
-    print "<div class='error'>";
-        print "You do not have access to this action.";
-    print "</div>";
+    $page->addError(__("You do not have access to this action."));
 } else {
 
     if ($edit) {
