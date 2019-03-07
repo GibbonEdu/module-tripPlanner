@@ -38,9 +38,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         }
     }
 
-    print "<div class='trail'>";
-        print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . __("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . __(getModuleName($_GET["q"])) . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_manageRiskTemplates.php'>" . __("Risk Assessment Templates") . "</a> > </div><div class='trailEnd'>" . __(($edit ? "Edit" : "Add") . ' Risk Assessment Templates') . "</div>";
-    print "</div>";
+    $page->breadcrumbs->add(__('Risk Assessment Templates'), 'trips_manageRiskTemplates.php');
+    $page->breadcrumbs->add($edit ? __('Edit Risk Assessment Templates') : __('Add Risk Assessment Templates'));
 
     print "<h3>";
         print __(($edit ? "Edit" : "Add") . " Risk Assessment Template");

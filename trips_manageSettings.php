@@ -27,9 +27,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         print "You do not have access to this action.";
     print "</div>";
 } else {
-    print "<div class='trail'>";
-        print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . __("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . __(getModuleName($_GET["q"])) . "</a> > </div><div class='trailEnd'>" . __('Manage Settings') . "</div>";
-    print "</div>";
+    $page->breadcrumbs->add(__('Manage Settings'));
 
     print "<h3>";
         print "Settings";

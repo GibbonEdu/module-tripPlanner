@@ -27,9 +27,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
 } else {
     $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manageApprovers.php', $connection2);
     if ($highestAction != false) {
-        print "<div class='trail'>";
-            print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . __("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . __(getModuleName($_GET["q"])) . "</a> > </div><div class='trailEnd'>" . __('Manage Approvers') . "</div>";
-        print "</div>";
+        $page->breadcrumbs->add(__('Manage Approvers'));
 
         if (isset($_GET['return'])) {
             returnProcess($guid, $_GET['return'], null, null);

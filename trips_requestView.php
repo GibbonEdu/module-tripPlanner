@@ -20,9 +20,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 //Module includes
 include "./modules/Trip Planner/moduleFunctions.php";
 
-print "<div class='trail'>";
-    print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . __("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . __(getModuleName($_GET["q"])) . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_manage.php'>" . __("Manage Trip Requests") . "</a> > </div><div class='trailEnd'>" . __('View Request') . "</div>";
-print "</div>";
+$page->breadcrumbs->add(__('Manage Trip Requests'), 'trips_manage.php');
+$page->breadcrumbs->add(__('View Request'));
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php')) {
     print "<div class='error'>";

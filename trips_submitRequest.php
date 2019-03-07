@@ -51,9 +51,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         }
     }
 
-    print "<div class='trail'>";
-        print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . __("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . __(getModuleName($_GET["q"])) . "</a> > </div><div class='trailEnd'>" . __(($edit ? "Edit" : "Submit") . ' Trip Request') . "</div>";
-    print "</div>";
+    $page->breadcrumbs->add($edit ? __('Edit Trip Request') : __('Submit Trip Request'));
 
     if (isset($_GET['return'])) {
         $editLink = null;
