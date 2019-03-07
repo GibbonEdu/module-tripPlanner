@@ -23,7 +23,7 @@ include './modules/Trip Planner/moduleFunctions.php';
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php')) {
     //Acess denied
     echo "<div class='error'>";
-    echo __($guid, 'You do not have access to this action.');
+    echo __('You do not have access to this action.');
     echo '</div>';
 } else {    
     $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
@@ -49,10 +49,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                     <tr>
                         <?php
                             echo '<h2>';
-                                echo __($guid, 'Students in Trip');
+                                echo __('Students in Trip');
                             echo '</h2>';
                             echo "<div class='linkTop'>";
-                                echo "<a href='javascript:window.print()'>".__($guid, 'Print')."<img style='margin-left: 5px' title='".__($guid, 'Print')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/print.png'/></a>";
+                                echo "<a href='javascript:window.print()'>".__('Print')."<img style='margin-left: 5px' title='".__('Print')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/print.png'/></a>";
                             echo '</div>';
                             $students = array();
                             $peopleInTrip = getPeopleInTrip($connection2, array($tripPlannerRequestID), "Student");

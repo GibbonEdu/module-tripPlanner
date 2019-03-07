@@ -39,11 +39,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     }
 
     print "<div class='trail'>";
-        print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . _("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . _(getModuleName($_GET["q"])) . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_manageRiskTemplates.php'>" . _("Risk Assessment Templates") . "</a> > </div><div class='trailEnd'>" . _(($edit ? "Edit" : "Add") . ' Risk Assessment Templates') . "</div>";
+        print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . __("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . __(getModuleName($_GET["q"])) . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_manageRiskTemplates.php'>" . __("Risk Assessment Templates") . "</a> > </div><div class='trailEnd'>" . __(($edit ? "Edit" : "Add") . ' Risk Assessment Templates') . "</div>";
     print "</div>";
 
     print "<h3>";
-        print __($guid, ($edit ? "Edit" : "Add") . " Risk Assessment Template");
+        print __(($edit ? "Edit" : "Add") . " Risk Assessment Template");
     print "</h3>";
 
     if (isset($_GET['return'])) {

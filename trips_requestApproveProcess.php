@@ -104,7 +104,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                             exit();
                         }
 
-                        $message = __($guid, 'A trip request is awaiting your approval.');
+                        $message = __('A trip request is awaiting your approval.');
                         setNotification($connection2, $guid, $result->fetch()["gibbonPersonID"], $message, 'Trip Planner', "/index.php?q=/modules/Trip Planner/trips_requestApprove.php&tripPlannerRequestID=$tripPlannerRequestID");
                     }
 
