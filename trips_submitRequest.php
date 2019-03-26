@@ -147,7 +147,25 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         $activities["Activity:" . $rowSelect['gibbonActivityID']] = htmlPrep($rowSelect['name']);
     }
 
-    $groups = array("By Class" => $classes, "By Activity" => $activities);
+    try {
+        if ($highestAction2 == 'Submit Request_all') {
+            $dataSelect = array('gibbonSchoolYearID' => $_SESSION[$guid]['gibbonSchoolYearID']);
+            $sqlSelect = 'SELECT gibbonGroupID, name FROM gibbonGroup WHERE gibbonSchoolYearID=:gibbonSchoolYearID ORDER BY name ASC';
+        } else {
+            $dataSelect = array('gibbonSchoolYearID' => $_SESSION[$guid]['gibbonSchoolYearID'], 'gibbonPersonID' => $_SESSION[$guid]['gibbonPersonID']);
+            $sqlSelect = "SELECT gibbonGroupID, name FROM gibbonGroup WHERE gibbonSchoolYearID=:gibbonSchoolYearID AND gibbonPersonIDOwner=:gibbonPersonID ORDER BY name ASC";
+        }
+        $resultSelect = $connection2->prepare($sqlSelect);
+        $resultSelect->execute($dataSelect);
+    } catch (PDOException $e) {
+    }
+
+    $groups = array();
+    while ($rowSelect = $resultSelect->fetch()) {
+        $groups["Group:" . $rowSelect['gibbonGroupID']] = htmlPrep($rowSelect['name']);
+    }
+
+    $groups = array("By Class" => $classes, "By Activity" => $activities, "By Group" => $groups);
     ?>
 
     <script type="text/javascript">
@@ -506,12 +524,17 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             $multiSelect->addSortableAttribute("Form", $studentsForm);
 
     $row = $form->addRow();
-        $row->addLabel("addByGroup", "Add by Group")->description("Add or remove students to trip by Class or Activity (scroll down for activities).");
+        $row->addLabel("addByGroup", "Add by Group")->description("Add or remove students to trip by Class, Activity or Messenger Group.");
         $column = $row->addColumn()->addClass("right");
             $column->addSelect("addStudentsByClass")->fromArray($groups)->placeholder("None");
             $column->addButton("Add", "addClass('Add')")->addClass("shortWidth")->setID("addButton");
             $column->addButton("Remove", "addClass('Remove')")->addClass("shortWidth")->setID("removeButton");
-            
+
+    if (!$edit) {
+        $row = $form->addRow();
+            $row->addLabel('createGroup', __('Create Messenger Group?'));
+            $row->addYesNo('createGroup')->selected('N');
+    }
 
     $row = $form->addRow();
         $row->addFooter();

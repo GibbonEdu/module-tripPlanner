@@ -145,3 +145,7 @@ Added setting to disable the view of expired unapproved trips.
 v0.2.12
 -------
 Added template for parent letter
+
+v0.2.13
+-------
+Added Messenger Group to Add by Group in trip submission

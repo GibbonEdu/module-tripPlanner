@@ -30,8 +30,15 @@ if ($type == "Add") {
 
 try {
     $data = array("id" => $addInfo[1]);
-    if ($addInfo[0] == "Class") $sql = "SELECT gibbonPersonID FROM gibbonCourseClassPerson WHERE gibbonCourseClassID=:id AND role='Student'";
-    else $sql = "SELECT gibbonPersonID FROM gibbonActivityStudent WHERE gibbonActivityID=:id AND status='Accepted'";
+    if ($addInfo[0] == "Class") {
+        $sql = "SELECT gibbonPersonID FROM gibbonCourseClassPerson WHERE gibbonCourseClassID=:id AND role='Student'";
+    }
+    else if ($addInfo[0] == "Activity") { 
+        $sql = "SELECT gibbonPersonID FROM gibbonActivityStudent WHERE gibbonActivityID=:id AND status='Accepted'";
+    }
+    else { //Group
+        $sql = "SELECT gibbonGroupPerson.gibbonPersonID FROM gibbonGroupPerson JOIN gibbonPerson ON (gibbonGroupPerson.gibbonPersonID=gibbonPerson.gibbonPersonID) WHERE gibbonGroupID=:id AND gibbonPerson.status='Full'";
+    }
     $result = $connection2->prepare($sql);
     $result->execute($data);
     $students = array();

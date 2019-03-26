@@ -103,4 +103,7 @@ $sql[$count++][1]="
 INSERT INTO gibbonSetting SET scope='Trip Planner', name='letterToParentsTemplate', nameDisplay='Letter To Parents Template', description='Template text for Letter To Parents for new trips.', value='';end
 ";
 
+$sql[$count][0]="0.2.13";
+$sql[$count++][1]="";
+
 ?>
