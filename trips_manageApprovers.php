@@ -21,15 +21,11 @@ include "./modules/Trip Planner/moduleFunctions.php";
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manageApprovers.php')) {
     //Acess denied
-    print "<div class='error'>";
-        print "You do not have access to this action.";
-    print "</div>";
+    $page->addError(__("You do not have access to this action."));
 } else {
     $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manageApprovers.php', $connection2);
     if ($highestAction != false) {
-        print "<div class='trail'>";
-            print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . _("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . _(getModuleName($_GET["q"])) . "</a> > </div><div class='trailEnd'>" . _('Manage Approvers') . "</div>";
-        print "</div>";
+        $page->breadcrumbs->add(__('Manage Approvers'));
 
         if (isset($_GET['return'])) {
             returnProcess($guid, $_GET['return'], null, null);
@@ -45,30 +41,30 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
 
         if ($actionsAllowed) {
             print "<div class='linkTop'>";
-                print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_addApprover.php'>" .  _('Add') . "<img style='margin-left: 5px' title='" . _('Add') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/page_new.png'/></a>";
+                print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_addApprover.php'>" .  __('Add') . "<img style='margin-left: 5px' title='" . __('Add') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/page_new.png'/></a>";
             print "</div>";
         }
 
         print "<table cellspacing='0' style='width: 100%'>";
             print "<tr class='head'>";
                 print "<th>";
-                    print _("Name");
+                    print __("Name");
                 print "</th>";
                 $expenseApprovalType = getSettingByScope($connection2, "Trip Planner", "requestApprovalType");
                 if ($expenseApprovalType == "Chain Of All") {
                     print "<th>";
-                        print _("Sequence Number");
+                        print __("Sequence Number");
                     print "</th>";
                 }
                 $riskAssessmentApproval = getSettingByScope($connection2, "Trip Planner", "riskAssessmentApproval");
                 if($riskAssessmentApproval) {
                     print "<th>";
-                        print _("Is a Final Approver?");
+                        print __("Is a Final Approver?");
                     print "</th>";
                 }
                 if ($actionsAllowed) {
                     print "<th>";
-                        print _("Action");
+                        print __("Action");
                     print "</th>";
                 }
             print "</tr>";
@@ -96,10 +92,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                         }
                         if ($actionsAllowed) {
                             print "<td>";
-                                print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_editApprover.php&tripPlannerApproverID=" . $approver["tripPlannerApproverID"] . "'><img title='" . _('Edit') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/config.png'/></a> ";
+                                print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_editApprover.php&tripPlannerApproverID=" . $approver["tripPlannerApproverID"] . "'><img title='" . __('Edit') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/config.png'/></a> ";
 
                                 if ($highestAction == "Manage Approvers_full") {
-                                    print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/modules/Trip Planner/trips_deleteApproverProcess.php?tripPlannerApproverID=" . $approver["tripPlannerApproverID"] . "'><img title='" . _('Delete') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/garbage.png'/></a> ";
+                                    print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/modules/Trip Planner/trips_deleteApproverProcess.php?tripPlannerApproverID=" . $approver["tripPlannerApproverID"] . "'><img title='" . __('Delete') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/garbage.png'/></a> ";
                                 }
                             print "</td>";
                         }
@@ -122,7 +118,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                     }
 
                     print "<td colspan=$colspan>";
-                        print _("There are no records to display.");
+                        print __("There are no records to display.");
                     print "</td>";
                 print "</tr>";
             }

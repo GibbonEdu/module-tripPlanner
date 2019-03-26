@@ -389,23 +389,23 @@ function getRequestLog($guid, $connection2, $tripPlannerRequestID, $commentsOpen
 
     if ($result->rowCount() < 1) {
         echo "<div class='error'>";
-            echo __($guid, 'There are no records to display.');
+            echo __('There are no records to display.');
         echo '</div>';
     } else {
         echo "<table cellspacing='0' style='width: 100%'>";
             echo "<tr class='head'>";
                 echo '<th>';
-                    echo __($guid, 'Person');
+                    echo __('Person');
                 echo '</th>';
                 echo '<th>';
-                    echo __($guid, 'Date');
+                    echo __('Date');
                 echo '</th>';
                 echo '<th>';
-                    echo __($guid, 'Event');
+                    echo __('Event');
                 echo '</th>';
                 if ($commentsOpen == false) {
                     echo '<th>';
-                        echo __($guid, 'Actions');
+                        echo __('Actions');
                     echo '</th>';
                 }
             echo '</tr>';
@@ -443,7 +443,7 @@ function getRequestLog($guid, $connection2, $tripPlannerRequestID, $commentsOpen
                                 echo '});';
                             echo '</script>';
                             if ($row['comment'] != '') {
-                                echo "<a title='".__($guid, 'View Description')."' class='show_hide-$count' onclick='false' href='#'><img style='padding-right: 5px' src='".$_SESSION[$guid]['absoluteURL'].'/themes/'.$_SESSION[$guid]['gibbonThemeName']."/img/page_down.png' alt='".__($guid, 'Show Comment')."' onclick='return false;' /></a>";
+                                echo "<a title='".__('View Description')."' class='show_hide-$count' onclick='false' href='#'><img style='padding-right: 5px' src='".$_SESSION[$guid]['absoluteURL'].'/themes/'.$_SESSION[$guid]['gibbonThemeName']."/img/page_down.png' alt='".__('Show Comment')."' onclick='return false;' /></a>";
                             }
                         echo '</td>';
                     }
@@ -525,7 +525,7 @@ function getPersonBlock($guid, $connection2, $gibbonPersonID, $role, $numPerRow=
                                     if ($rowMember['phone'.$i.'CountryCode'] != '') {
                                         print '+'.$rowMember['phone'.$i.'CountryCode'].' ';
                                     }
-                                    print __($guid, $rowMember['phone'.$i]).'<br/>';
+                                    print __($rowMember['phone'.$i]).'<br/>';
                                 }
                             }
                         }
@@ -551,13 +551,13 @@ function requestNotification($guid, $connection2, $tripPlannerRequestID, $gibbon
     $ownerOnly = true;
     
     if ($action == "Approved") {
-        $message = __($guid, 'Your trip request has been fully approved.');
+        $message = __('Your trip request has been fully approved.');
     } elseif ($action == "Awaiting Final Approval") {
-        $message = __($guid, 'Your trip request is awaiting final approval.');
+        $message = __('Your trip request is awaiting final approval.');
     } elseif ($action == "Rejected") {
-        $message = __($guid, 'Your trip request has been rejected.');
+        $message = __('Your trip request has been rejected.');
     } else {
-        $message = __($guid, 'Someone has commented on a trip request.');
+        $message = __('Someone has commented on a trip request.');
         $ownerOnly = false;
     }
 
@@ -733,11 +733,11 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
 
             if (isOwner($connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"])) {
                 echo "<div class='linkTop'>";
-                    echo "<a href='".$_SESSION[$guid]['absoluteURL']."/index.php?q=/modules/Trip Planner/trips_submitRequest.php&mode=edit&tripPlannerRequestID=$tripPlannerRequestID'>".__($guid, 'Edit')."<img style='margin-left: 5px' title='".__($guid, 'Edit')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/config.png'/></a>";
+                    echo "<a href='".$_SESSION[$guid]['absoluteURL']."/index.php?q=/modules/Trip Planner/trips_submitRequest.php&mode=edit&tripPlannerRequestID=$tripPlannerRequestID'>".__('Edit')."<img style='margin-left: 5px' title='".__('Edit')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/config.png'/></a>";
                 echo '</div>';
             } else if ($approveMode) {
                 echo "<div class='linkTop'>";
-                    echo "<a href='".$_SESSION[$guid]['absoluteURL']."/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID=$tripPlannerRequestID'>".__($guid, 'View')."<img style='margin-left: 5px' title='".__($guid, 'View')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/plus.png'/></a>";
+                    echo "<a href='".$_SESSION[$guid]['absoluteURL']."/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID=$tripPlannerRequestID'>".__('View')."<img style='margin-left: 5px' title='".__('View')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/plus.png'/></a>";
                 echo '</div>';
             }
 
@@ -748,7 +748,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                         <td colspan=2>
                             <h3>
                                 Basic Information
-                                <?php print "<div id='showBasic'  title='" . __($guid, 'Show/Hide') . "' style='margin-top: -5px; margin-left: 3px; padding-right: 1px; float: right; width: 23px; height: 25px; background-image: url(\"" . $_SESSION[$guid]["absoluteURL"] . "/themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/minus.png\")'></div>"; ?>
+                                <?php print "<div id='showBasic'  title='" . __('Show/Hide') . "' style='margin-top: -5px; margin-left: 3px; padding-right: 1px; float: right; width: 23px; height: 25px; background-image: url(\"" . $_SESSION[$guid]["absoluteURL"] . "/themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/minus.png\")'></div>"; ?>
                             </h3>
                             <script type="text/javascript">
                                 $(document).ready(function(){
@@ -768,7 +768,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                     <tbody id='basicInfo'>
                         <tr>
                             <td> 
-                                <b><?php echo __($guid, 'Title') ?> *</b><br/>
+                                <b><?php echo __('Title') ?> *</b><br/>
                             </td>
                             <td class="right">
                                 <input readonly name="title" id="title" maxlength=60 value="<?php echo $request['title']; ?>" type="text" class="standardWidth">
@@ -776,7 +776,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                         </tr>
                         <tr>
                             <td colspan=2> 
-                                <b><?php echo __($guid, 'Description') ?></b>
+                                <b><?php echo __('Description') ?></b>
                                 <?php 
                                     echo '<p>';
                                     echo $request['description'];
@@ -786,7 +786,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                         </tr>
                         <tr>
                             <td> 
-                                <b><?php echo __($guid, 'Location') ?> *</b><br/>
+                                <b><?php echo __('Location') ?> *</b><br/>
                             </td>
                             <td class="right">
                                 <input readonly name="location" id="location" maxlength=60 value="<?php echo $request['location']; ?>" type="text" class="standardWidth">
@@ -794,7 +794,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                         </tr>
                         <tr>
                             <td> 
-                                <b><?php echo __($guid, 'Status') ?> *</b><br/>
+                                <b><?php echo __('Status') ?> *</b><br/>
                             </td>
                             <td class="right">
                                 <input readonly name="status" id="status" maxlength=60 value="<?php echo $request['status']; ?>" type="text" class="standardWidth">
@@ -805,7 +805,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                         <td colspan=2>
                             <h3>
                                 Date & Time
-                                <?php print "<div id='showDate'  title='" . __($guid, 'Show/Hide') . "' style='margin-top: -5px; margin-left: 3px; padding-right: 1px; float: right; width: 23px; height: 25px; background-image: url(\"" . $_SESSION[$guid]["absoluteURL"] . "/themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/minus.png\")'></div>"; ?>
+                                <?php print "<div id='showDate'  title='" . __('Show/Hide') . "' style='margin-top: -5px; margin-left: 3px; padding-right: 1px; float: right; width: 23px; height: 25px; background-image: url(\"" . $_SESSION[$guid]["absoluteURL"] . "/themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/minus.png\")'></div>"; ?>
                             </h3>
                             <script type="text/javascript">
                                 $(document).ready(function(){
@@ -877,8 +877,8 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                             $riskAssessmentApproval = getSettingByScope($connection2, "Trip Planner", "riskAssessmentApproval");
                         ?>
                             <h3>
-                                <?php echo __($guid, 'Risk Assessment & Communication') ?>
-                                <?php print "<div id='showRisk'  title='" . __($guid, 'Show/Hide') . "' style='margin-top: -5px; margin-left: 3px; padding-right: 1px; float: right; width: 23px; height: 25px; background-image: url(\"" . $_SESSION[$guid]["absoluteURL"] . "/themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/minus.png\")'></div>"; ?>
+                                <?php echo __('Risk Assessment & Communication') ?>
+                                <?php print "<div id='showRisk'  title='" . __('Show/Hide') . "' style='margin-top: -5px; margin-left: 3px; padding-right: 1px; float: right; width: 23px; height: 25px; background-image: url(\"" . $_SESSION[$guid]["absoluteURL"] . "/themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/minus.png\")'></div>"; ?>
                             </h3>
                             <script type="text/javascript">
                                 $(document).ready(function(){
@@ -898,7 +898,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                     <tbody id='riskInfo'>
                         <tr>
                             <td colspan=2> 
-                                <b><?php echo __($guid, 'Risk Assessment') ?></b>
+                                <b><?php echo __('Risk Assessment') ?></b>
                                 <?php 
                                     echo '<p>';
                                     echo $request['riskAssessment'];
@@ -908,14 +908,14 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                         </tr>
                         <tr>
                             <td colspan=2> 
-                                <b><?php echo __($guid, 'Letter To Parents') ?></b>
+                                <b><?php echo __('Letter To Parents') ?></b>
                                 <?php
                                     //TODO: make buttons works
                                     // echo "<div class='linkTop' style='margin-top:-20px'>";
                                     //     if(isActionAccessible($guid, $connection2, "/modules/Messenger/messenger_post.php", "New Message_readReceipts")) {
-                                    //         echo "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/modules/Trip Planner/trips_requestExternalReportProcess.php?tripPlannerRequestID=$tripPlannerRequestID&report=medical'>".__($guid, 'Send to Parents')."<img style='margin-right: 10px;margin-left: 5px' title='".__($guid, 'Send to Parents')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/delivery2.png'/></a>";
+                                    //         echo "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/modules/Trip Planner/trips_requestExternalReportProcess.php?tripPlannerRequestID=$tripPlannerRequestID&report=medical'>".__('Send to Parents')."<img style='margin-right: 10px;margin-left: 5px' title='".__('Send to Parents')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/delivery2.png'/></a>";
                                     //     }
-                                    //     echo "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/report.php?q=/modules/Trip Planner/trips_letterToParents.php&tripPlannerRequestID=$tripPlannerRequestID'>".__($guid, 'Print')."<img style='margin-left: 5px' title='".__($guid, 'Print')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/print.png'/></a>";
+                                    //     echo "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/report.php?q=/modules/Trip Planner/trips_letterToParents.php&tripPlannerRequestID=$tripPlannerRequestID'>".__('Print')."<img style='margin-left: 5px' title='".__('Print')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/print.png'/></a>";
                                     // echo '</div>';
                                     echo '<p>';
                                     echo $request['letterToParents'];
@@ -928,7 +928,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                         <td colspan=2>
                             <h3>
                                 Participants
-                                <?php print "<div id='showPeople'  title='" . __($guid, 'Show/Hide') . "' style='margin-top: -5px; margin-left: 3px; padding-right: 1px; float: right; width: 23px; height: 25px; background-image: url(\"" . $_SESSION[$guid]["absoluteURL"] . "/themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/minus.png\")'></div>"; ?>
+                                <?php print "<div id='showPeople'  title='" . __('Show/Hide') . "' style='margin-top: -5px; margin-left: 3px; padding-right: 1px; float: right; width: 23px; height: 25px; background-image: url(\"" . $_SESSION[$guid]["absoluteURL"] . "/themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/minus.png\")'></div>"; ?>
                             </h3>
                             <script type="text/javascript">
                                 $(document).ready(function(){
@@ -948,7 +948,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                     <tbody id="peopleInfo">
                         <tr>
                             <td colspan=2>
-                                <b><?php echo __($guid, 'Teachers') ?></b>
+                                <b><?php echo __('Teachers') ?></b>
                                 <table class='noIntBorder' cellspacing='0' style='width:100%;'>
                                     <tr>
                                         <?php
@@ -974,16 +974,16 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                         <tr>
                             <td colspan=2>
                                 <?php if (!empty($students)) { ?>
-                                <b><?php echo __($guid, 'Students') ?></b>
+                                <b><?php echo __('Students') ?></b>
                                 <?php
                                     echo "<div class='linkTop'>";
                                         if(isActionAccessible($guid, $connection2, '/modules/Students/report_student_medicalSummary_print.php')) {
-                                            echo "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/modules/Trip Planner/trips_requestExternalReportProcess.php?tripPlannerRequestID=$tripPlannerRequestID&report=medical'>".__($guid, 'Medical Info')."<img style='margin-right: 10px;margin-left: 5px' title='".__($guid, 'Medical Info')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/print.png'/></a>";
+                                            echo "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/modules/Trip Planner/trips_requestExternalReportProcess.php?tripPlannerRequestID=$tripPlannerRequestID&report=medical'>".__('Medical Info')."<img style='margin-right: 10px;margin-left: 5px' title='".__('Medical Info')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/print.png'/></a>";
                                         }
                                         if(isActionAccessible($guid, $connection2, '/modules/Students/report_student_emergencySummary_print.php')) {
-                                            echo "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/modules/Trip Planner/trips_requestExternalReportProcess.php?tripPlannerRequestID=$tripPlannerRequestID&report=emergency'>".__($guid, 'Emergency Info')."<img style='margin-right: 10px;margin-left: 5px' title='".__($guid, 'Emergency Info')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/print.png'/></a>";
+                                            echo "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/modules/Trip Planner/trips_requestExternalReportProcess.php?tripPlannerRequestID=$tripPlannerRequestID&report=emergency'>".__('Emergency Info')."<img style='margin-right: 10px;margin-left: 5px' title='".__('Emergency Info')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/print.png'/></a>";
                                         }
-                                        echo "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/report.php?q=/modules/Trip Planner/trips_reportTripPeople.php&tripPlannerRequestID=$tripPlannerRequestID'>".__($guid, 'Student List')."<img style='margin-left: 5px' title='".__($guid, 'Student List')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/print.png'/></a>";
+                                        echo "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/report.php?q=/modules/Trip Planner/trips_reportTripPeople.php&tripPlannerRequestID=$tripPlannerRequestID'>".__('Student List')."<img style='margin-left: 5px' title='".__('Student List')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/print.png'/></a>";
                                     echo '</div>';
                                 ?>
                                 <table class='noIntBorder' cellspacing='0' style='width:100%;'>
@@ -1017,7 +1017,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                         <td colspan=2>
                             <h3>
                                 Cost Breakdown
-                                <?php print "<div id='showCost'  title='" . __($guid, 'Show/Hide') . "' style='margin-top: -5px; margin-left: 3px; padding-right: 1px; float: right; width: 23px; height: 25px; background-image: url(\"" . $_SESSION[$guid]["absoluteURL"] . "/themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/minus.png\")'></div>"; ?>
+                                <?php print "<div id='showCost'  title='" . __('Show/Hide') . "' style='margin-top: -5px; margin-left: 3px; padding-right: 1px; float: right; width: 23px; height: 25px; background-image: url(\"" . $_SESSION[$guid]["absoluteURL"] . "/themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/minus.png\")'></div>"; ?>
                             </h3>
                             <script type="text/javascript">
                                 $(document).ready(function(){
@@ -1040,14 +1040,14 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                                 <table cellspacing='0' style='width: 100%'>
                                     <tr class='head'>
                                         <th style='text-align: left; padding-left: 10px'>
-                                            <?php print __($guid, 'Name'); ?>
+                                            <?php print __('Name'); ?>
                                         </th>
                                         <th style='text-align: left'>
-                                            <?php print __($guid, 'Description'); ?>
+                                            <?php print __('Description'); ?>
                                         </th>
                                         <th style='text-align: left'>
                                             <?php 
-                                                print __($guid, 'Cost') . "<br/>"; 
+                                                print __('Cost') . "<br/>"; 
                                                 if ($_SESSION[$guid]['currency'] != '') {
                                                     print "<span style='font-style: italic; font-size: 85%'>".$_SESSION[$guid]['currency'].'</span>';
                                                 }
@@ -1097,7 +1097,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                         </tr>
                         <tr>
                             <td> 
-                                <b><?php echo __($guid, 'Total Cost') ?> *</b><br/>
+                                <b><?php echo __('Total Cost') ?> *</b><br/>
                             </td>
                             <td class="right">
                                 <input readonly name="totalCost" id="totalCost" maxlength=60 value="<?php echo $_SESSION[$guid]['currency'] . ' ' . $totalCost; ?>" type="text" class="standardWidth">
@@ -1108,7 +1108,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                         <td colspan=2>
                             <h3>
                                 Timetable Overlaps
-                                <?php print "<div id='showPlanner'  title='" . __($guid, 'Show/Hide') . "' style='margin-top: -5px; margin-left: 3px; padding-right: 1px; float: right; width: 23px; height: 25px; background-image: url(\"" . $_SESSION[$guid]["absoluteURL"] . "/themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/minus.png\")'></div>"; ?>
+                                <?php print "<div id='showPlanner'  title='" . __('Show/Hide') . "' style='margin-top: -5px; margin-left: 3px; padding-right: 1px; float: right; width: 23px; height: 25px; background-image: url(\"" . $_SESSION[$guid]["absoluteURL"] . "/themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/minus.png\")'></div>"; ?>
                             </h3>
                             <script type="text/javascript">
                                 $(document).ready(function(){
@@ -1131,16 +1131,16 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                                 <table cellspacing='0' style='width: 100%'>
                                     <tr class='head'>
                                         <th style='text-align: left; padding-left: 10px; width:10%'>
-                                            <?php print __($guid, 'Class'); ?>
+                                            <?php print __('Class'); ?>
                                         </th>
                                         <th style='text-align: left'>
-                                            <?php print __($guid, 'People Involved'); ?>
+                                            <?php print __('People Involved'); ?>
                                         </th>
                                         <th style='text-align: left; width: 10%'>
-                                            <?php print __($guid, 'Require Covers?'); ?>
+                                            <?php print __('Require Covers?'); ?>
                                         </th>
                                         <th style='text-align: left; width:10%'>
-                                            <?php print __($guid, 'Actions'); ?>
+                                            <?php print __('Actions'); ?>
                                         </th>
                                     </tr>
                                     <?php
@@ -1337,13 +1337,13 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                                                 print "</td>";
                                                 print "<td>";
                                                     if (isOwner($connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"])) {
-                                                        echo "<a class='thickbox' href='".$_SESSION[$guid]['absoluteURL']."/fullscreen.php?q=/modules/Trip Planner/trips_requestCoverStatus.php&tripPlannerRequestID=$tripPlannerRequestID&gibbonCourseClassID=" . $row["gibbonCourseClassID"] . "&date=" . $row["date"] . "&requiresCover=$requiresCover&width=1000&height=550'><img title='".__($guid, 'Change Cover Status')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/config.png'/></a> ";
+                                                        echo "<a class='thickbox' href='".$_SESSION[$guid]['absoluteURL']."/fullscreen.php?q=/modules/Trip Planner/trips_requestCoverStatus.php&tripPlannerRequestID=$tripPlannerRequestID&gibbonCourseClassID=" . $row["gibbonCourseClassID"] . "&date=" . $row["date"] . "&requiresCover=$requiresCover&width=1000&height=550'><img title='".__('Change Cover Status')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/config.png'/></a> ";
                                                     }
                                                     
                                                     if ($requiresCover) {
-                                                        echo "<a class='thickbox' href='".$_SESSION[$guid]['absoluteURL']."/fullscreen.php?q=/modules/Trip Planner/trips_requestCoverTeachers.php&tripPlannerRequestID=$tripPlannerRequestID&date=" . $row["date"] . "&timeStart=" . $row["timeStart"] . "&timeEnd=" . $row["timeEnd"] . "&width=1000&height=550'><img title='".__($guid, 'View Possible Cover Teachers')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/plus.png'/></a> ";
+                                                        echo "<a class='thickbox' href='".$_SESSION[$guid]['absoluteURL']."/fullscreen.php?q=/modules/Trip Planner/trips_requestCoverTeachers.php&tripPlannerRequestID=$tripPlannerRequestID&date=" . $row["date"] . "&timeStart=" . $row["timeStart"] . "&timeEnd=" . $row["timeEnd"] . "&width=1000&height=550'><img title='".__('View Possible Cover Teachers')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/plus.png'/></a> ";
                                                     }
-                                                    //print "<a><img title='" . _('View') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/plus.png'/></a> ";
+                                                    //print "<a><img title='" . __('View') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/plus.png'/></a> ";
                                                 print "</td>";
                                             print "</tr>";
                                         }
@@ -1381,7 +1381,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                             ?>
                             <tr>
                                 <td colspan=2> 
-                                    <div class='error'><?php echo __($guid, 'Your approval is not currently required: it is possible someone beat you to it, or you have already approved it.') ?></div>
+                                    <div class='error'><?php echo __('Your approval is not currently required: it is possible someone beat you to it, or you have already approved it.') ?></div>
                                 </td>
                             </tr>
                             <?php
@@ -1389,20 +1389,20 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                             ?>
                             <tr>
                                 <td style='width: 275px'> 
-                                    <b><?php echo __($guid, 'Approval') ?> *</b><br/>
+                                    <b><?php echo __('Approval') ?> *</b><br/>
                                 </td>
                                 <td class="right">
                                     <?php
                                     echo "<select name='approval' id='approval' style='width:302px'>";
-                                        echo "<option value='Please select...'>".__($guid, 'Please select...').'</option>';
-                                        echo "<option value='Approval - Partial'>".__($guid, 'Approve').'</option>';
-                                        echo "<option value='Rejection'>".__($guid, 'Reject').'</option>';
-                                        echo "<option value='Comment'>".__($guid, 'Comment').'</option>';
+                                        echo "<option value='Please select...'>".__('Please select...').'</option>';
+                                        echo "<option value='Approval - Partial'>".__('Approve').'</option>';
+                                        echo "<option value='Rejection'>".__('Reject').'</option>';
+                                        echo "<option value='Comment'>".__('Comment').'</option>';
                                     echo '</select>';
                                     ?>
                                     <script type="text/javascript">
                                         var approval=new LiveValidation('approval');
-                                        approval.add(Validate.Exclusion, { within: ['Please select...'], failureMessage: "<?php echo __($guid, 'Select something!') ?>"});
+                                        approval.add(Validate.Exclusion, { within: ['Please select...'], failureMessage: "<?php echo __('Select something!') ?>"});
                                     </script>
                                 </td>
                             </tr>
@@ -1412,17 +1412,17 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                     ?>
                     <tr>
                         <td colspan=2> 
-                            <b><?php echo __($guid, 'Comment') ?></b><br/>
+                            <b><?php echo __('Comment') ?></b><br/>
                             <textarea name="comment" id="comment" rows=8 style="resize:vertical; width: 100%"></textarea>
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <span class="emphasis small">* <?php echo __($guid, 'denotes a required field'); ?></span>
+                            <span class="emphasis small">* <?php echo __('denotes a required field'); ?></span>
                         </td>
                         <td class="right">
                             <input name="tripPlannerRequestID" id="tripPlannerRequestID" value="<?php echo $tripPlannerRequestID ?>" type="hidden">
-                            <input type="submit" value="<?php echo __($guid, 'Submit'); ?>">
+                            <input type="submit" value="<?php echo __('Submit'); ?>">
                         </td>
                     </tr>
                 </table>

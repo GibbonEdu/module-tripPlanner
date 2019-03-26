@@ -22,13 +22,11 @@ include "./modules/Trip Planner/moduleFunctions.php";
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php')) {
     //Acess denied
-    print "<div class='error'>";
-        print "You do not have access to this action.";
-    print "</div>";
+    $page->addError(__("You do not have access to this action."));
 } else {
-    print "<div class='trail'>";
-        print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . _("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . _(getModuleName($_GET["q"])) . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_manage.php'>" . _("Manage Trip Requests") . "</a> > </div><div class='trailEnd'>" . _('Approve Request') . "</div>";
-    print "</div>";
+
+    $page->breadcrumbs->add(__('Manage Trip Requests'), 'trips_manage.php');
+    $page->breadcrumbs->add(__('Approve Request'));
 
     if (isset($_GET['return'])) {
         returnProcess($guid, $_GET['return'], null, null);
@@ -58,9 +56,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             }
         }
     } else {    
-        print "<div class='error'>";
-            print "No request selected.";
-        print "</div>";
+        $page->addError(__("No request selected."));
     }
 }   
 ?>

@@ -24,13 +24,10 @@ use Gibbon\Forms\Form;
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_addApprover.php')) {
     //Acess denied
-    print "<div class='error'>";
-        print "You do not have access to this action.";
-    print "</div>";
+    $page->addError(__('You do not have access to this action.'));
 } else {
-    print "<div class='trail'>";
-        print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . _("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . _(getModuleName($_GET["q"])) . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_manageApprovers.php'>" . _("Manage Approver") . "</a> > </div><div class='trailEnd'>" . _('Add Approver') . "</div>";
-    print "</div>";
+    $page->breadcrumbs->add(__('Manage Approver'), 'trips_manageApprovers.php');
+    $page->breadcrumbs->add(__('Add Approver'));
 
     print "<h3>";
         print "Add Approver";

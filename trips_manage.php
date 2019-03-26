@@ -22,15 +22,11 @@ include "./modules/Trip Planner/moduleFunctions.php";
 use Gibbon\Forms\Form;
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php')) {
-    print "<div class='error'>";
-        print "You do not have access to this action.";
-    print "</div>";
+    $page->addError(__("You do not have access to this action."));
 } else {
     $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
     if ($highestAction != false) {
-        print "<div class='trail'>";
-            print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . _("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . _(getModuleName($_GET["q"])) . "</a> > </div><div class='trailEnd'>" . _('Manage Trip Requests') . "</div>";
-        print "</div>";
+        $page->breadcrumbs->add(__('Manage Trip Requests'));
 
         if (isset($_GET['return'])) {
             returnProcess($guid, $_GET['return'], null, null);
@@ -137,7 +133,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         }
 
         print "<h3>";
-            print __($guid, "Filter");
+            print __("Filter");
         print "</h3>";
 
         $form = Form::create("tripFilters", $_SESSION[$guid]["absoluteURL"] . "/index.php?q=" . $_GET["q"]);
@@ -174,9 +170,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         <div class="linkTop">
             <a style='position:relative; bottom:10px; float:right;' href='<?php print $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_submitRequest.php" ?>'>
                 <?php
-                    print __($guid, "Submit Request");
+                    print __("Submit Request");
                 ?>
-                <img style='margin-left: -2px' title='<?php print __($guid, "Sumbit") ?>' src='<?php print $_SESSION[$guid]["absoluteURL"] . "/themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/page_new.png" ?>'/>
+                <img style='margin-left: -2px' title='<?php print __("Sumbit") ?>' src='<?php print $_SESSION[$guid]["absoluteURL"] . "/themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/page_new.png" ?>'/>
             </a>
         </div>
 
@@ -243,12 +239,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                         print "</td>";
                         print "<td style='width:16.5%'>";
                             //TODO: Add duplicate function
-                            print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID=" . $row["tripPlannerRequestID"] . "'><img title='" . _('View') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/plus.png'/></a> ";
+                            print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID=" . $row["tripPlannerRequestID"] . "'><img title='" . __('View') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/plus.png'/></a> ";
                             if ($row["status"] != "Cancelled" && $row["status"] != "Rejected" && $row['gibbonPersonID'] == $_SESSION[$guid]['gibbonPersonID']) {
-                                print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_submitRequest.php&mode=edit&tripPlannerRequestID=" . $row["tripPlannerRequestID"] . "'><img title='" . _('Edit') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/config.png'/></a> ";
+                                print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_submitRequest.php&mode=edit&tripPlannerRequestID=" . $row["tripPlannerRequestID"] . "'><img title='" . __('Edit') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/config.png'/></a> ";
                             }
                             if (($row["status"] == "Requested" && needsApproval($connection2, $row["tripPlannerRequestID"], $_SESSION[$guid]["gibbonPersonID"])) == 0 || ($row["status"] == "Awaiting Final Approval" && isApprover($connection2, $_SESSION[$guid]["gibbonPersonID"], true))) {
-                                print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_requestApprove.php&tripPlannerRequestID=" . $row["tripPlannerRequestID"] . "'><img title='" . __($guid, 'Approve/Reject') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/iconTick.png'/></a> ";
+                                print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_requestApprove.php&tripPlannerRequestID=" . $row["tripPlannerRequestID"] . "'><img title='" . __('Approve/Reject') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/iconTick.png'/></a> ";
                             }
                         print "</td>";
                     print "</tr>";
@@ -270,9 +266,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         </table>
         <?php
     } else {
-        print "<div class='error'>";
-            print "Highest grouped action could not be determined.";
-        print "</div>";
+        $page->addError(__("Highest grouped action could not be determined."));
     }
 }   
 ?>
