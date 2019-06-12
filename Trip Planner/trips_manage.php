@@ -89,7 +89,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         //This must be the FIRST filter check!
         if ($relationFilter == "I") {
             $data["teacherPersonID"] = $_SESSION[$guid]["gibbonPersonID"];
-            $sql .= " JOIN tripPlannerRequestPerson ON (tripPlannerRequestPerson.tripPlannerRequestID = tripPlannerRequests.tripPlannerRequestID) WHERE (tripPlannerRequestPerson.role='Teacher' AND :teacherPersonID = tripPlannerRequestPerson.gibbonPersonID OR teacherPersonIDs LIKE CONCAT('%', :teacherPersonID, '%'))"; 
+            $sql .= " JOIN tripPlannerRequestPerson ON (tripPlannerRequestPerson.tripPlannerRequestID = tripPlannerRequests.tripPlannerRequestID) WHERE (tripPlannerRequestPerson.role='Teacher' AND :teacherPersonID = tripPlannerRequestPerson.gibbonPersonID OR teacherPersonIDs LIKE CONCAT('%', :teacherPersonID, '%'))";
             $connector = " AND ";
         } elseif ($relationFilter == "MR") {
             $data["creatorPersonID"] = $_SESSION[$guid]["gibbonPersonID"];
@@ -196,7 +196,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                 </th>
                 <th>
                     Action
-                </th> 
+                </th>
             </tr>
         <?php
         if ($result->rowCount() == 0) {
@@ -239,7 +239,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                         print "<td style='width:20%'>" . $row['preferredName'] . " " . $row["surname"] . "</td>";
                         print "<td style='width:12%'>";
                             print $row['status'] . "</br>";
-                            //print "<span style='font-size: 85%; font-style: italic'>" . dateConvertBack($guid, $row['timestampCreation']) . "</span>";          
+                            //print "<span style='font-size: 85%; font-style: italic'>" . dateConvertBack($guid, $row['timestampCreation']) . "</span>";
                         print "</td>";
                         print "<td style='width:16.5%'>";
                             //TODO: Add duplicate function
@@ -263,7 +263,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                         There are no records to display
                     </td>
                 </tr>
-            <?php  
+            <?php
             }
         }
         ?>
@@ -274,5 +274,5 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             print "Highest grouped action could not be determined.";
         print "</div>";
     }
-}   
+}
 ?>
