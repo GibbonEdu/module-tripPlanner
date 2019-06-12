@@ -188,9 +188,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
             $("input[name=allDay]").on('change', function(){
                 var enabled = $(this).prop("checked");
-                $('tr[id=timeRow]').each(function(){ 
+                $('tr[id=timeRow]').each(function(){
                     $(this).css("display", enabled ? "none" : "table-row");
-                }); 
+                });
                 modifyDayList($(this), 2);
             });
 
@@ -223,7 +223,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                 if (endDate.val() == "" || (new Date($(this).val()) > new Date(endDate.val()))) {
                     endDate.val($(this).val());
                 }
-                modifyDayList($(this), 0); 
+                modifyDayList($(this), 0);
 
              });
             $("input[name=endDate]").on('change', function() { modifyDayList($(this), 1); });
@@ -243,7 +243,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                             $("<input>").attr({
                                 type: 'hidden',
                                 name: "days[" + i + "][" + names[j] + "]"
-                            }).val(daysList[i][j]).appendTo(form);        
+                            }).val(daysList[i][j]).appendTo(form);
                         }
                     }
                 }
@@ -370,7 +370,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     }
 
     $students = array();
-    $studentsForm = array(); 
+    $studentsForm = array();
 
     try {
         $dataStudents = array('gibbonSchoolYearID' => $_SESSION[$guid]['gibbonSchoolYearID']);
@@ -583,5 +583,5 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     </script>
     <?php
     }
-}   
+}
 ?>

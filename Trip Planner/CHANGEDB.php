@@ -8,7 +8,6 @@ $count = 0;
 $sql[$count][0]="0.0.01";
 $sql[$count++][1]="-- First version, nothing to update";
 
-
 //v0.0.02
 $sql[$count][0]="0.0.02";
 $sql[$count++][1]="
@@ -106,4 +105,6 @@ INSERT INTO gibbonSetting SET scope='Trip Planner', name='letterToParentsTemplat
 $sql[$count][0]="0.2.13";
 $sql[$count++][1]="";
 
+$sql[$count][0]="0.3.00";
+$sql[$count++][1]="";
 ?>

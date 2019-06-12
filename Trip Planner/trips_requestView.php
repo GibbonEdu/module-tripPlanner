@@ -58,11 +58,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                     print "You do not have access to this action.";
                 print "</div>";
             }
-        } else {    
+        } else {
             print "<div class='error'>";
                 print "No request selected.";
             print "</div>";
         }
     }
-}   
+}
 ?>
