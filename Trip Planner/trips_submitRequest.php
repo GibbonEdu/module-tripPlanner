@@ -189,7 +189,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             $("input[name=allDay]").on('change', function(){
                 var enabled = $(this).prop("checked");
                 $('tr[id=timeRow]').each(function(){
-                    $(this).css("display", enabled ? "none" : "table-row");
+                    $(this).css("display", enabled ? "none" : "flex");
                 });
                 modifyDayList($(this), 2);
             });
@@ -440,10 +440,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     $row = $form->addRow("multipleRow");
         //Not showing required symbol
         $row->addLabel("dayList", "Days *");
-        $column = $row->addColumn()->addClass("right");
-            $column->addSelect("dayList")->placeholder(__("Add New Days"))->isRequired();
-            $column->addButton("Add Days", "addDay()")->addClass("shortWidth")->setID("addDays");
-            $column->addButton("Remove Days", "remDay()")->addClass("shortWidth")->setID("removeDays");
+        $column = $row->addColumn()->addClass("right flex-wrap");
+            $column->addSelect("dayList")->placeholder(__("Add New Days"))->isRequired()->setClass('w-full');
+            $column->addButton("Add Days", "addDay()")->addClass("flex-1 w-full mr-1")->setID("addDays");
+            $column->addButton("Remove Days", "remDay()")->addClass("flex-1 w-full")->setID("removeDays");
 
     $row = $form->addRow();
         $row->addHeading("Costs");
@@ -525,10 +525,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
     $row = $form->addRow();
         $row->addLabel("addByGroup", "Add by Group")->description("Add or remove students to trip by Class, Activity or Messenger Group.");
-        $column = $row->addColumn()->addClass("right");
-            $column->addSelect("addStudentsByClass")->fromArray($groups)->placeholder("None");
-            $column->addButton("Add", "addClass('Add')")->addClass("shortWidth")->setID("addButton");
-            $column->addButton("Remove", "addClass('Remove')")->addClass("shortWidth")->setID("removeButton");
+        $column = $row->addColumn()->addClass("right flex-wrap");
+            $column->addSelect("addStudentsByClass")->fromArray($groups)->placeholder("None")->setClass('w-full');
+            $column->addButton("Add", "addClass('Add')")->addClass("flex-1 w-full mr-1")->setID("addButton");
+            $column->addButton("Remove", "addClass('Remove')")->addClass("flex-1 w-full")->setID("removeButton");
 
     if (!$edit) {
         $row = $form->addRow();
