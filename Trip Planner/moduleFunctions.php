@@ -1127,7 +1127,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                     if ($approveMode) {
                         ?>
                         <tr class="break">
-                            <td>
+                            <td colspan=2>
                                 <h3>
                                     Action
                                 </h3>

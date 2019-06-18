@@ -1,12 +1,15 @@
 CHANGELOG
 =========
+v1.0.00
+-------
+Added custom approval notifications
+
 v0.3.00
 -------
 Reordered CHANGELOG.txt into reverse chronological order
 Moved contents into Trip Planner sub-folder
 Removed Timetable Overlaps (great idea, but not in use, and very slow loading)
 Fixed isInvolved bug preventing involved teachers viewing trips
-
 
 v0.2.13
 -------

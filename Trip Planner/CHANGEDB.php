@@ -107,4 +107,10 @@ $sql[$count++][1]="";
 
 $sql[$count][0]="0.3.00";
 $sql[$count++][1]="";
+
+$sql[$count][0]="1.0.00";
+$sql[$count++][1]="
+INSERT INTO `gibbonNotificationEvent` (`event`, `moduleName`, `actionName`, `type`, `scopes`, `active`)
+VALUES ('Trip Request Approval', 'Trip Planner', 'Manage Trips_full', 'Additional', 'All', 'Y');end
+";
 ?>

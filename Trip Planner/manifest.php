@@ -23,7 +23,7 @@ $description = "A trip planner module for Gibbon.";
 $entryURL = "trips_manage.php";
 $type = "Additional";
 $category = "Learn";
-$version = "0.3.00"; 
+$version = "1.0.00";
 $author = "Ray Clark";
 $url = "https://github.com/raynichc/Trip-Planner";
 
@@ -128,6 +128,10 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestDays` (
     `endTime` time NOT NULL DEFAULT '00:00:00',
     PRIMARY KEY (`tripPlannerRequestDaysID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
+
+$moduleTables[$tables++] = "INSERT INTO `gibbonNotificationEvent` (`event`, `moduleName`, `actionName`, `type`, `scopes`, `active`)
+VALUES ('Trip Request Approval', 'Trip Planner', 'Manage Trips_full', 'Additional', 'All', 'Y');";
+
 
 //Actions
 $actionCount = 0;
