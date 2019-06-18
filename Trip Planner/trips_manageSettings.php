@@ -23,9 +23,13 @@ use Gibbon\Forms\Form;
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manageSettings.php')) {
     //Acess denied
-    $page->addError(__("You do not have access to this action."));
+    print "<div class='error'>";
+        print "You do not have access to this action.";
+    print "</div>";
 } else {
-    $page->breadcrumbs->add(__('Manage Settings'));
+    print "<div class='trail'>";
+        print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . _("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . _(getModuleName($_GET["q"])) . "</a> > </div><div class='trailEnd'>" . _('Manage Settings') . "</div>";
+    print "</div>";
 
     print "<h3>";
         print "Settings";

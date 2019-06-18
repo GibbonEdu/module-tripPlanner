@@ -24,7 +24,9 @@ use Gibbon\Forms\Form;
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manageRiskTemplates.php')) {
     //Acess denied
-    $page->addError(__('You do not have access to this action.'));
+    print "<div class='error'>";
+        print "You do not have access to this action.";
+    print "</div>";
 } else {
 
     $edit = false;
@@ -36,11 +38,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         }
     }
 
-    $page->breadcrumbs->add(__('Risk Assessment Templates'), 'trips_manageRiskTemplates.php');
-    $page->breadcrumbs->add($edit ? __('Edit Risk Assessment Templates') : __('Add Risk Assessment Templates'));
+    print "<div class='trail'>";
+        print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . _("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . _(getModuleName($_GET["q"])) . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_manageRiskTemplates.php'>" . _("Risk Assessment Templates") . "</a> > </div><div class='trailEnd'>" . _(($edit ? "Edit" : "Add") . ' Risk Assessment Templates') . "</div>";
+    print "</div>";
 
     print "<h3>";
-        print __(($edit ? "Edit" : "Add") . " Risk Assessment Template");
+        print __($guid, ($edit ? "Edit" : "Add") . " Risk Assessment Template");
     print "</h3>";
 
     if (isset($_GET['return'])) {

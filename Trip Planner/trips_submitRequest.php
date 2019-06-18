@@ -31,7 +31,9 @@ if (isset($_GET['mode']) && isset($_GET['tripPlannerRequestID'])) {
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submitRequest.php') || ($edit && !isOwner($connection2, $tripPlannerRequestID, $_SESSION[$guid]['gibbonPersonID']))) {
     //Acess denied
-    $page->addError(__("You do not have access to this action."));
+    print "<div class='error'>";
+        print "You do not have access to this action.";
+    print "</div>";
 } else {
 
     if ($edit) {
@@ -49,7 +51,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         }
     }
 
-    $page->breadcrumbs->add($edit ? __('Edit Trip Request') : __('Submit Trip Request'));
+    print "<div class='trail'>";
+        print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . _("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . _(getModuleName($_GET["q"])) . "</a> > </div><div class='trailEnd'>" . _(($edit ? "Edit" : "Submit") . ' Trip Request') . "</div>";
+    print "</div>";
 
     if (isset($_GET['return'])) {
         $editLink = null;
@@ -143,7 +147,25 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         $activities["Activity:" . $rowSelect['gibbonActivityID']] = htmlPrep($rowSelect['name']);
     }
 
-    $groups = array("By Class" => $classes, "By Activity" => $activities);
+    try {
+        if ($highestAction2 == 'Submit Request_all') {
+            $dataSelect = array('gibbonSchoolYearID' => $_SESSION[$guid]['gibbonSchoolYearID']);
+            $sqlSelect = 'SELECT gibbonGroupID, name FROM gibbonGroup WHERE gibbonSchoolYearID=:gibbonSchoolYearID ORDER BY name ASC';
+        } else {
+            $dataSelect = array('gibbonSchoolYearID' => $_SESSION[$guid]['gibbonSchoolYearID'], 'gibbonPersonID' => $_SESSION[$guid]['gibbonPersonID']);
+            $sqlSelect = "SELECT gibbonGroupID, name FROM gibbonGroup WHERE gibbonSchoolYearID=:gibbonSchoolYearID AND gibbonPersonIDOwner=:gibbonPersonID ORDER BY name ASC";
+        }
+        $resultSelect = $connection2->prepare($sqlSelect);
+        $resultSelect->execute($dataSelect);
+    } catch (PDOException $e) {
+    }
+
+    $groups = array();
+    while ($rowSelect = $resultSelect->fetch()) {
+        $groups["Group:" . $rowSelect['gibbonGroupID']] = htmlPrep($rowSelect['name']);
+    }
+
+    $groups = array("By Class" => $classes, "By Activity" => $activities, "By Group" => $groups);
     ?>
 
     <script type="text/javascript">
@@ -166,9 +188,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
             $("input[name=allDay]").on('change', function(){
                 var enabled = $(this).prop("checked");
-                $('tr[id=timeRow]').each(function(){ 
-                    $(this).css("display", enabled ? "none" : "table-row");
-                }); 
+                $('tr[id=timeRow]').each(function(){
+                    $(this).css("display", enabled ? "none" : "flex");
+                });
                 modifyDayList($(this), 2);
             });
 
@@ -201,7 +223,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                 if (endDate.val() == "" || (new Date($(this).val()) > new Date(endDate.val()))) {
                     endDate.val($(this).val());
                 }
-                modifyDayList($(this), 0); 
+                modifyDayList($(this), 0);
 
              });
             $("input[name=endDate]").on('change', function() { modifyDayList($(this), 1); });
@@ -221,7 +243,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                             $("<input>").attr({
                                 type: 'hidden',
                                 name: "days[" + i + "][" + names[j] + "]"
-                            }).val(daysList[i][j]).appendTo(form);        
+                            }).val(daysList[i][j]).appendTo(form);
                         }
                     }
                 }
@@ -348,7 +370,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     }
 
     $students = array();
-    $studentsForm = array(); 
+    $studentsForm = array();
 
     try {
         $dataStudents = array('gibbonSchoolYearID' => $_SESSION[$guid]['gibbonSchoolYearID']);
@@ -368,7 +390,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
     if ($edit) {
         echo "<div class='linkTop'>";
-            echo "<a href='".$_SESSION[$guid]['absoluteURL']."/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID=$tripPlannerRequestID'>".__('View')."<img style='margin-left: 5px' title='".__('Edit')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/plus.png'/></a>";
+            echo "<a href='".$_SESSION[$guid]['absoluteURL']."/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID=$tripPlannerRequestID'>".__($guid, 'View')."<img style='margin-left: 5px' title='".__($guid, 'Edit')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/plus.png'/></a>";
         echo '</div>';
     }
 
@@ -418,10 +440,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     $row = $form->addRow("multipleRow");
         //Not showing required symbol
         $row->addLabel("dayList", "Days *");
-        $column = $row->addColumn()->addClass("right");
-            $column->addSelect("dayList")->placeholder(__("Add New Days"))->isRequired();
-            $column->addButton("Add Days", "addDay()")->addClass("shortWidth")->setID("addDays");
-            $column->addButton("Remove Days", "remDay()")->addClass("shortWidth")->setID("removeDays");
+        $column = $row->addColumn()->addClass("right flex-wrap");
+            $column->addSelect("dayList")->placeholder(__("Add New Days"))->isRequired()->setClass('w-full');
+            $column->addButton("Add Days", "addDay()")->addClass("flex-1 w-full mr-1")->setID("addDays");
+            $column->addButton("Remove Days", "remDay()")->addClass("flex-1 w-full")->setID("removeDays");
 
     $row = $form->addRow();
         $row->addHeading("Costs");
@@ -502,12 +524,17 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             $multiSelect->addSortableAttribute("Form", $studentsForm);
 
     $row = $form->addRow();
-        $row->addLabel("addByGroup", "Add by Group")->description("Add or remove students to trip by Class or Activity (scroll down for activities).");
-        $column = $row->addColumn()->addClass("right");
-            $column->addSelect("addStudentsByClass")->fromArray($groups)->placeholder("None");
-            $column->addButton("Add", "addClass('Add')")->addClass("shortWidth")->setID("addButton");
-            $column->addButton("Remove", "addClass('Remove')")->addClass("shortWidth")->setID("removeButton");
-            
+        $row->addLabel("addByGroup", "Add by Group")->description("Add or remove students to trip by Class, Activity or Messenger Group.");
+        $column = $row->addColumn()->addClass("right flex-wrap");
+            $column->addSelect("addStudentsByClass")->fromArray($groups)->placeholder("None")->setClass('w-full');
+            $column->addButton("Add", "addClass('Add')")->addClass("flex-1 w-full mr-1")->setID("addButton");
+            $column->addButton("Remove", "addClass('Remove')")->addClass("flex-1 w-full")->setID("removeButton");
+
+    if (!$edit) {
+        $row = $form->addRow();
+            $row->addLabel('createGroup', __('Create Messenger Group?'));
+            $row->addYesNo('createGroup')->selected('N');
+    }
 
     $row = $form->addRow();
         $row->addFooter();
@@ -556,5 +583,5 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     </script>
     <?php
     }
-}   
+}
 ?>

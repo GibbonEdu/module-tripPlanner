@@ -24,7 +24,9 @@ use Gibbon\Forms\Form;
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php')) {
     //Acess denied
-    $page->addError(__("You do not have access to this action."));
+    print "<div class='error'>";
+        print "You do not have access to this action.";
+    print "</div>";
 } else {
     if (isset($_GET["tripPlannerRequestID"])) {
         $tripPlannerRequestID = $_GET["tripPlannerRequestID"];
@@ -52,7 +54,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
 
                 print $form->getOutput();
             } else {
-                $page->addError(__('You do not have access to this action.'));
+                print "<div class='error'>";
+                    print "You do not have access to this action.";
                 print "</div>";
             }
         } else {    
@@ -61,7 +64,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             print "</div>";
         }
     } else {    
-        $page->addError(__('No request selected.'));
+        print "<div class='error'>";
+            print "No request selected.";
+        print "</div>";
     }
 }   
 ?>

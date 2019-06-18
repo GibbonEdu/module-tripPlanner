@@ -104,12 +104,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     //     }
     //     $days[] = array("startDate" => DateTime::createFromFormat("d/m/Y", $_POST["startDate"])->format("Y-m-d"), "endDate" => DateTime::createFromFormat("d/m/Y", $_POST["startDate"])->format("Y-m-d"), "allDay" => (isset($_POST["allDay"]) ? 1 : 0), "startTime" => (!isset($_POST["allDay"]) ? $_POST["startTime"] : 0), "endTime" => (!isset($_POST["allDay"]) ? $_POST["endTime"] : 0));
     // }
-
+       
     $groupGateway = $container->get(GroupGateway::class);
     $groupNotFound = false;
 
     try {
-
         if ($edit) {
             $dataGroup = array("tripPlannerRequestID" => $tripPlannerRequestID);
             $sqlGroup = "SELECT messengerGroupID FROM tripPlannerRequests WHERE tripPlannerRequestID=:tripPlannerRequestID";
@@ -181,7 +180,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         exit();
     }
 
-    if (!$edit || $groupNotFound) {
+    $createGroup = (isset($_POST['createGroup'])) ? $_POST['createGroup'] : 'N' ;
+    if ($createGroup == 'Y' && (!$edit || $groupNotFound)) {
         $data = array('gibbonPersonIDOwner' => $_SESSION[$guid]['gibbonPersonID'], 'gibbonSchoolYearID' => $_SESSION[$guid]['gibbonSchoolYearID'], 'name' => $data["title"] . " (Trip Planner)");
         $groupID = $groupGateway->insertGroup($data);
 

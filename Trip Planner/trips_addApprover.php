@@ -22,28 +22,27 @@ include "./modules/Trip Planner/moduleFunctions.php";
 
 use Gibbon\Forms\Form;
 
-if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_editApprover.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_addApprover.php')) {
     //Acess denied
-    $page->addError(__("You do not have access to this action."));
+    print "<div class='error'>";
+        print "You do not have access to this action.";
+    print "</div>";
 } else {
-    $page->breadcrumbs->add(__('Manage Approver'), 'trips_manageApprovers.php');
-    $page->breadcrumbs->add(__('Edit Approver'));
-
-    if (isset($_GET["tripPlannerApproverID"])) {
-        if ($_GET["tripPlannerApproverID"] != null && $_GET["tripPlannerApproverID"] != "") {
-            $tripPlannerApproverID = $_GET["tripPlannerApproverID"];
-        }
-    }
-
-    $approver = getApprover($connection2, $tripPlannerApproverID);
+    print "<div class='trail'>";
+        print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . _("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . _(getModuleName($_GET["q"])) . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_manageApprovers.php'>" . _("Manage Approver") . "</a> > </div><div class='trailEnd'>" . _('Add Approver') . "</div>";
+    print "</div>";
 
     print "<h3>";
-        print "Edit Approver";
+        print "Add Approver";
     print "</h3>";
 
     if (isset($_GET['return'])) {
-        returnProcess($guid, $_GET['return'], null, null);
-    }
+        $editLink = null;
+        if(isset($_GET['tripPlannerApproverID'])) {
+            $editLink = $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_editApprover.php&tripPlannerApproverID=" . $_GET['tripPlannerApproverID'];
+        }
+        returnProcess($guid, $_GET['return'], $editLink, null);
+    }   
 
     try {
         $sqlSelect = "SELECT * FROM gibbonPerson JOIN gibbonStaff ON (gibbonPerson.gibbonPersonID=gibbonStaff.gibbonPersonID) WHERE status='Full' ORDER BY surname, preferredName";
@@ -54,33 +53,30 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_editAp
 
     $staff = array();
 
-    $approverName = null;
-
     while ($rowSelect = $resultSelect->fetch()) {
-        if (!isApprover($connection2, $rowSelect["gibbonPersonID"]) || $rowSelect["gibbonPersonID"] == $approver["gibbonPersonID"]) {
-            if($rowSelect["gibbonPersonID"] == $approver["gibbonPersonID"]) $approverName = formatName("", htmlPrep($rowSelect["preferredName"]), htmlPrep($rowSelect["surname"]), "Staff", true, true);
+        if (!isApprover($connection2, $rowSelect["gibbonPersonID"])) {
             $staff[$rowSelect["gibbonPersonID"]] = formatName("", htmlPrep($rowSelect["preferredName"]), htmlPrep($rowSelect["surname"]), "Staff", true, true);
         }
     }
 
-    $form = Form::create("editApprover", $_SESSION[$guid]["absoluteURL"] . "/modules/Trip Planner/trips_editApproverProcess.php?tripPlannerApproverID=$tripPlannerApproverID");
+    $form = Form::create("addApprover", $_SESSION[$guid]["absoluteURL"] . "/modules/Trip Planner/trips_addApproverProcess.php");
 
     $row = $form->addRow();
         $row->addLabel("staffLabel", "Staff *");
-        $row->addSelect("gibbonPersonID")->fromArray($staff)->setRequired(true)->selected($approverName);
+        $row->addSelect("gibbonPersonID")->fromArray($staff)->setRequired(true)->placeholder("Please select...");
 
     $requestApprovalType = getSettingByScope($connection2, "Trip Planner", "requestApprovalType");
     if ($requestApprovalType == "Chain Of All") {
         $row = $form->addRow();
             $row->addLabel("sequenceNumberLabel", "Sequence Number *")->description("Must be unique.");
-            $row->addNumber("sequenceNumber")->minimum(0)->decimalPlaces(0)->setRequired(true)->value($approver['sequenceNumber']);
+            $row->addNumber("sequenceNumber")->minimum(0)->decimalPlaces(0)->setRequired(true);
     }
 
     $riskAssessmentApproval = getSettingByScope($connection2, "Trip Planner", "riskAssessmentApproval");
     if($riskAssessmentApproval) {
         $row = $form->addRow();
             $row->addLabel("finalApproverLabel", "Final Approver");
-            $row->addCheckbox("finalApprover")->checked($approver['finalApprover']);
+            $row->addCheckbox("finalApprover");
     }
 
     $row = $form->addRow();

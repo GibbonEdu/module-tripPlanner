@@ -20,11 +20,14 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 //Module includes
 include "./modules/Trip Planner/moduleFunctions.php";
 
-$page->breadcrumbs->add(__('Manage Trip Requests'), 'trips_manage.php');
-$page->breadcrumbs->add(__('View Request'));
+print "<div class='trail'>";
+    print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . _("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . _(getModuleName($_GET["q"])) . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_manage.php'>" . _("Manage Trip Requests") . "</a> > </div><div class='trailEnd'>" . _('View Request') . "</div>";
+print "</div>";
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php')) {
-    $page->addError(__("You do not have access to this action."));
+    print "<div class='error'>";
+        print "You do not have access to this action.";
+    print "</div>";
 } else {
 
     if (isset($_GET['return'])) {
@@ -51,12 +54,15 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             if (isApprover($connection2, $gibbonPersonID) || isOwner($connection2, $tripPlannerRequestID, $gibbonPersonID) || isInvolved($connection2, $tripPlannerRequestID, $gibbonPersonID) || $isHOD || $highestAction == "Manage Trips_full") {
                 renderTrip($guid, $connection2, $tripPlannerRequestID, false);
             } else {
-                $page->addError(__('You do not have access to this action.'));
+                print "<div class='error'>";
+                    print "You do not have access to this action.";
+                print "</div>";
             }
-        } else {    
+        } else {
             print "<div class='error'>";
-            $page->addError(__('No request selected.'));
+                print "No request selected.";
+            print "</div>";
         }
     }
-}   
+}
 ?>

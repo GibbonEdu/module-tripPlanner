@@ -21,9 +21,13 @@ include "./modules/Trip Planner/moduleFunctions.php";
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manageRiskTemplates.php')) {
     //Acess denied
-    $page->addError(__("You do not have access to this action."));
+    print "<div class='error'>";
+        print "You do not have access to this action.";
+    print "</div>";
 } else {
-    $page->breadcrumbs->add(__('Risk Assessment Templates'));
+    print "<div class='trail'>";
+        print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . _("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . _(getModuleName($_GET["q"])) . "</a> > </div><div class='trailEnd'>" . _('Risk Assessment Templates') . "</div>";
+    print "</div>";
 
     if (isset($_GET['return'])) {
         returnProcess($guid, $_GET['return'], null, null);
@@ -34,16 +38,16 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     <div class="linkTop">
         <a style='position:relative; bottom:10px; float:right;' href='<?php print $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_addRiskTemplate.php" ?>'>
             <?php
-                print __("Add");
+                print __($guid, "Add");
             ?>
-            <img style='margin-left: -2px' title='<?php print __("Add");?>' src='<?php print $_SESSION[$guid]["absoluteURL"] . "/themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/page_new.png" ?>'/>
+            <img style='margin-left: -2px' title='<?php print __($guid, "Add");?>' src='<?php print $_SESSION[$guid]["absoluteURL"] . "/themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/page_new.png" ?>'/>
         </a>
     </div>
 
     <?php
 
     print "<h3>";
-        print __("Risk Assessment Templates");
+        print __($guid, "Risk Assessment Templates");
     print "</h3>";
 
     try {
@@ -57,13 +61,13 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     print "<table cellspacing='0' style='width: 100%'>";
         print "<tr class='head'>";
             print "<th>";
-                print __("Name");
+                print __($guid, "Name");
             print "</th>";
             print "<th>";
-                print __("Body");
+                print __($guid, "Body");
             print "</th>";
             print "<th>";
-                print __("Action");
+                print __($guid, "Action");
             print "</th>";
         print "</tr>";
         if ($resultTemplates->rowCount() > 0) {
@@ -81,9 +85,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                         print $template['body'];
                     print "</td>";
                     print "<td style='width:15%'>";
-                        print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_addRiskTemplate.php&tripPlannerRiskTemplateID=" . $template["tripPlannerRiskTemplateID"] . "'><img title='" . __('Edit') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/config.png'/></a> ";
+                        print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_addRiskTemplate.php&tripPlannerRiskTemplateID=" . $template["tripPlannerRiskTemplateID"] . "'><img title='" . __($guid, 'Edit') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/config.png'/></a> ";
 
-                            print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/modules/Trip Planner/trips_deleteRiskTemplateProcess.php?tripPlannerRiskTemplateID=" . $template["tripPlannerRiskTemplateID"] . "'><img title='" . __('Delete') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/garbage.png'/></a> ";
+                            print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/modules/Trip Planner/trips_deleteRiskTemplateProcess.php?tripPlannerRiskTemplateID=" . $template["tripPlannerRiskTemplateID"] . "'><img title='" . __($guid, 'Delete') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/garbage.png'/></a> ";
                     print "</td>";
                 print "</tr>";
                 $rowCount++;
@@ -91,7 +95,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         } else {
             print "<tr>";
                 print "<td colspan=3>";
-                    print __("There are no records to display.");
+                    print _("There are no records to display.");
                 print "</td>";
             print "</tr>";
         }
