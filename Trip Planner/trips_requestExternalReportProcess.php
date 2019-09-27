@@ -52,7 +52,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.
                             $students[] = $student['gibbonPersonID'];
                         }
                         $_SESSION[$guid]['report_student_' . $report . 'Summary.php_choices'] = $students;
-                        $URL = $_SESSION[$guid]['absoluteURL']."/report.php?q=/modules/Students/report_student_" . $report . 'Summary_print.php';
+                        $URL = $_SESSION[$guid]['absoluteURL']."/report.php?q=/modules/Students/report_student_" . $report . 'Summary.php&format=print';
                         header("Location: {$URL}");
                     } else {
                         $URL .= "trips_manage.php&return=error1";
@@ -73,7 +73,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.
     } else {
         $URL .= "trips_manage.php&return=error0";
         header("Location: {$URL}");
-        }    
+        }
 } else {
     $URL .= "trips_manage.php&return=error0";
     header("Location: {$URL}");
