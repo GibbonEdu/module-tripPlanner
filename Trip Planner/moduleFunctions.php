@@ -46,7 +46,7 @@ function getNameFromID($connection2, $gibbonPersonID)
 {
     try {
         $data = array("gibbonPersonID" => $gibbonPersonID);
-        $sql = "SELECT preferredName, surname FROM gibbonPerson WHERE gibbonPersonID=:gibbonPersonID";
+        $sql = "SELECT preferredName, surname, phone1 FROM gibbonPerson WHERE gibbonPersonID=:gibbonPersonID";
         $result = $connection2->prepare($sql);
         $result->execute($data);
     } catch (PDOException $e) {
@@ -982,13 +982,9 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                                 <b><?php echo __($guid, 'Students') ?></b>
                                 <?php
                                     echo "<div class='linkTop'>";
-                                        if(isActionAccessible($guid, $connection2, '/modules/Students/report_student_medicalSummary_print.php')) {
-                                            echo "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/modules/Trip Planner/trips_requestExternalReportProcess.php?tripPlannerRequestID=$tripPlannerRequestID&report=medical'>".__($guid, 'Medical Info')."<img style='margin-right: 10px;margin-left: 5px' title='".__($guid, 'Medical Info')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/print.png'/></a>";
-                                        }
-                                        if(isActionAccessible($guid, $connection2, '/modules/Students/report_student_emergencySummary_print.php')) {
-                                            echo "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/modules/Trip Planner/trips_requestExternalReportProcess.php?tripPlannerRequestID=$tripPlannerRequestID&report=emergency'>".__($guid, 'Emergency Info')."<img style='margin-right: 10px;margin-left: 5px' title='".__($guid, 'Emergency Info')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/print.png'/></a>";
-                                        }
-                                        echo "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/report.php?q=/modules/Trip Planner/trips_reportTripPeople.php&tripPlannerRequestID=$tripPlannerRequestID'>".__($guid, 'Student List')."<img style='margin-left: 5px' title='".__($guid, 'Student List')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/print.png'/></a>";
+                                        echo "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/report.php?q=/modules/Trip Planner/trips_reportTripPeople.php&tripPlannerRequestID=$tripPlannerRequestID'>".__($guid, 'Student List')."<img style='margin-right: 10px;margin-left: 5px' title='".__($guid, 'Student List')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/print.png'/></a>";
+                                        echo "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/report.php?q=/modules/Trip Planner/trips_reportTripOverview.php&tripPlannerRequestID=$tripPlannerRequestID&format=print&orientation=L'>".__($guid, 'Trip Overview')."<img style='margin-left: 5px' title='".__($guid, 'Student List')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/print.png'/></a>";
+
                                     echo '</div>';
                                 ?>
                                 <table class='noIntBorder' cellspacing='0' style='width:100%;'>

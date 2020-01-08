@@ -1,5 +1,9 @@
 CHANGELOG
 =========
+v1.1.00
+-------
+Added new all-in-one Trip Report
+
 v1.0.01
 -------
 v19 compatibility
