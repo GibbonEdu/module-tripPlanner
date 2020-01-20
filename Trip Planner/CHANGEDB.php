@@ -117,7 +117,9 @@ VALUES ('Trip Request Approval', 'Trip Planner', 'Manage Trips_full', 'Additiona
 $sql[$count][0]="1.0.01";
 $sql[$count++][1]="";
 
-
 $sql[$count][0]="1.1.00";
+$sql[$count++][1]="";
+
+$sql[$count][0]="1.1.01";
 $sql[$count++][1]="";
 ?>

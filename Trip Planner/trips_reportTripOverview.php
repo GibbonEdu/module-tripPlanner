@@ -154,6 +154,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                    $medical = $medicalGateway->queryMedicalFormsBySchoolYear($criteria, $gibbonSchoolYearID)->toArray(); //->fetchGrouped()
                    $students->joinColumn('gibbonPersonID', 'medical', $medical);
 
+                   // Join a set of medical conditions per student
+                   $medicalIDs = $students->getColumn('gibbonPersonMedicalID');
+                   $medicalConditions = $medicalGateway->selectMedicalConditionsByID($medicalIDs)->fetchGrouped();
+                   $students->joinColumn('gibbonPersonMedicalID', 'medicalConditions', $medicalConditions);
+
                    // Join a set of family adults per student
                    $people = $students->getColumn('gibbonPersonID');
                    $familyAdults = $familyGateway->selectFamilyAdultsByStudent($people, true)->fetchGrouped();
