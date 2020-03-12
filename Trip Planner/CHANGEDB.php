@@ -122,4 +122,11 @@ $sql[$count++][1]="";
 
 $sql[$count][0]="1.1.01";
 $sql[$count++][1]="";
+
+$sql[$count][0]="1.2.00";
+$sql[$count++][1]="
+INSERT INTO gibbonAction SET name='Today\'s Trips', precedence=0, category='Reports', description='Displays trips scheduled for today with the status requested, approved or awaiting final approval.', URLList='trips_reportToday.php', entryURL='trips_reportToday.php', defaultPermissionAdmin='Y', defaultPermissionTeacher='N', defaultPermissionStudent='N', defaultPermissionParent='N', defaultPermissionSupport='N', categoryPermissionStaff='Y', categoryPermissionStudent='N', categoryPermissionParent='N', categoryPermissionOther='N', gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='Trip Planner');end
+INSERT INTO `gibbonPermission` (`permissionID` ,`gibbonRoleID` ,`gibbonActionID`) VALUES (NULL , '1', (SELECT gibbonActionID FROM gibbonAction JOIN gibbonModule ON (gibbonAction.gibbonModuleID=gibbonModule.gibbonModuleID) WHERE gibbonModule.name='Trip Planner' AND gibbonAction.name='Today\'s Trips'));end
+
+";
 ?>

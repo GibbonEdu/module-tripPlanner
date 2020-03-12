@@ -1,5 +1,9 @@
 CHANGELOG
 =========
+v1.2.00
+-------
+Added Today's Trips report
+
 v1.1.01
 -------
 Fixed missing medical conditions from Trip Overview

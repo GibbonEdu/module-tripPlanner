@@ -91,7 +91,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                                 $dates .= " - ".DateTime::createFromFormat("Y-m-d", $day[1])->format("d/m/Y");
                             }
                             if ($day[2]) {
-                                $dates .= " (" . __("All Day") . ")";
+                                $dates .= " (" . __("All Day") . ")<br/>";
                             } else {
                                 $dates .= " (" . DateTime::createFromFormat("H:i:s", $day[3])->format("H:i") . " - ";
                                 $dates .= DateTime::createFromFormat("H:i:s", $day[4])->format("H:i") . ")<br/>";

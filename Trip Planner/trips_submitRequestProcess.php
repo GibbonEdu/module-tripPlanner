@@ -20,7 +20,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     $URL .= "trips_manage.php&return=error0";
     header("Location: {$URL}");
     exit();
-} else {   
+} else {
     $multipleDays = false;
     if (isset($_POST['multipleDays'])) {
         $multipleDays = true; //WHY?!
@@ -53,7 +53,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                     $role = "Teacher";
                     if ($item == "students") {
                         $role = "Student";
-                    } 
+                    }
 
                     foreach ($_POST[$item] as $person) {
                         $people[] = array("role" => $role, "gibbonPersonID" => $person);
@@ -104,7 +104,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     //     }
     //     $days[] = array("startDate" => DateTime::createFromFormat("d/m/Y", $_POST["startDate"])->format("Y-m-d"), "endDate" => DateTime::createFromFormat("d/m/Y", $_POST["startDate"])->format("Y-m-d"), "allDay" => (isset($_POST["allDay"]) ? 1 : 0), "startTime" => (!isset($_POST["allDay"]) ? $_POST["startTime"] : 0), "endTime" => (!isset($_POST["allDay"]) ? $_POST["endTime"] : 0));
     // }
-       
+
     $groupGateway = $container->get(GroupGateway::class);
     $groupNotFound = false;
 
@@ -144,7 +144,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         $result->execute($data);
         if (!$edit) $tripPlannerRequestID = $connection2->lastInsertId();
         logEvent($connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"], $edit ? "Edit" : "Request");
-    
+
         if ($edit) {
             $tables = array("tripPlannerCostBreakdown", "tripPlannerRequestPerson", "tripPlannerRequestDays");
             foreach ($tables as $table) {
@@ -152,7 +152,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                 $sqlEdit = "DELETE FROM " . $table . " WHERE tripPlannerRequestID=:tripPlannerRequestID";
                 $resultEdit = $connection2->prepare($sqlEdit);
                 $resultEdit->execute($dataEdit);
-            }  
+            }
         }
         $sql1 = "INSERT INTO tripPlannerCostBreakdown SET tripPlannerRequestID=:tripPlannerRequestID, title=:name, cost=:cost, description=:description";
         foreach ($costs as $cost) {
@@ -190,7 +190,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                 $data = array('gibbonGroupID' => $groupID, 'gibbonPersonID' => $person["gibbonPersonID"]);
                 $inserted = $groupGateway->insertGroupPerson($data);
                 //$partialFail &= !$inserted;
-            }  
+            }
 
             $dataGroup = array("tripPlannerRequestID" => $tripPlannerRequestID, "groupID" => $groupID);
             $sqlGroup = "UPDATE tripPlannerRequests SET messengerGroupID=:groupID WHERE tripPlannerRequestID=:tripPlannerRequestID";
@@ -202,5 +202,5 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     $URL .= "&return=success0&tripPlannerRequestID=" . $tripPlannerRequestID . ($edit ? "&mode=edit" : "");
     header("Location: {$URL}");
     exit();
-}   
+}
 ?>
