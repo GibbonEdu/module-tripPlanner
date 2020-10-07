@@ -43,7 +43,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     print "</div>";
 
     print "<h3>";
-        print __($guid, ($edit ? "Edit" : "Add") . " Risk Assessment Template");
+        print __m(($edit ? "Edit" : "Add") . " Risk Assessment Template");
     print "</h3>";
 
     if (isset($_GET['return'])) {
