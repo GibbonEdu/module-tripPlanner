@@ -24,6 +24,7 @@ $entryURL = "trips_manage.php";
 $type = "Additional";
 $category = "Learn";
 $version = "1.2.00";
+
 $author = "Ray Clark";
 $url = "https://github.com/raynichc/Trip-Planner";
 
@@ -39,7 +40,7 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerApprovers` (
     `timestampUpdate` timestamp NULL,
     `finalApprover` boolean DEFAULT 0 NULL,
     PRIMARY KEY (`tripPlannerApproverID`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
 $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequests` (
     `tripPlannerRequestID` int(7) unsigned zerofill NOT NULL AUTO_INCREMENT,
@@ -62,7 +63,7 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequests` (
     `letterToParents` text NOT NULL,
     `messengerGroupID` int(8) unsigned zerofill NULL,
     PRIMARY KEY (`tripPlannerRequestID`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
 $moduleTables[$tables++] = "CREATE TABLE `tripPlannerCostBreakdown` (
     `tripPlannerCostBreakdownID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
@@ -71,7 +72,7 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerCostBreakdown` (
     `description` text NOT NULL,
     `cost` decimal(12, 2) NOT NULL,
     PRIMARY KEY (`tripPlannerCostBreakdownID`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
 $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestLog` (
     `tripPlannerRequestLogID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
@@ -81,7 +82,7 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestLog` (
     `comment` text NULL,
     `timestamp` timestamp NULL,
     PRIMARY KEY (`tripPlannerRequestLogID`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
 $moduleTables[$tables++] = "INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`)
 VALUES
@@ -100,7 +101,7 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestPerson` (
     `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
     `role` ENUM('Student', 'Teacher') NOT NULL,
     PRIMARY KEY (`tripPlannerRequestPersonID`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
 $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestCover` (
     `tripPlannerRequestCoverID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
@@ -109,14 +110,14 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestCover` (
     `requiresCover` boolean DEFAULT TRUE NOT NULL,
     `date` date NOT NULL,
     PRIMARY KEY (`tripPlannerRequestCoverID`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
 $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRiskTemplates` (
     `tripPlannerRiskTemplateID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
     `name` varchar(30) NOT NULL,
     `body` text NOT NULL,
     PRIMARY KEY (`tripPlannerRiskTemplateID`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
 $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestDays` (
     `tripPlannerRequestDaysID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
@@ -127,7 +128,7 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestDays` (
     `startTime` time NOT NULL DEFAULT '00:00:00',
     `endTime` time NOT NULL DEFAULT '00:00:00',
     PRIMARY KEY (`tripPlannerRequestDaysID`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
 $moduleTables[$tables++] = "INSERT INTO `gibbonNotificationEvent` (`event`, `moduleName`, `actionName`, `type`, `scopes`, `active`)
 VALUES ('Trip Request Approval', 'Trip Planner', 'Manage Trips_full', 'Additional', 'All', 'Y');";
@@ -305,4 +306,5 @@ $actionRows[$actionCount]["categoryPermissionStudent"] = "N";
 $actionRows[$actionCount]["categoryPermissionParent"] = "N";
 $actionRows[$actionCount]["categoryPermissionOther"] = "N";
 $actionCount++;
+
 ?>
