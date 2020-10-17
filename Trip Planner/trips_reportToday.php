@@ -18,8 +18,12 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 include "./modules/Trip Planner/moduleFunctions.php";
+include "./modules/Trip Planner/src/Domain/TripPlanner/TripGateway.php";
 
 use Gibbon\Forms\Form;
+use Gibbon\Tables\DataTable;
+use Gibbon\Services\Format;
+use Gibbon\Domain\TripPlanner\TripGateway;
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_reportToday.php')) {
     print "<div class='error'>";
@@ -33,7 +37,14 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_report
     try {
         $data = array('date' => date('Y-m-d'));
         $sql = "SELECT
-                tripPlannerRequests.tripPlannerRequestID, tripPlannerRequests.timestampCreation, tripPlannerRequests.title, tripPlannerRequests.description, tripPlannerRequests.status, gibbonPerson.preferredName, gibbonPerson.surname, gibbonPerson.gibbonPersonID
+                tripPlannerRequests.tripPlannerRequestID, 
+                tripPlannerRequests.timestampCreation, 
+                tripPlannerRequests.title, 
+                tripPlannerRequests.description, 
+                tripPlannerRequests.status, 
+                gibbonPerson.preferredName, 
+                gibbonPerson.surname, 
+                gibbonPerson.gibbonPersonID
             FROM tripPlannerRequests
                 JOIN tripPlannerRequestDays ON (tripPlannerRequestDays.tripPlannerRequestID=tripPlannerRequests.tripPlannerRequestID)
                 LEFT JOIN gibbonPerson ON tripPlannerRequests.creatorPersonID = gibbonPerson.gibbonPersonID
@@ -47,6 +58,28 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_report
     } catch (PDOException $e) {
         echo $e->getMessage();
     }
+
+    $gateway = $container->get(TripGateway::class);
+    $criteria = $gateway->newQueryCriteria();
+    $trips = $gateway->queryTrips($criteria);
+
+    $table = DataTable::createPaginated('report',$criteria);
+    $table->addColumn('tripTitle',__('Title'));
+    $table->addColumn('description',__('Description'));
+    $table
+      ->addColumn('owner',__('Owner'))
+      ->format(function($row) {
+        return Format::name($row['title'],$row['preferredName'],$row['surname']);
+      });
+    $table->addColumn('status',__('Status'));
+    $table->addActionColumn()
+        ->addParam('tripPlannerRequestID')
+        ->format(function($row,$actions) {
+          $actions
+            ->addAction('view',__('View'))
+            ->setURL('/modules/Trip Planner/trips_requestView.php');
+        });
+    echo $table->render($trips); 
     ?>
 
     <h3>
