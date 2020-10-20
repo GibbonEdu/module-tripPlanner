@@ -24,7 +24,6 @@ use Gibbon\Forms\Form;
 use Gibbon\Tables\DataTable;
 use Gibbon\Services\Format;
 use Gibbon\Module\TripPlanner\Domain\TripGateway;
-#use Gibbon\Module\TripPlanner\Domain;
 use Gibbon\Domain\School\SchoolYearGateway;
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php')) {
