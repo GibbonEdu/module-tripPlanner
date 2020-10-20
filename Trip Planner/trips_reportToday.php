@@ -30,7 +30,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_report
         print "You do not have access to this action.";
     print "</div>";
 } else {
-    $page->breadcrumbs->add(_('Today\'s Trips'));
+    $page->breadcrumbs->add(__('Today\'s Trips'));
 
     $gateway = $container->get(TripGateway::class);
     $criteria = $gateway
