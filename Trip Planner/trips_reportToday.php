@@ -18,7 +18,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 include "./modules/Trip Planner/moduleFunctions.php";
-include "./modules/Trip Planner/src/Domain/TripPlanner/TripGateway.php";
 
 use Gibbon\Forms\Form;
 use Gibbon\Tables\DataTable;
