@@ -30,36 +30,35 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_report
         print "You do not have access to this action.";
     print "</div>";
 } else {
-    $page->breadcrumbs->add( _('Today\'s Trips'));
+    $page->breadcrumbs->add(_('Today\'s Trips'));
 
     $gateway = $container->get(TripGateway::class);
     $criteria = $gateway
       ->newQueryCriteria(true)
-      ->filterBy('tripDay',date('Y-m-d'))
-      ->filterBy('status',serialize([
+      ->filterBy('tripDay', date('Y-m-d'))
+      ->filterBy('status', serialize([
         'Requested',
         'Approved',
         'Awaiting Final Approval'
       ]));
     $trips = $gateway->queryTrips($criteria);
 
-    $table = DataTable::createPaginated('report',$criteria);
+    $table = DataTable::createPaginated('report', $criteria);
     $table->setTitle(__("Today's Trips"));
-    $table->addColumn('tripTitle',__('Title'));
-    $table->addColumn('description',__('Description'));
+    $table->addColumn('tripTitle', __('Title'));
+    $table->addColumn('description', __('Description'));
     $table
-      ->addColumn('owner',__('Owner'))
-      ->format(function($row) {
-        return Format::name($row['title'],$row['preferredName'],$row['surname']);
+      ->addColumn('owner', __('Owner'))
+      ->format(function ($row) {
+        return Format::name($row['title'], $row['preferredName'], $row['surname']);
       });
-    $table->addColumn('status',__('Status'));
+    $table->addColumn('status', __('Status'));
     $table->addActionColumn()
         ->addParam('tripPlannerRequestID')
-        ->format(function($row,$actions) {
-          $actions
-            ->addAction('view',__('View'))
+        ->format(function ($row, $actions) {
+            $actions
+            ->addAction('view', __('View'))
             ->setURL('/modules/Trip Planner/trips_requestView.php');
         });
-    echo $table->render($trips); 
+    echo $table->render($trips);
 }
-?>
