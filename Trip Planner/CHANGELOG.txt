@@ -1,5 +1,8 @@
 CHANGELOG
 =========
+v1.3.00
+-------
+
 v1.2.00
 -------
 Added Today's Trips report
