@@ -3,7 +3,6 @@
 use Gibbon\Module\TripPlanner\Domain\ApproverGateway;
 
 require_once '../../gibbon.php';
-require_once './moduleFunctions.php';
 
 $URL = $gibbon->session->get('absoluteURL') . '/index.php?q=/modules/' . $gibbon->session->get('module');
 

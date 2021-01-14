@@ -21,8 +21,6 @@ use Gibbon\Forms\Form;
 use Gibbon\Forms\DatabaseFormFactory;
 use Gibbon\Module\TripPlanner\Domain\ApproverGateway;
 
-require_once __DIR__ . '/moduleFunctions.php';
-
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_editApprover.php')) {
     //Acess denied
     $page->addError(__('You do not have access to this action.'));

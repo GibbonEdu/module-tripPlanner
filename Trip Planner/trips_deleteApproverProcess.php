@@ -2,7 +2,6 @@
 use Gibbon\Module\TripPlanner\Domain\ApproverGateway;
 
 require_once '../../gibbon.php';
-require_once './moduleFunctions.php';
 
 $URL = $_SESSION[$guid]["absoluteURL"] . '/index.php?q=/modules/Trip Planner/trips_manageApprovers.php';
 

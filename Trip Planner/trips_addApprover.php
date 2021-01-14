@@ -21,8 +21,6 @@ use Gibbon\Forms\Form;
 use Gibbon\Forms\DatabaseFormFactory;
 use Gibbon\Module\TripPlanner\Domain\ApproverGateway;
 
-require_once __DIR__ . '/moduleFunctions.php';
-
 $page->breadcrumbs
         ->add(__('Manage Approvers'), 'trips_manageApprovers.php')
         ->add(__('Add Approver'));
