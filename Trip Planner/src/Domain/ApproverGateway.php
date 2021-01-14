@@ -32,7 +32,7 @@ class ApproverGateway extends QueryableGateway
         return $this->runQuery($query, $critera);
     }
 
-    public function selectStaffForApprover() {
+    public function selectStaffForApprover($ignore = true) {
         $select = $this
             ->newSelect()
             ->from('gibbonPerson')
@@ -40,11 +40,14 @@ class ApproverGateway extends QueryableGateway
                 'gibbonPerson.gibbonPersonID', 'title', 'surname', 'preferredName', 'username'
             ])
             ->innerJoin('gibbonStaff', 'gibbonStaff.gibbonPersonID=gibbonPerson.gibbonPersonID')
-            ->leftJoin($this->getTableName(), 'tripPlannerApprovers.gibbonPersonID=gibbonPerson.gibbonPersonID')
-            ->where("gibbonPerson.status=:status")
+            ->where('gibbonPerson.status=:status')
             ->bindValue('status', 'Full')
-            ->where('tripPlannerApprovers.gibbonPersonID IS NULL')
             ->orderBy(['surname', 'preferredName']);
+
+        if ($ignore) {
+            $select->leftJoin($this->getTableName(), 'tripPlannerApprovers.gibbonPersonID=gibbonPerson.gibbonPersonID')
+                ->where('tripPlannerApprovers.gibbonPersonID IS NULL');
+        }
 
         $result = $this->runSelect($select);
         $users = array_reduce($result->fetchAll(), function ($group, $item) {
