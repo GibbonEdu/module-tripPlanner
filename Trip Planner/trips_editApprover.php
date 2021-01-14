@@ -55,7 +55,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_editAp
         }
 
         $row = $form->addRow();
-            $row->addFooter();
             $row->addSubmit();
 
         print $form->getOutput();
