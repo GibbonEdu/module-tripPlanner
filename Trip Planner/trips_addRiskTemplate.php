@@ -22,7 +22,7 @@ use Gibbon\Forms\Form;
 require_once __DIR__ . '/moduleFunctions.php';
 
 $page->breadcrumbs
-    ->add(__('Risk Assessment Templates'), 'trips_manageApprovers.php')
+    ->add(__('Risk Assessment Templates'), 'trips_manageRiskTemplates.php')
     ->add(__('Add Template'));
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manageRiskTemplates.php')) {
@@ -45,7 +45,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         $row->addLabel('name', 'Name');
         $row->addTextfield('name')
             ->setRequired(true)
-            ->maxLength(30);
+            ->maxLength(30)
+            ->uniqueField('./modules/' . $gibbon->session->get('module') . '/trips_addRiskTemplateAjax.php');
 
     $row = $form->addRow();
         $column = $row->addColumn();
