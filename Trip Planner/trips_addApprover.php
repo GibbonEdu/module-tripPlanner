@@ -19,6 +19,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 use Gibbon\Forms\Form;
 use Gibbon\Forms\DatabaseFormFactory;
+use Gibbon\Module\TripPlanner\Domain\ApproverGateway;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
@@ -38,13 +39,16 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_addApp
         returnProcess($guid, $_GET['return'], $editLink, null);
     }   
 
+    $approverGateway = $container->get(ApproverGateway::class);
+
     $form = Form::create('addApprover', $gibbon->session->get('absoluteURL') . '/index.php?q=/modules/' . $gibbon->session->get('module') . '/trips_addApproverProcess.php');
     $form->setFactory(DatabaseFormFactory::create($pdo));
     $form->setTitle('Add Approver');
 
     $row = $form->addRow();
         $row->addLabel('gibbonPersonID', 'Staff');
-        $row->addSelectStaff('gibbonPersonID')
+        $row->addSelectPerson('gibbonPersonID')
+            ->fromArray($approverGateway->selectStaffForApprover())
             ->setRequired(true)
             ->placeholder('Please select...');
 
