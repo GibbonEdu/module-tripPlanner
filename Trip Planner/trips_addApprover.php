@@ -37,7 +37,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_addApp
 
     $approverGateway = $container->get(ApproverGateway::class);
 
-    $form = Form::create('addApprover', $gibbon->session->get('absoluteURL') . '/index.php?q=/modules/' . $gibbon->session->get('module') . '/trips_addApproverProcess.php');
+    $form = Form::create('addApprover', $gibbon->session->get('absoluteURL') . '/modules/' . $gibbon->session->get('module') . '/trips_addApproverProcess.php', 'post');
+    $form->addHiddenValue('address', $gibbon->session->get('address'));
     $form->setFactory(DatabaseFormFactory::create($pdo));
     $form->setTitle('Add Approver');
 
