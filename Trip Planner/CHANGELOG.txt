@@ -1,5 +1,11 @@
 CHANGELOG
 =========
+v1.3.00
+-------
+OOification
+Implmentation of Gateways
+Removed redundant columns from tripPlannerApprovers
+
 v1.2.00
 -------
 Added Today's Trips report
