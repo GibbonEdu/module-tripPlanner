@@ -32,11 +32,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_addApp
     $page->addError(__('You do not have access to this action.'));
 } else {
     if (isset($_GET['return'])) {
-        $editLink = null;
-        if(isset($_GET['tripPlannerApproverID'])) {
-            $editLink = $gibbon->session->get('absoluteURL') . '/index.php?q=/modules/' . $gibbon->session->get('module') . '/trips_editApprover.php&tripPlannerApproverID=' . $_GET['tripPlannerApproverID'];
-        }
-        returnProcess($guid, $_GET['return'], $editLink, null);
+        returnProcess($guid, $_GET['return'], $gibbon->session->get('absoluteURL') . '/index.php?q=/modules/' . $gibbon->session->get('module') . '/trips_manageApprovers.php', null);
     }   
 
     $approverGateway = $container->get(ApproverGateway::class);
