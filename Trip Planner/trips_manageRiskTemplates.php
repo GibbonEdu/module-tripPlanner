@@ -64,7 +64,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         ->addParam('tripPlannerRiskTemplateID')
         ->format(function ($riskTemplate, $actions) use ($moduleName) {
             $actions->addAction('edit', __('Edit'))
-                ->setURL('/modules/' . $moduleName . '/trips_addRiskTemplate.php');
+                ->setURL('/modules/' . $moduleName . '/trips_editRiskTemplate.php');
 
             //TODO: Create Page
             $actions->addAction('delete', __('Delete'))
