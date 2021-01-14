@@ -9,7 +9,7 @@ $URL = $gibbon->session->get('absoluteURL') . '/index.php?q=/modules/' . $gibbon
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_addApprover.php')) {
     //Acess denied
-    $URL .= '/trips_manageApprover.php&return=error0';
+    $URL .= '/trips_manageApprovers.php&return=error0';
     header("Location: {$URL}");
     exit();
 } else {    
