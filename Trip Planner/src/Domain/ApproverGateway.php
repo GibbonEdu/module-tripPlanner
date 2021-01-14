@@ -55,6 +55,23 @@ class ApproverGateway extends QueryableGateway
         return $users;
     }
 
+    public function insertApprover($gibbonPersonID, $finalApprover) {
+        $select = $this
+            ->newSelect()
+            ->from($this->getTableName())
+            ->cols(['MAX(sequenceNumber) + 1 as sequenceNumber']);
+        $result = $this->runSelect($select);
+
+        if ($result->rowCount() > 0) {
+            $sequenceNumber = $result->fetch()['sequenceNumber'];
+        } else {
+            return false;
+        }
+
+        $this->insert(['gibbonPersonID' => $gibbonPersonID, 'sequenceNumber' => $sequenceNumber, 'finalApprover' => $finalApprover]);
+        return true;
+    }
+
     public function updateSequence($order) {
         $this->db()->beginTransaction();
 
