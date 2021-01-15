@@ -20,11 +20,11 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 include "./modules/Trip Planner/moduleFunctions.php";
 include "./modules/Trip Planner/src/Domain/TripPlanner/TripGateway.php";
 
-use Gibbon\Forms\Form;
-use Gibbon\Tables\DataTable;
-use Gibbon\Services\Format;
-use Gibbon\Module\TripPlanner\Domain\TripGateway;
 use Gibbon\Domain\School\SchoolYearGateway;
+use Gibbon\Forms\Form;
+use Gibbon\Module\TripPlanner\Domain\TripGateway;
+use Gibbon\Services\Format;
+use Gibbon\Tables\DataTable;
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php')) {
     print "<div class='error'>";
@@ -110,7 +110,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             $row->addSubmit();
 
         print $form->getOutput();
-        
+      
         $tripGateway = $container->get(TripGateway::class);
         $criteria = $tripGateway->newQueryCriteria(true)
               ->filterBy('status', $statusFilter)
@@ -123,42 +123,55 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
 
         $table = DataTable::createPaginated('trips', $criteria);
         $table->setTitle(__("Requests"));
-        $table
-          ->addHeaderAction('add', __('Submit Request'))
+      
+        $table->addHeaderAction('add', __('Submit Request'))
+          ->displayLabel()
           ->setURL('/modules/Trip Planner/trips_submitRequest.php');
+      
         $table->addColumn('tripTitle', __('Title'));
+      
         $table->addColumn('description', __('Description'));
-        $table
-          ->addColumn('owner', __('Owner'))
-          ->format(function ($row) {
-            return Format::name($row['title'], $row['preferredName'], $row['surname']);
-          });
+      
+        $table->addColumn('owner', __('Owner'))
+          ->format(Format::using('name', ['title', 'preferredName', 'surname', 'Staff', false, true]);
+
         $table->addColumn('status', __('Status'));
-        $table
-          ->addActionColumn()
+                   
+        $table->addActionColumn()
+        ->addParam('tripPlannerRequestID')
+        ->format(function ($row, $actions) use ($guid, $connection2) {
+                $actions->addAction('approve/reject', __('Approve/Reject'))
+                    ->setURL('/modules/Trip Planner/trips_requestApprove.php')
+                    ->setIcon('iconTick');
+            }
+            
+           ;
+        });
+                   
+        $table->addActionColumn()
           ->addParam('tripPlannerRequestID')
           ->format(function ($row, $actions) use ($connection2, $gibbon) {
-              $actions
-                ->addAction('view', __('View Details'))
+              $actions->addAction('view', __('View Details'))
                 ->setURL('/modules/Trip Planner/trips_requestView.php');
 
             if ($gibbon->session->get('gibbonPersonID') == $row['creatorPersonID'] &&
                   $row['status'] != 'Cancelled' &&
                   $row['status'] != 'Rejected'
               ) {
-                $actions
-                ->addAction('edit', __('Edit'))
+                $actions->addAction('edit', __('Edit'))
                 ->addParam('mode', 'edit')
                 ->setURL('/modules/Trip Planner/trips_submitRequest.php');
             }
-
-            if (isApprover($connection2, $gibbon->session->get('gibbonPersonID'))) {
-                $actions
-                ->addAction('approve', __('Approve/Reject'))
+            
+            if (($row["status"] == 'Requested' && needsApproval($connection2, $row["tripPlannerRequestID"], $gibbon->session->get('gibbonPersonID')) == 0
+                || ($row["status"] == "Awaiting Final Approval" && isApprover($connection2, $gibbon->session->get('gibbonPersonID'), true))) {
+                $actions->addAction('approve', __('Approve/Reject'))
                 ->setURL('/modules/Trip Planner/trips_requestApprove.php')
                 ->setIcon('iconTick');
             }
           });
           echo $table->render($trips);
+    } else {
+        $page->addError(__('Highest grouped action could not be determined.'));
     }
 }
