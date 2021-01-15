@@ -17,23 +17,22 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-include "./modules/Trip Planner/moduleFunctions.php";
+require_once __DIR__ . '/moduleFunctions.php';
 
 use Gibbon\Forms\Form;
+use Gibbon\Services\Format;
+use Gibbon\Tables\DataTable;
+
+$page->breadcrumbs->add(__('Today\'s Trips'));
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_reportToday.php')) {
-    print "<div class='error'>";
-        print "You do not have access to this action.";
-    print "</div>";
+    $page->addError(__('You do not have access to this action.'));
 } else {
-    print "<div class='trail'>";
-        print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . _("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . _(getModuleName($_GET["q"])) . "</a> > </div><div class='trailEnd'>" . _('Today\'s Trips') . "</div>";
-    print "</div>";
-
+    //TODO: Migrate to Gateway
     try {
         $data = array('date' => date('Y-m-d'));
         $sql = "SELECT
-                tripPlannerRequests.tripPlannerRequestID, tripPlannerRequests.timestampCreation, tripPlannerRequests.title, tripPlannerRequests.description, tripPlannerRequests.status, gibbonPerson.preferredName, gibbonPerson.surname, gibbonPerson.gibbonPersonID
+                tripPlannerRequests.tripPlannerRequestID, tripPlannerRequests.timestampCreation, tripPlannerRequests.title, tripPlannerRequests.description, tripPlannerRequests.status, gibbonPerson.title as personTitle, gibbonPerson.preferredName, gibbonPerson.surname, gibbonPerson.gibbonPersonID
             FROM tripPlannerRequests
                 JOIN tripPlannerRequestDays ON (tripPlannerRequestDays.tripPlannerRequestID=tripPlannerRequests.tripPlannerRequestID)
                 LEFT JOIN gibbonPerson ON tripPlannerRequests.creatorPersonID = gibbonPerson.gibbonPersonID
@@ -47,92 +46,37 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_report
     } catch (PDOException $e) {
         echo $e->getMessage();
     }
-    ?>
 
-    <h3>
-        Today's Trips
-    </h3>
+    $moduleName = $gibbon->session->get('module');
 
-    <table cellspacing = '0' style = 'width: 100% !important'>
-        <tr>
-            <th>
-                Title
-            </th>
-            <th>
-                Description
-            </th>
-            <th>
-                Owner
-            </th>
-            <th>
-                Status
-            </th>
-            <th>
-                Action
-            </th>
-        </tr>
-    <?php
-    if ($result->rowCount() == 0) {
-        ?>
-        <tr>
-            <td colspan=5>
-                There are no records to display
-            </td>
-        </tr>
-    <?php
-    } else {
-        $rowCount = 0;
-        $descriptionLength = 100;
-        while ($row = $result->fetch()) {
-            $show = true;
-            if ($relationFilter == "AMA" && $ama) {
-                if (!($row["status"] == "Requested" && needsApproval($connection2, $row["tripPlannerRequestID"], $_SESSION[$guid]["gibbonPersonID"])) == 0 && !($row["status"] == "Awaiting Final Approval" && isApprover($connection2, $_SESSION[$guid]["gibbonPersonID"], true))) {
-                    $show = false;
-                }
-            }
+    //TODO: pagination?
+    $table = DataTable::create('todaysTrips');
+    $table->setTitle('Today\'s Trips');
 
-            if ($eutFilter) {
-                $startDate = getFirstDayOfTrip($connection2, $row["tripPlannerRequestID"]);
-                if (strtotime($startDate) < mktime(0, 0, 0) && $row["status"] != "Approved") {
-                    $show = false;
-                }
-            }
-            if ($show) {
-                $class = "odd";
-                if ($rowCount % 2 == 0) {
-                    $class = "even";
-                }
-                print "<tr class='$class'>";
-                    print "<td style='width:20%'>" . $row['title'] . "</td>";
-                    $descriptionText = strip_tags($row['description']);
-                    if (strlen($descriptionText)>$descriptionLength) {
-                        $descriptionText = substr($descriptionText, 0, $descriptionLength) . "...";
-                    }
-                    print "<td>" . $descriptionText . "</td>";
-                    print "<td style='width:20%'>" . $row['preferredName'] . " " . $row["surname"] . "</td>";
-                    print "<td style='width:12%'>";
-                        print $row['status'] . "</br>";
-                    print "</td>";
-                    print "<td style='width:16.5%'>";
-                        print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID=" . $row["tripPlannerRequestID"] . "'><img title='" . _('View') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/plus.png'/></a> ";
-                    print "</td>";
-                print "</tr>";
-                $rowCount++;
-            }
-        }
+    $table->addExpandableColumn('description')
+        ->format(function ($trip) {
+            $output = '';
 
-        if($rowCount == 0) {
-              ?>
-            <tr>
-                <td colspan=5>
-                    There are no records to display
-                </td>
-            </tr>
-        <?php
-        }
-    }
-    ?>
-    </table>
-    <?php
+            $output .= '<h6>' . __('Description') . '</h6>';
+            $output .= nl2brr($trip['description']);
+
+            return $output;
+        });
+
+    $table->addColumn('title', __('Title'));
+
+    $table->addColumn('owner', __('Owner'))
+        ->format(Format::using('name', ['personTitle', 'preferredName', 'surname', 'Staff', false, true]));
+
+    $table->addColumn('status', __('Status'));
+
+    $table->addActionColumn()
+        ->addParam('tripPlannerRequestID')
+        ->format(function ($trip, $actions) use ($moduleName) {
+            $actions->addAction('view', __('View'))
+                ->setURL('/modules/' . $moduleName . '/trips_requestView.php');
+        });
+
+    echo $table->render($result->toDataSet());
 }
 ?>
