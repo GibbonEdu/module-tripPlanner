@@ -17,47 +17,56 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-include "./modules/Trip Planner/moduleFunctions.php";
+require_once __DIR__ . '/moduleFunctions.php';
 
 use Gibbon\Forms\Form;
-use Gibbon\Tables\DataTable;
-use Gibbon\Services\Format;
 use Gibbon\Module\TripPlanner\Domain\TripGateway;
+use Gibbon\Services\Format;
+use Gibbon\Tables\DataTable;
+
+$page->breadcrumbs->add(__('Today\'s Trips'));
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_reportToday.php')) {
-    print "<div class='error'>";
-        print "You do not have access to this action.";
-    print "</div>";
+    $page->addError(__('You do not have access to this action.'));
 } else {
-    $page->breadcrumbs->add(__('Today\'s Trips'));
-
-    $gateway = $container->get(TripGateway::class);
-    $criteria = $gateway
-      ->newQueryCriteria(true)
+    $moduleName = $gibbon->session->get('module');
+  
+    $tripGateway = $container->get(TripGateway::class);
+    $criteria = $tripGateway->newQueryCriteria(true)
       ->filterBy('tripDay', date('Y-m-d'))
       ->filterBy('status', serialize([
         'Requested',
         'Approved',
         'Awaiting Final Approval'
       ]));
-    $trips = $gateway->queryTrips($criteria);
+    $trips = $tripGateway->queryTrips($criteria);
 
     $table = DataTable::createPaginated('report', $criteria);
     $table->setTitle(__("Today's Trips"));
+  
+    $table->addExpandableColumn('description')
+        ->format(function ($trip) {
+            $output = '';
+
+            $output .= '<h6>' . __('Description') . '</h6>';
+            $output .= nl2brr($trip['description']);
+
+            return $output;
+        });
+  
     $table->addColumn('tripTitle', __('Title'));
-    $table->addColumn('description', __('Description'));
-    $table
-      ->addColumn('owner', __('Owner'))
-      ->format(function ($row) {
-        return Format::name($row['title'], $row['preferredName'], $row['surname']);
-      });
+    
+    $table->addColumn('owner', __('Owner'))
+       ->format(Format::using('name', ['title', 'preferredName', 'surname', 'Staff', false, true]));
+
     $table->addColumn('status', __('Status'));
+  
     $table->addActionColumn()
         ->addParam('tripPlannerRequestID')
-        ->format(function ($row, $actions) {
-            $actions
-            ->addAction('view', __('View'))
-            ->setURL('/modules/Trip Planner/trips_requestView.php');
+        ->format(function ($trip, $actions) use ($moduleName) {
+            $actions->addAction('view', __('View'))
+                ->setURL('/modules/' . $moduleName . '/trips_requestView.php');
         });
+
     echo $table->render($trips);
 }

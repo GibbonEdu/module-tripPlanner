@@ -17,88 +17,60 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-include "./modules/Trip Planner/moduleFunctions.php";
+use Gibbon\Module\TripPlanner\Domain\RiskTemplateGateway;
+use Gibbon\Services\Format;
+use Gibbon\Tables\DataTable;
+
+require_once __DIR__ . '/moduleFunctions.php';
+
+$page->breadcrumbs->add(__('Risk Assessment Templates'));
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manageRiskTemplates.php')) {
     //Acess denied
-    print "<div class='error'>";
-        print "You do not have access to this action.";
-    print "</div>";
+    $page->addError(__('You do not have access to this action.'));
 } else {
-    print "<div class='trail'>";
-        print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . _("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . _(getModuleName($_GET["q"])) . "</a> > </div><div class='trailEnd'>" . _('Risk Assessment Templates') . "</div>";
-    print "</div>";
-
     if (isset($_GET['return'])) {
         returnProcess($guid, $_GET['return'], null, null);
     }
 
-    ?>
+    $moduleName = $gibbon->session->get('module');
 
-    <div class="linkTop">
-        <a style='position:relative; bottom:10px; float:right;' href='<?php print $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_addRiskTemplate.php" ?>'>
-            <?php
-                print __m("Add");
-            ?>
-            <img style='margin-left: -2px' title='<?php print __m("Add");?>' src='<?php print $_SESSION[$guid]["absoluteURL"] . "/themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/page_new.png" ?>'/>
-        </a>
-    </div>
+    $riskTemplateGateway = $container->get(RiskTemplateGateway::class);
 
-    <?php
+    $criteria = $riskTemplateGateway->newQueryCriteria()
+        ->sortBy(['name'])
+        ->fromPOST();
 
-    print "<h3>";
-        print __m("Risk Assessment Templates");
-    print "</h3>";
+    $table = DataTable::createPaginated('risktemplates', $criteria);
+    $table->setTitle(__('Risk Assessment Templates'));
 
-    try {
-        $sqlTemplates = "SELECT tripPlannerRiskTemplateID, name, body FROM tripPlannerRiskTemplates ORDER BY name ASC";
-        $resultTemplates = $connection2->prepare($sqlTemplates);
-        $resultTemplates->execute();
-    } catch(PDOException $e) {
+    $table->addHeaderAction('add', __('Add'))
+        ->setURL('/modules/' . $gibbon->session->get('module') . '/trips_addRiskTemplate.php')
+        ->displayLabel();
+    
+    $table->addExpandableColumn('body')
+        ->format(function ($riskTemplate) {
+            $output = '';
 
-    }
+            $output .= Format::bold(__('Risk Template Content')) . '<br/>';
+            $output .= nl2brr($riskTemplate['body']) . '<br/>';
 
-    print "<table cellspacing='0' style='width: 100%'>";
-        print "<tr class='head'>";
-            print "<th>";
-                print __m("Name");
-            print "</th>";
-            print "<th>";
-                print __m("Body");
-            print "</th>";
-            print "<th>";
-                print __m("Action");
-            print "</th>";
-        print "</tr>";
-        if ($resultTemplates->rowCount() > 0) {
-            $rowCount = 0;
-            while ($template = $resultTemplates->fetch()) {
-                $class = "odd";
-                if ($rowCount % 2 == 0) {
-                    $class = "even";
-                }
-                print "<tr class='$class'>";
-                    print "<td style='width:25%'>";
-                        print $template['name'];
-                    print "</td>";
-                    print "<td>";
-                        print $template['body'];
-                    print "</td>";
-                    print "<td style='width:15%'>";
-                        print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_addRiskTemplate.php&tripPlannerRiskTemplateID=" . $template["tripPlannerRiskTemplateID"] . "'><img title='" . __m('Edit') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/config.png'/></a> ";
+            return $output;
+        });
+    
+    $table->addColumn('name', __('Risk Template Name'));
 
-                            print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/modules/Trip Planner/trips_deleteRiskTemplateProcess.php?tripPlannerRiskTemplateID=" . $template["tripPlannerRiskTemplateID"] . "'><img title='" . __m('Delete') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/garbage.png'/></a> ";
-                    print "</td>";
-                print "</tr>";
-                $rowCount++;
-            }
-        } else {
-            print "<tr>";
-                print "<td colspan=3>";
-                    print _("There are no records to display.");
-                print "</td>";
-            print "</tr>";
-        }
-    print "</table>";
+    $table->addActionColumn()
+        ->addParam('tripPlannerRiskTemplateID')
+        ->format(function ($riskTemplate, $actions) use ($moduleName) {
+            $actions->addAction('edit', __('Edit'))
+                ->setURL('/modules/' . $moduleName . '/trips_editRiskTemplate.php');
+
+            //TODO: Create Page
+            $actions->addAction('delete', __('Delete'))
+                ->setURL('/modules/' . $moduleName . '/trips_deleteRiskTemplate.php');
+        });
+
+    echo $table->render($riskTemplateGateway->queryTemplates($criteria));
 }   
 ?>

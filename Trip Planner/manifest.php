@@ -23,7 +23,7 @@ $description = "A trip planner module for Gibbon.";
 $entryURL = "trips_manage.php";
 $type = "Additional";
 $category = "Learn";
-$version = "1.2.00";
+$version = "1.3.00";
 
 $author = "Ray Clark";
 $url = "https://github.com/raynichc/Trip-Planner";
@@ -34,10 +34,6 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerApprovers` (
     `tripPlannerApproverID` int(4) unsigned zerofill NOT NULL AUTO_INCREMENT,
     `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
     `sequenceNumber` int(4) NULL,
-    `gibbonPersonIDCreator` int(10) unsigned zerofill NOT NULL,
-    `timestampCreator` timestamp NULL,
-    `gibbonPersonIDUpdate` int(10) unsigned zerofill NULL,
-    `timestampUpdate` timestamp NULL,
     `finalApprover` boolean DEFAULT 0 NULL,
     PRIMARY KEY (`tripPlannerApproverID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";

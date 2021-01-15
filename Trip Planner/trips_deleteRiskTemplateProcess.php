@@ -1,41 +1,36 @@
 <?php
 
-//Module includes
-include '../../gibbon.php';
+use Gibbon\Module\TripPlanner\Domain\RiskTemplateGateway;
 
-include "./moduleFunctions.php";
+require_once '../../gibbon.php';
 
-$URL = $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_manageRiskTemplates.php";
+$URL = $gibbon->session->get('absoluteURL') . '/index.php?q=/modules/' . $gibbon->session->get('module');
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manageRiskTemplates.php')) {
     //Acess denied
-    $URL .= "&return=error0";
+    $URL .= '/trips_manage.php&return=error0';
     header("Location: {$URL}");
     exit();
 } else {
-    if (isset($_GET["tripPlannerRiskTemplateID"])) {
-        if ($_GET["tripPlannerRiskTemplateID"] != null && $_GET["tripPlannerRiskTemplateID"] != "") {
-            $tripPlannerRiskTemplateID = $_GET["tripPlannerRiskTemplateID"];
-        }
+    $URL .= '/trips_manageRiskTemplates.php';
+
+    $riskTemplateGateway = $container->get(RiskTemplateGateway::class);
+
+    $tripPlannerRiskTemplateID = $_POST['tripPlannerRiskTemplateID'] ?? '';
+
+    if (empty($tripPlannerRiskTemplateID) || !$riskTemplateGateway->exists($tripPlannerRiskTemplateID)) {
+        $URL .= '&return=error1';
+        header("Location: {$URL}");
+        exit();
     } else {
-        $URL .= "&return=error1";
+        if ($riskTemplateGateway->delete($tripPlannerRiskTemplateID)) {
+            $URL .= '&return=success0';
+        } else {
+            $URL .= '&return=error2';
+        }
+
         header("Location: {$URL}");
         exit();
     }
-
-    try {
-        $data = array("tripPlannerRiskTemplateID"=> $tripPlannerRiskTemplateID);
-        $sql = "DELETE FROM tripPlannerRiskTemplates WHERE tripPlannerRiskTemplateID=:tripPlannerRiskTemplateID";
-        $result = $connection2->prepare($sql);
-        $result->execute($data);
-    } catch (PDOException $e) {
-        $URL .= "&return=error2";
-        header("Location: {$URL}");
-        exit();
-    }
-
-    $URL .= "&return=success0";
-    header("Location: {$URL}");
-    exit();
 }   
 ?>
