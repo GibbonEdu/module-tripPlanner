@@ -27,13 +27,11 @@ use Gibbon\Domain\Students\MedicalGateway;
 use Gibbon\Domain\Students\StudentReportGateway;
 
 //Module includes
-include './modules/Trip Planner/moduleFunctions.php';
+require_once __DIR__ . '/moduleFunctions.php';
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php')) {
     //Acess denied
-    echo "<div class='error'>";
-    echo __m('You do not have access to this action.');
-    echo '</div>';
+    echo Format::alert(__('You do not have access to this action.'));
 } else {
     $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
     if ($highestAction != false) {
@@ -43,9 +41,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             $request = getTrip($connection2, $tripPlannerRequestID);
 
             if ($request == null) {
-                echo "<div class='error'>";
-                echo __('The specified record does not exist.');
-                echo '</div>';
+                echo Format::alert(__('The specified record does not exist.'))   ;
             }
             else {
                 $gibbonPersonID = $_SESSION[$guid]["gibbonPersonID"];
@@ -244,15 +240,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                     echo $table->render($students);
 
                 } else {
-                    print "<div class='error'>";
-                        print "You do not have access to this action.";
-                    print "</div>";
+                    echo Format::alert(__('You do not have access to this action.'));
                 }
             }
         } else {
-            print "<div class='error'>";
-                print "No request selected.";
-            print "</div>";
+            echo Format::alert(__('No request selected'));
         }
     }
 }
