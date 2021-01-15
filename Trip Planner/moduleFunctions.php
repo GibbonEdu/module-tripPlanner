@@ -21,6 +21,7 @@ function getSettings($guid, $riskTemplateGateway) {
                     ->checked(boolval($data['value']));
             },
             'process' => function ($data) {
+                //TODO: Update trip's status?
                 return $data === null ? 0 : 1;
             }
         ],
