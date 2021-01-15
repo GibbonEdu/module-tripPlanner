@@ -142,30 +142,19 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         $table->addColumn('status', __('Status'));
                    
         $table->addActionColumn()
-        ->addParam('tripPlannerRequestID')
-        ->format(function ($row, $actions) use ($guid, $connection2) {
-            $actions->addAction('approve/reject', __('Approve/Reject'))
-                ->setURL('/modules/Trip Planner/trips_requestApprove.php')
-                ->setIcon('iconTick');
-        });
-                   
-        $table->addActionColumn()
           ->addParam('tripPlannerRequestID')
-          ->format(function ($row, $actions) use ($connection2, $gibbon) {
+          ->format(function ($row, $actions) use ($connection2, $gibbonPersonID)  {
               $actions->addAction('view', __('View Details'))
                 ->setURL('/modules/Trip Planner/trips_requestView.php');
 
-            if ($gibbon->session->get('gibbonPersonID') == $row['creatorPersonID'] &&
-                  $row['status'] != 'Cancelled' &&
-                  $row['status'] != 'Rejected'
-              ) {
+            if ($gibbonPersonID == $row['creatorPersonID'] && !in_array($row['status'], ['Cancelled', 'Rejected'])) {
                 $actions->addAction('edit', __('Edit'))
                 ->addParam('mode', 'edit')
                 ->setURL('/modules/Trip Planner/trips_submitRequest.php');
             }
             
-            if (($row['status'] == 'Requested' && needsApproval($connection2, $row['tripPlannerRequestID'], $gibbon->session->get('gibbonPersonID')) == 0)
-                || ($row['status'] == 'Awaiting Final Approval' && isApprover($connection2, $gibbon->session->get('gibbonPersonID'), true))) {
+            if (($row['status'] == 'Requested' && needsApproval($connection2, $row['tripPlannerRequestID'], $gibbonPersonID) == 0)
+                || ($row['status'] == 'Awaiting Final Approval' && isApprover($connection2, $gibbonPersonID, true))) {
                 $actions->addAction('approve', __('Approve/Reject'))
                     ->setURL('/modules/Trip Planner/trips_requestApprove.php')
                     ->setIcon('iconTick');
