@@ -26,7 +26,6 @@ use Gibbon\Domain\User\FamilyGateway;
 use Gibbon\Domain\Students\MedicalGateway;
 use Gibbon\Domain\Students\StudentReportGateway;
 
-//Module includes
 require_once __DIR__ . '/moduleFunctions.php';
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php')) {
