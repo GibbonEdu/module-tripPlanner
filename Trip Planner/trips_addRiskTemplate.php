@@ -17,66 +17,41 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-//Module includes
-include "./modules/Trip Planner/moduleFunctions.php";
-
 use Gibbon\Forms\Form;
+
+$page->breadcrumbs
+    ->add(__('Risk Assessment Templates'), 'trips_manageRiskTemplates.php')
+    ->add(__('Add Template'));
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manageRiskTemplates.php')) {
     //Acess denied
-    print "<div class='error'>";
-        print "You do not have access to this action.";
-    print "</div>";
+    $page->addError(__('You do not have access to this action.'));
 } else {
-
-    $edit = false;
-
-    if (isset($_GET['tripPlannerRiskTemplateID'])) {
-        $tripPlannerRiskTemplateID = $_GET['tripPlannerRiskTemplateID'];
-        if($tripPlannerRiskTemplateID != '' && $tripPlannerRiskTemplateID != null) {
-            $edit = true;
-        }
-    }
-
-    print "<div class='trail'>";
-        print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . _("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . _(getModuleName($_GET["q"])) . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_manageRiskTemplates.php'>" . _("Risk Assessment Templates") . "</a> > </div><div class='trailEnd'>" . _(($edit ? "Edit" : "Add") . ' Risk Assessment Templates') . "</div>";
-    print "</div>";
-
-    print "<h3>";
-        print __m(($edit ? "Edit" : "Add") . " Risk Assessment Template");
-    print "</h3>";
-
     if (isset($_GET['return'])) {
         $editLink = null;
         if(isset($_GET['tripPlannerRiskTemplateID'])) {
-            $editLink = $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_addRiskTemplate.php&tripPlannerRiskTemplateID=" . $_GET['tripPlannerRiskTemplateID'];
+            $editLink = $gibbon->session->get('absoluteURL') . '/index.php?q=/modules/' . $gibbon->session->get('module') . '/trips_editRiskTemplate.php&tripPlannerRiskTemplateID=' . $_GET['tripPlannerRiskTemplateID'];
         }
         returnProcess($guid, $_GET['return'], $editLink, null);
     }   
 
-    if ($edit) {
-        try {
-            $dataTemplates = array("tripPlannerRiskTemplateID" => $tripPlannerRiskTemplateID);
-            $sqlTemplates = "SELECT name, body FROM tripPlannerRiskTemplates WHERE tripPlannerRiskTemplateID=:tripPlannerRiskTemplateID";
-            $resultTemplates = $connection2->prepare($sqlTemplates);
-            $resultTemplates->execute($dataTemplates);
-            $template = $resultTemplates->fetch();
-        } catch(PDOException $e) {
-
-        }
-    }
-
-    $form = Form::create("addRiskTemplate", $_SESSION[$guid]["absoluteURL"] . "/modules/Trip Planner/trips_addRiskTemplateProcess.php" . ($edit ? "?tripPlannerRiskTemplateID=$tripPlannerRiskTemplateID" : ""));
+    $form = Form::create('addRiskTemplate', $gibbon->session->get('absoluteURL') . '/modules/' . $gibbon->session->get('module') . '/trips_addRiskTemplateProcess.php');
+    $form->addHiddenValue('address', $gibbon->session->get('address'));
+    $form->setTitle('Add Risk Assessment Template');
 
     $row = $form->addRow();
-        $row->addLabel("nameLabel", "Name *");
-        $row->addTextfield('name')->setRequired(true)->setValue((isset($template) ? $template['name'] : ""));
+        $row->addLabel('name', 'Name');
+        $row->addTextfield('name')
+            ->setRequired(true)
+            ->maxLength(30)
+            ->uniqueField('./modules/' . $gibbon->session->get('module') . '/trips_addRiskTemplateAjax.php');
 
     $row = $form->addRow();
         $column = $row->addColumn();
-        $column->addLabel("bodyLabel", "Body *");
-        $column->addEditor('body', $guid)->setRequired(true)->setValue((isset($template) ? $template['body'] : ""));
-    
+        $column->addLabel('body', 'Body');
+        $column->addEditor('body', $guid)
+            ->setRequired(true);
+
     $row = $form->addRow();
         $row->addFooter();
         $row->addSubmit();

@@ -17,14 +17,15 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-//Module includes
-include './modules/Trip Planner/moduleFunctions.php';
+use Gibbon\Services\Format;
+use Gibbon\Tables\DataTable;
+use Gibbon\Tables\View\GridView;
+
+require_once __DIR__ . '/moduleFunctions.php';
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php')) {
     //Acess denied
-    echo "<div class='error'>";
-    echo __m('You do not have access to this action.');
-    echo '</div>';
+    echo Format::alert(__('You do not have access to this action.'));
 } else {    
     $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
     if ($highestAction != false) {
@@ -44,49 +45,46 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             }
 
             if (isApprover($connection2, $gibbonPersonID) || isOwner($connection2, $tripPlannerRequestID, $gibbonPersonID) || isInvolved($connection2, $tripPlannerRequestID, $gibbonPersonID) || $isHOD || $highestAction == "Manage Trips_full") {
-                ?>
-                <table class='noIntBorder' cellspacing='0' style='width:100%;'>
-                    <tr>
-                        <?php
-                            echo '<h2>';
-                                echo __m('Students in Trip');
-                            echo '</h2>';
-                            echo "<div class='linkTop'>";
-                                echo "<a href='javascript:window.print()'>".__m('Print')."<img style='margin-left: 5px' title='".__m('Print')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/print.png'/></a>";
-                            echo '</div>';
-                            $students = array();
-                            $peopleInTrip = getPeopleInTrip($connection2, array($tripPlannerRequestID), "Student");
-                            while ($people = $peopleInTrip->fetch()) {
-                                $students[] = $people['gibbonPersonID'];
-                            }
-                            $numPerRow = 5;
-                            $studentCount = count($students);
-                            $studentCount += $numPerRow - ($studentCount % $numPerRow);
-                            for ($i = 0; $i < $studentCount; $i++) {
-                                if ($i % $numPerRow == 0) {
-                                    print "</tr>";
-                                    print "<tr>";
-                                } 
-                                if (isset($students[$i])) {
-                                    getPersonBlock($guid, $connection2, $students[$i], "Student", $numPerRow);
-                                } else {
-                                    print "<td>";
-                                    print "</td>";
-                                }
-                            } 
-                        ?>
-                    </tr>
-                </table>
-                <?php
+
+                //TODO: Migrate to Gateway
+                try {
+                    $data = array('tripPlannerRequestID' => $tripPlannerRequestID, 'role' => 'Student');
+                    $sql = 'SELECT gibbonPerson.title, gibbonPerson.preferredName, gibbonPerson.surname, gibbonPerson.image_240
+                            FROM gibbonPerson
+                            INNER JOIN tripPlannerRequestPerson ON (tripPlannerRequestPerson.gibbonPersonID=gibbonPerson.gibbonPersonID)
+                            WHERE tripPlannerRequestPerson.tripPlannerRequestID=:tripPlannerRequestID
+                            AND tripPlannerRequestPerson.role=:role';
+                    $result = $connection2->prepare($sql);
+                    $result->execute($data);
+                } catch(PDOException $e) {
+                }
+
+                //TODO: Migrate to ReportTable
+                $gridRenderer = new GridView($container->get('twig'));
+                $table = $container->get(DataTable::class)->setRenderer($gridRenderer);
+                $table->setTitle(__('Students in Trip'));
+
+                $table->addMetaData('gridClass', 'rounded-sm bg-blue-100 border py-2');
+                $table->addMetaData('gridItemClass', 'w-1/2 sm:w-1/4 md:w-1/5 my-2 text-center');
+                
+                $table->addHeaderAction('print', __('Print'))
+                    ->setExternalURL('javascript:window.print()')
+                    ->displayLabel()
+                    ->addClass('mr-2 underline');
+
+                $table->addColumn('image_240')
+                    ->format(Format::using('userPhoto', ['image_240', 'sm', '']));
+                
+                $table->addColumn('name')
+                    ->setClass('text-xs font-bold mt-1')
+                    ->format(Format::using('name', ['title', 'preferredName', 'surname', 'Student', false, false]));
+
+                echo $table->render($result->toDataSet());
             } else {
-                print "<div class='error'>";
-                    print "You do not have access to this action.";
-                print "</div>";
+                echo Format::alert(__('You do not have access to this action.'));
             }
         } else {    
-            print "<div class='error'>";
-                print "No request selected.";
-            print "</div>";
+            echo Format::alert(__('No request selected.'));
         }
     }
 }

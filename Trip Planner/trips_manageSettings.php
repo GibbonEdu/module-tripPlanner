@@ -17,83 +17,43 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-include "./modules/Trip Planner/moduleFunctions.php";
-
+use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Forms\Form;
+use Gibbon\Module\TripPlanner\Domain\RiskTemplateGateway;
+
+require_once __DIR__ . '/moduleFunctions.php';
+
+$page->breadcrumbs->add(__('Manage Settings'));
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manageSettings.php')) {
     //Acess denied
-    print "<div class='error'>";
-        print "You do not have access to this action.";
-    print "</div>";
+    $page->addError(__('You do not have access to this action.'));
 } else {
-    print "<div class='trail'>";
-        print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . _("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . _(getModuleName($_GET["q"])) . "</a> > </div><div class='trailEnd'>" . _('Manage Settings') . "</div>";
-    print "</div>";
-
-    print "<h3>";
-        print "Settings";
-    print "</h3>";
-
     if (isset($_GET['return'])) {
         returnProcess($guid, $_GET['return'], null, null);
     }
 
-    try {
-        $sql = "SELECT name, nameDisplay, description, value FROM gibbonSetting WHERE scope='Trip Planner' ORDER BY gibbonSettingID ASC";
-        $result = $connection2->prepare($sql);
-        $result->execute();
-    } catch(PDOException $e) {
-    }
+    $settingGateway = $container->get(SettingGateway::class);
+    $riskTemplateGateway = $container->get(RiskTemplateGateway::class);
 
-    $templates = array("-1" => "None", "0" => "Custom");
-
-    try {
-        $sqlTemplates = "SELECT tripPlannerRiskTemplateID, name FROM tripPlannerRiskTemplates ORDER BY name ASC";
-        $resultTemplates = $connection2->prepare($sqlTemplates);
-        $resultTemplates->execute();
-    } catch(PDOException $e) {
-    }
-
-    while ($rowTemplates = $resultTemplates->fetch()) {
-        $templates[$rowTemplates["tripPlannerRiskTemplateID"]] = $rowTemplates["name"];
-    }
+    $moduleName = $gibbon->session->get('module'); 
 
     $form = Form::create("tripPlannerSettings", $_SESSION[$guid]["absoluteURL"] . "/modules/Trip Planner/trips_manageSettingsProcess.php");
+    $form->addHiddenValue('address', $gibbon->session->get('address'));
+    $form->setTitle(__('Trip Planner Settings'));
 
-    while ($row = $result->fetch()) {
-        if ($row["name"] == "requestEditing") continue;
-        $fRow = $form->addRow();
-            if ($row["name"] == "riskAssessmentTemplate" || $row["name"] == "letterToParentsTemplate") {
-                $col = $fRow->addColumn();
-                $col->addLabel($row["name"], $row["nameDisplay"])->description($row["description"]);
-            } else {
-                $fRow->addLabel($row["name"], $row["nameDisplay"])->description($row["description"]);
-            }
+    foreach (getSettings($guid, $riskTemplateGateway) as $key => $value) {
+        $setting = $settingGateway->getSettingByScope('Trip Planner', $key, true);
+        
+        $row = $form->addRow();
+        if (!$value['row']) {
+            $row = $row->addColumn();
+        }
 
-            switch($row["name"]) {
-                case "requestApprovalType":
-                    $fRow->addSelect($row["name"])->fromArray(array("One Of", "Two Of", "Chain Of All"))->selected($row["value"])->setRequired(true);
-                    break;
-                case "riskAssessmentTemplate":
-                    $col->addEditor($row["name"], $guid)->setValue($row["value"])->setRows(15);
-                    break;
-                case "missedClassWarningThreshold":
-                    $fRow->addNumber($row["name"])->minimum(0)->setRequired(true)->decimalPlaces(0)->setValue($row["value"]);
-                    break;
-                case "expiredUnapprovedFilter":
-                case "riskAssessmentApproval":
-                    $fRow->addCheckBox($row["name"])->checked((int)$row["value"]);
-                    break;
-                case "defaultRiskTemplate":
-                    $fRow->addSelect($row["name"])->fromArray($templates)->selected($row["value"])->setRequired(true);
-                    break;
-                case "letterToParentsTemplate":
-                    $col->addEditor($row["name"], $guid)->setValue($row["value"])->setRows(15);
-                    break;
-                default:
-                    break;
-            }
+        $row->addLabel($setting['name'], __($setting['nameDisplay']))
+            ->description($setting['description']);
+
+        $value['render']($setting, $row);
     }
 
     $fRow = $form->addRow();

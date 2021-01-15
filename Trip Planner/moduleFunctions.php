@@ -1,4 +1,111 @@
 <?php
+function getSettings($guid, $riskTemplateGateway) {
+    $requestApprovalOptions = ['One Of', 'Two Of', 'Chain Of All'];
+    return [
+        'requestApprovalType' => [
+            'row' => true,
+            'render' => function ($data, $row) use ($requestApprovalOptions) {
+                $row->addSelect($data['name'])
+                    ->fromArray($requestApprovalOptions)
+                    ->selected($data['value'])
+                    ->setRequired(true);
+            },
+            'process' => function ($data) use ($requestApprovalOptions) {
+                return in_array($data, $requestApprovalOptions) ? $data : false;
+            }
+        ],
+        'riskAssessmentApproval' => [
+            'row' => true,
+            'render' => function ($data, $row) {
+                $row->addCheckBox($data['name'])
+                    ->checked(boolval($data['value']));
+            },
+            'process' => function ($data) {
+                //TODO: Update trip's status?
+                return $data === null ? 0 : 1;
+            }
+        ],
+        'defaultRiskTemplate' => [
+            'row' => true,
+            'render' => function ($data, $row) use ($riskTemplateGateway) {
+                $templates = array('-1' => 'None', '0' => 'Custom');
+
+                $criteria = $riskTemplateGateway->newQueryCriteria()
+                    ->sortBy(['name']);
+
+                foreach ($riskTemplateGateway->queryTemplates($criteria) as $template) {
+                    $templates[$template['tripPlannerRiskTemplateID']] = $template['name'];
+                } 
+
+                $row->addSelect($data['name'])
+                    ->fromArray($templates)
+                    ->selected($data['value'])
+                    ->setRequired(true);
+            },
+            'process' => function ($data) use ($riskTemplateGateway) {
+                $data = intval($data);
+
+                if ($data > 0) {
+                    if (!$riskTemplateGateway->exists($data)) {
+                        return false;
+                    }
+                } else if ($data < -1) {
+                    return false;
+                }
+
+                return $data;
+
+            }
+        ],
+        'riskAssessmentTemplate' => [
+            'row' => false,
+            'render' => function ($data, $col) use ($guid) {
+                $col->addEditor($data['name'], $guid)
+                    ->setValue($data['value'])
+                    ->setRows(15);
+            },
+            'process' => function ($data) {
+                return $data ?? '';
+            }
+        ],
+        'expiredUnapprovedFilter' => [
+            'row' => true,
+            'render' => function ($data, $row) {
+                $row->addCheckBox($data['name'])
+                    ->checked(boolval($data['value']));
+            },
+            'process' => function ($data) {
+                return $data === null ? 0 : 1;
+            } 
+        ],
+        'missedClassWarningThreshold' => [
+            'row' => true,
+            'render' => function ($data, $row) {
+                $row->addNumber($data['name'])
+                    ->minimum(0)
+                    ->decimalPlaces(0)
+                    ->setRequired(true)
+                    ->setValue($data['value']);
+            },
+            'process' => function ($data) {
+                $data = intval($data);
+                return $data < 0 ? false : $data;
+            }
+        ], 
+        'letterToParentsTemplate' => [
+            'row' => false,
+            'render' => function ($data, $col) use ($guid) {
+                $col->addEditor($data['name'], $guid)
+                    ->setValue($data['value'])
+                    ->setRows(15);
+            },
+            'process' => function ($data) {
+                return $data ?? '';
+            }
+        ],
+    ];
+}
+
 function isOwner($connection2, $tripPlannerRequestID, $gibbonPersonID)
 {
     try {
