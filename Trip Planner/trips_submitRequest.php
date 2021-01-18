@@ -103,7 +103,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         $resultTemplates->execute();
     } catch(PDOException $e) {
     }
-    $templates = array("0"=>getSettingByScope($connection2, "Trip Planner", "riskAssessmentTemplate"));
+    $templates = array('-1' => null, "0"=>getSettingByScope($connection2, "Trip Planner", "riskAssessmentTemplate"));
     $templateNames = array("-1" => "None", "0" => "Custom");
     while ($rowTemplate = $resultTemplates->fetch()) {
         $templates[$rowTemplate['tripPlannerRiskTemplateID']] = $rowTemplate['body'];
