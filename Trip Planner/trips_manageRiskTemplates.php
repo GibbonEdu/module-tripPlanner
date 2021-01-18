@@ -52,8 +52,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         ->format(function ($riskTemplate) {
             $output = '';
 
-            $output .= Format::bold(__('Risk Template Content')) . '<br/>';
-            $output .= nl2brr($riskTemplate['body']) . '<br/>';
+            $output .= formatExpandableSection(__('Risk Template Content'), $riskTemplate['body']);
 
             return $output;
         });
@@ -66,7 +65,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             $actions->addAction('edit', __('Edit'))
                 ->setURL('/modules/' . $moduleName . '/trips_editRiskTemplate.php');
 
-            //TODO: Create Page
             $actions->addAction('delete', __('Delete'))
                 ->setURL('/modules/' . $moduleName . '/trips_deleteRiskTemplate.php');
         });
