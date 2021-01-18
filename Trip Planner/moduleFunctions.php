@@ -106,6 +106,25 @@ function getSettings($guid, $riskTemplateGateway) {
     ];
 }
 
+function formatExpandableSection($title, $content) {
+    $output = '';
+
+    $output .= '<h6>' . $title . '</h6></br>';
+    $output .= nl2brr($content);
+
+    return $output;
+}
+
+function getStatuses() {
+    return [
+        'Requested',
+        'Approved',
+        'Rejected',
+        'Cancelled', 
+        'Awaiting Final Approval',
+    ];
+}
+
 function isOwner($connection2, $tripPlannerRequestID, $gibbonPersonID)
 {
     try {
@@ -147,41 +166,6 @@ function getApprovers($connection2)
     }
 
     return $result;
-}
-
-function getNameFromID($connection2, $gibbonPersonID)
-{
-    try {
-        $data = array("gibbonPersonID" => $gibbonPersonID);
-        $sql = "SELECT preferredName, surname, phone1 FROM gibbonPerson WHERE gibbonPersonID=:gibbonPersonID";
-        $result = $connection2->prepare($sql);
-        $result->execute($data);
-    } catch (PDOException $e) {
-    }
-
-    return $result->fetch();
-}
-
-function getApprover($connection2, $tripPlannerApproverID)
-{
-    try {
-        $data = array("tripPlannerApproverID" => $tripPlannerApproverID);
-        $sql = "SELECT * FROM tripPlannerApprovers WHERE tripPlannerApproverID=:tripPlannerApproverID";
-        $result = $connection2->prepare($sql);
-        $result->execute($data);
-        if($result->rowCount() == 1) {
-            return $result->fetch();
-        }
-    } catch (PDOException $e) {
-    }
-
-    return null;
-}
-
-function approverExists($connection2, $tripPlannerApproverID)
-{
-    $approver = getApprover($connection2, $tripPlannerApproverID);
-    return $approver != null;
 }
 
 function isApprover($connection2, $gibbonPersonID, $final=false)
@@ -293,76 +277,17 @@ function getTripStatus($connection2, $tripPlannerRequestID) {
 function getTrip($connection2, $tripPlannerRequestID) {
     try {
         $data = array("tripPlannerRequestID" => $tripPlannerRequestID);
-        $sql = "SELECT creatorPersonID, timestampCreation, title, description, teacherPersonIDs, studentPersonIDs, location, tripPlannerRequests.date, tripPlannerRequests.endDate, tripPlannerRequests.startTime, tripPlannerRequests.endTime, riskAssessment, letterToParents, status, (SELECT GROUP_CONCAT(CONCAT(tripPlannerRequestDays.startDate, ';', tripPlannerRequestDays.endDate, ';', tripPlannerRequestDays.allDay, ';', tripPlannerRequestDays.startTime, ';', tripPlannerRequestDays.endTime) SEPARATOR ', ') FROM tripPlannerRequestDays WHERE tripPlannerRequestDays.tripPlannerRequestID = tripPlannerRequests.tripPlannerRequestID ORDER BY tripPlannerRequestDays.startDate ASC) as multiDay, (SELECT GROUP_CONCAT(CONCAT(tripPlannerRequestPerson.gibbonPersonID, ';', tripPlannerRequestPerson.role) SEPARATOR ', ') FROM tripPlannerRequestPerson WHERE tripPlannerRequestPerson.tripPlannerRequestID = tripPlannerRequests.tripPlannerRequestID) as people FROM tripPlannerRequests WHERE tripPlannerRequests.tripPlannerRequestID=:tripPlannerRequestID";
+        $sql = "SELECT creatorPersonID, timestampCreation, title, description, location,  riskAssessment, letterToParents, status, (SELECT GROUP_CONCAT(CONCAT(tripPlannerRequestDays.startDate, ';', tripPlannerRequestDays.endDate, ';', tripPlannerRequestDays.allDay, ';', tripPlannerRequestDays.startTime, ';', tripPlannerRequestDays.endTime) SEPARATOR ', ') FROM tripPlannerRequestDays WHERE tripPlannerRequestDays.tripPlannerRequestID = tripPlannerRequests.tripPlannerRequestID ORDER BY tripPlannerRequestDays.startDate ASC) as multiDay, (SELECT GROUP_CONCAT(CONCAT(tripPlannerRequestPerson.gibbonPersonID, ';', tripPlannerRequestPerson.role) SEPARATOR ', ') FROM tripPlannerRequestPerson WHERE tripPlannerRequestPerson.tripPlannerRequestID = tripPlannerRequests.tripPlannerRequestID) as people FROM tripPlannerRequests WHERE tripPlannerRequests.tripPlannerRequestID=:tripPlannerRequestID";
         $result = $connection2->prepare($sql);
         $result->execute($data);
         if($result->rowCount() == 1) {
             $request = $result->fetch();
-            if($request['teacherPersonIDs'] != "" || $request['studentPersonIDs'] != "") {
-                $people = array();
-                foreach (explode(",", $request["teacherPersonIDs"]) as $teacher) {
-                    $people[] = array("role" => "Teacher", "gibbonPersonID" => $teacher);
-                }
-
-                foreach (explode(",", $request["studentPersonIDs"]) as $student) {
-                    $people[] = array("role" => "Student", "gibbonPersonID" => $student);
-                }
-                $sql1 = "INSERT INTO tripPlannerRequestPerson SET tripPlannerRequestID=:tripPlannerRequestID, gibbonPersonID=:gibbonPersonID, role=:role";
-                foreach ($people as $person) {
-                    $person['tripPlannerRequestID'] = $tripPlannerRequestID;
-                    $result1 = $connection2->prepare($sql1);
-                    $result1->execute($person);
-                }
-
-                $sql2 = "UPDATE tripPlannerRequests SET teacherPersonIDs='', studentPersonIDs='' WHERE tripPlannerRequestID=:tripPlannerRequestID";
-                $result2 = $connection2->prepare($sql2);
-                $result2->execute($data);
-                $request["teacherPersonIDs"] = "";
-                $request["studentPersonIDs"] = "";
-            }
-
-            if($request['date'] != "0000-00-00") {
-                $startDate = $request['date'];
-                $endDate = ($request['endDate'] != null || $request['endDate'] != "" ? $request['endDate']  : $request['date']);
-
-                $allDay = ($request['startTime'] == null || $request['startTime'] == "00:00:00" || $request['endTime'] == null || $request['endTime'] == "00:00:00");
-                $startTime = $allDay ? "00:00" : $request['startTime'];
-                $endTime = $allDay ? "00:00" : $request['endTime'];
-
-                $dateData = array("tripPlannerRequestID" => $tripPlannerRequestID, "startDate" => $startDate, "endDate" => $endDate, "allDay" => $allDay, "startTime" => $startTime, "endTime" => $endTime);
-                $dateSQL = "INSERT INTO tripPlannerRequestDays SET tripPlannerRequestID=:tripPlannerRequestID, startDate=:startDate, endDate=:endDate, allDay=:allDay, startTime=:startTime, endTime=:endTime";
-                $dateResult = $connection2->prepare($dateSQL);
-                $dateResult->execute($dateData);
-
-                $dateData = array("tripPlannerRequestID" => $tripPlannerRequestID);
-                $dateSQL = "UPDATE tripPlannerRequests SET date='', endDate='', startTime='', endTime='' WHERE tripPlannerRequestID=:tripPlannerRequestID";
-                $dateResult = $connection2->prepare($dateSQL);
-                $dateResult->execute($dateData);
-
-                $request["multiDay"] .= ($request["multiDay"] == "" ? "" : ", ") . $startDate . ";" . $endDate . ";" . $allDay . ";" . $startTime . ";" . $endTime;
-
-                $request["date"] = "";
-                $request["endDate"] = "";
-                $request["startTime"] = "";
-                $request["endTime"] = "";
-
-            }
             return $request;
         }
     } catch (PDOException $e) {
         print $e;
     }
     return null;
-}
-
-function getFirstDayOfTrip($connection2, $tripPlannerRequestID)
-{
-    $data = array("tripPlannerRequestID" => $tripPlannerRequestID);
-    $sql = "SELECT startDate FROM tripPlannerRequestDays WHERE tripPlannerRequestID=:tripPlannerRequestID ORDER BY startDate ASC";
-    $result = $connection2->prepare($sql);
-    $result->execute($data);
-
-    return $result->fetch()["startDate"];
 }
 
 function getPeopleInTrip($connection2, $trips, $role=null)
@@ -713,30 +638,6 @@ function notifyApprovers($guid, $connection2, $tripPlannerRequestID, $owner, $ti
             }
         }
     }
-}
-
-function getPastTrips($guid, $connection2, $people)
-{
-    if (!is_array($people) || empty($people)) {
-        return null;
-    }
-
-    try {
-        $date = new DateTime();
-        $data = array("gibbonSchoolYearID" => $_SESSION[$guid]["gibbonSchoolYearID"], "today" => $date->format('Y-m-d'));
-        $sql = "SELECT DISTINCT tripPlannerRequests.tripPlannerRequestID, startDate, endDate, startTime, endTime FROM tripPlannerRequests JOIN tripPlannerRequestPerson ON (tripPlannerRequestPerson.tripPlannerRequestID = tripPlannerRequests.tripPlannerRequestID) WHERE status='Approved' AND date>:today AND gibbonSchoolYearID=:gibbonSchoolYearID AND (";
-        foreach ($people as $key => $id) {
-            $pData = "person" . $key;
-            $data[$pData] = $id;
-            $sql .= "tripPlannerRequestPerson.gibbonPersonID=:" . $pData . " OR ";
-        }
-        $sql = substr($sql, 0, -4) . ")";
-        $result = $connection2->prepare($sql);
-        $result->execute($data);
-    } catch (PDOException $e) {
-    }
-
-    return $result;
 }
 
 //TODO: Depricate these functions
