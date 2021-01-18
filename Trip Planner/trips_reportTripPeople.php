@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+use Gibbon\Module\TripPlanner\Domain\TripPersonGateway;
 use Gibbon\Services\Format;
 use Gibbon\Tables\DataTable;
 use Gibbon\Tables\View\GridView;
@@ -46,20 +47,14 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
 
             if (isApprover($connection2, $gibbonPersonID) || isOwner($connection2, $tripPlannerRequestID, $gibbonPersonID) || isInvolved($connection2, $tripPlannerRequestID, $gibbonPersonID) || $isHOD || $highestAction == "Manage Trips_full") {
 
-                //TODO: Migrate to Gateway
-                try {
-                    $data = array('tripPlannerRequestID' => $tripPlannerRequestID, 'role' => 'Student');
-                    $sql = 'SELECT gibbonPerson.title, gibbonPerson.preferredName, gibbonPerson.surname, gibbonPerson.image_240
-                            FROM gibbonPerson
-                            INNER JOIN tripPlannerRequestPerson ON (tripPlannerRequestPerson.gibbonPersonID=gibbonPerson.gibbonPersonID)
-                            WHERE tripPlannerRequestPerson.tripPlannerRequestID=:tripPlannerRequestID
-                            AND tripPlannerRequestPerson.role=:role';
-                    $result = $connection2->prepare($sql);
-                    $result->execute($data);
-                } catch(PDOException $e) {
-                }
+                $tripPersonGateway = $container->get(TripPersonGateway::class);
 
-                //TODO: Migrate to ReportTable
+                $criteria = $tripPersonGateway->newQueryCriteria()
+                    ->sortBy(['surname', 'preferredName'])
+                    ->filterBy('tripPlannerRequestID', $tripPlannerRequestID)
+                    ->filterBy('role', 'Student');
+
+                //TODO: Can this be done better?
                 $gridRenderer = new GridView($container->get('twig'));
                 $table = $container->get(DataTable::class)->setRenderer($gridRenderer);
                 $table->setTitle(__('Students in Trip'));
@@ -79,7 +74,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                     ->setClass('text-xs font-bold mt-1')
                     ->format(Format::using('name', ['title', 'preferredName', 'surname', 'Student', false, false]));
 
-                echo $table->render($result->toDataSet());
+                echo $table->render($tripPersonGateway->queryTripPeople($criteria));
             } else {
                 echo Format::alert(__('You do not have access to this action.'));
             }
