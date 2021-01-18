@@ -133,5 +133,7 @@ INSERT INTO `gibbonPermission` (`permissionID` ,`gibbonRoleID` ,`gibbonActionID`
 $sql[$count][0]="1.3.00";
 $sql[$count++][1]="
 ALTER TABLE tripPlannerApprovers DROP COLUMN `gibbonPersonIDCreator`, DROP COLUMN `timestampCreator`, DROP COLUMN `gibbonpersonIDUpdate`, DROP COLUMN `timestampUpdate`;end
+ALTER TABLE tripPlannerRequests DROP COLUMN `teacherPersonIDs`, DROP COLUMN `studentPersonIDs`, DROP COLUMN `date`, DROP COLUMN `startTime`, DROP COLUMN `endTime`, DROP COLUMN `endDate`, DROP COLUMN `gibbonPersonIDUpdate`, DROP COLUMN `timestampUpdate`;end
+ALTER TABLE tripPlannerRequestLog MODIFY COLUMN `timestamp` NOT NULL DEFAULT NOW();end
 ";
 ?>
