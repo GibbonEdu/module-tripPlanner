@@ -25,6 +25,7 @@ use Gibbon\Tables\Prefab\ReportTable;
 use Gibbon\Domain\User\FamilyGateway;
 use Gibbon\Domain\Students\MedicalGateway;
 use Gibbon\Domain\Students\StudentReportGateway;
+use Gibbon\Domain\User\UserGateway;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
@@ -110,11 +111,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
 
                     //Prep lead teacher
                     $lead = '';
-                    $leadResult = getNameFromID($connection2, $request['creatorPersonID']);
-                    if (is_array($leadResult)) {
-                        $lead =  Format::name('', $leadResult['preferredName'], $leadResult['surname'], 'Student');
+                    $userGateway = $container->get(UserGateway::class);
+                    $leadResult = $userGateway->getByID($request['creatorPersonID']);
+                    if (!empty($leadResult)) {
+                        $lead =  Format::name($leadResult['title'], $leadResult['preferredName'], $leadResult['surname'], 'Staff', false, true);
                         if (!empty($leadResult['phone1'])) {
-                            $lead .= " (".$leadResult['phone1'].")";
+                            $lead .= ' (' . $leadResult['phone1'] . ')';
                         }
                     }
 
