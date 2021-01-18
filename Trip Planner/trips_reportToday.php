@@ -34,22 +34,23 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_report
     $tripGateway = $container->get(TripGateway::class);
     $criteria = $tripGateway->newQueryCriteria(true)
       ->filterBy('tripDay', date('Y-m-d'))
-      ->filterBy('status', serialize([
+      ->filterBy('statuses', serialize([
         'Requested',
         'Approved',
         'Awaiting Final Approval'
-      ]));
+      ]))
+      ->fromPOST();
+
     $trips = $tripGateway->queryTrips($criteria);
 
-    $table = DataTable::createPaginated('report', $criteria);
+    $table = DataTable::createPaginated('todaysTrips', $criteria);
     $table->setTitle(__("Today's Trips"));
   
     $table->addExpandableColumn('description')
         ->format(function ($trip) {
             $output = '';
 
-            $output .= '<h6>' . __('Description') . '</h6>';
-            $output .= nl2brr($trip['description']);
+            $output .= formatExpandableSection(__('Description'), $trip['description']);
 
             return $output;
         });
@@ -57,7 +58,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_report
     $table->addColumn('tripTitle', __('Title'));
     
     $table->addColumn('owner', __('Owner'))
-       ->format(Format::using('name', ['title', 'preferredName', 'surname', 'Staff', false, true]));
+        ->format(Format::using('name', ['title', 'preferredName', 'surname', 'Staff', false, true]))
+        ->sortable('surname');
 
     $table->addColumn('status', __('Status'));
   
