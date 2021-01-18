@@ -89,4 +89,24 @@ class ApproverGateway extends QueryableGateway
         return true;
     }
 
+    public function selectNextApprover($tripPlannerRequestID) { 
+        $select = $this
+            ->newSelect()
+            ->from($this->getTableName())
+            ->cols([
+                'gibbonPersonID'
+            ])
+            ->where('sequenceNumber > (
+                SELECT COALESCE(MAX(`tripPlannerApprovers`.`sequenceNumber`), -1)
+                FROM `tripplannerrequestlog`
+                LEFT JOIN `tripplannerapprovers` ON (`tripplannerapprovers`.`gibbonPersonID` = tripplannerrequestlog.gibbonPersonID)
+                WHERE `tripPlannerRequestID` = :tripPlannerRequestID
+                AND `action`=\'Approval - Partial\')')
+            ->bindValue('tripPlannerRequestID', $tripPlannerRequestID)
+            ->orderBy(['sequenceNumber'])
+            ->limit(1);
+
+        return $this->runSelect($select);
+    }
+
 }
