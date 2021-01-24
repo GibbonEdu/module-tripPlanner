@@ -53,9 +53,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         //Permissions
         $approverGateway = $container->get(ApproverGateway::class);
         
-        $approver = $approverGateway->selectBy(['gibbonPersonID' => $gibbonPersonID]);
-        $isApprover = $approver->isNotEmpty();
-        $finalApprover = $isApprover ? boolval($approver->fetch()['finalApprover']) : false;
+        $approver = $approverGateway->selectApproverByPerson($gibbonPersonID);
+        $isApprover = !empty($approver);
+        $finalApprover = $isApprover ? boolval($approver['finalApprover']) : false;
 
         $ama = ($isApprover && $requestApprovalType == 'Chain Of All')
             || ($riskAssessmentApproval && $finalApprover);
