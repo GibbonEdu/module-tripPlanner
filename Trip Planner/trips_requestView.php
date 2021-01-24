@@ -17,41 +17,37 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+use Gibbon\Module\TripPlanner\Domain\TripGateway;
+
 require_once __DIR__ . '/moduleFunctions.php';
 
-print "<div class='trail'>";
-    print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . _("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . _(getModuleName($_GET["q"])) . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_manage.php'>" . _("Manage Trip Requests") . "</a> > </div><div class='trailEnd'>" . _('View Request') . "</div>";
-print "</div>";
+$page->breadcrumbs
+        ->add(__('Manage Trip Requests'), 'trips_manage.php')
+        ->add(__('View Request'));
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php')) {
-    print "<div class='error'>";
-        print "You do not have access to this action.";
-    print "</div>";
+    $page->addError(__('You do not have access to this action.'));
 } else {
-
     if (isset($_GET['return'])) {
         returnProcess($guid, $_GET['return'], null, null);
     }
 
-    $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
-    if ($highestAction != false) {
-        if (isset($_GET["tripPlannerRequestID"])) {
-            $tripPlannerRequestID = $_GET["tripPlannerRequestID"];
+    $tripPlannerRequestID = $_GET["tripPlannerRequestID"];
 
-            $gibbonPersonID = $_SESSION[$guid]["gibbonPersonID"];
+    $tripGateway = $container->get(TripGateway::class);
+    $trip = $tripGateway->getByID($tripPlannerRequestID);
 
-            if (hasAccess($container, $tripPlannerRequestID, $gibbonPersonID, $highestAction)) {
-                renderTrip($guid, $connection2, $tripPlannerRequestID, false);
-            } else {
-                print "<div class='error'>";
-                    print "You do not have access to this action.";
-                print "</div>";
-            }
+    if (!empty($trip)) {
+        $gibbonPersonID = $_SESSION[$guid]["gibbonPersonID"];
+        $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
+
+        if (hasAccess($container, $tripPlannerRequestID, $gibbonPersonID, $highestAction)) {
+            renderTrip($guid, $connection2, $tripPlannerRequestID, false);
         } else {
-            print "<div class='error'>";
-                print "No request selected.";
-            print "</div>";
+            $page->addError(__('You do not have access to this action.'));
         }
+    } else {
+        $page->addError('No request selected.');
     }
 }
 ?>
