@@ -19,17 +19,17 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     $settingGateway = $container->get(SettingGateway::class);
     $riskTemplateGateway = $container->get(RiskTemplateGateway::class);
 
-    foreach (getSettings($guid, $riskTemplateGateway) as $key => $value) {
-        $data = $_POST[$key] ?? null;
+    foreach (getSettings($guid, $riskTemplateGateway) as $setting) {
+        $data = $_POST[$setting->getName()] ?? null;
 
-        $data = $value['process']($data);
+        $data = $setting->process($data);
 
         if ($data === false) {
             $return = 'warning1';
             continue;
         }
 
-        if (!$settingGateway->updateSettingByScope('Trip Planner', $key, $data)) {
+        if (!$settingGateway->updateSettingByScope('Trip Planner', $setting->getName(), $data)) {
             $return = 'warning1';
         }
 

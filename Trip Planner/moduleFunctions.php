@@ -1,6 +1,7 @@
 <?php
 
 use Gibbon\Domain\Departments\DepartmentGateway;
+use Gibbon\Module\TripPlanner\Data\Setting;
 use Gibbon\Module\TripPlanner\Domain\ApproverGateway;
 use Gibbon\Module\TripPlanner\Domain\TripGateway;
 use Gibbon\Module\TripPlanner\Domain\TripPersonGateway;
@@ -9,32 +10,27 @@ use Psr\Container\ContainerInterface;
 function getSettings($guid, $riskTemplateGateway) {
     $requestApprovalOptions = ['One Of', 'Two Of', 'Chain Of All'];
     return [
-        'requestApprovalType' => [
-            'row' => true,
-            'render' => function ($data, $row) use ($requestApprovalOptions) {
+        (new Setting('requestApprovalType'))
+            ->setRenderer(function ($data, $row) use ($requestApprovalOptions) {
                 $row->addSelect($data['name'])
                     ->fromArray($requestApprovalOptions)
                     ->selected($data['value'])
                     ->setRequired(true);
-            },
-            'process' => function ($data) use ($requestApprovalOptions) {
+            })
+            ->setProcessor(function ($data) use ($requestApprovalOptions) {
                 return in_array($data, $requestApprovalOptions) ? $data : false;
-            }
-        ],
-        'riskAssessmentApproval' => [
-            'row' => true,
-            'render' => function ($data, $row) {
+            }),
+        (new Setting('riskAssessmentApproval'))
+            ->setRenderer(function ($data, $row) {
                 $row->addCheckBox($data['name'])
                     ->checked(boolval($data['value']));
-            },
-            'process' => function ($data) {
+            })
+            ->setProcessor(function ($data) {
                 //TODO: Update trip's status?
                 return $data === null ? 0 : 1;
-            }
-        ],
-        'defaultRiskTemplate' => [
-            'row' => true,
-            'render' => function ($data, $row) use ($riskTemplateGateway) {
+            }),
+        (new Setting('defaultRiskTemplate'))
+            ->setRenderer(function ($data, $row) use ($riskTemplateGateway) {
                 $templates = array('-1' => 'None', '0' => 'Custom');
 
                 $criteria = $riskTemplateGateway->newQueryCriteria()
@@ -48,8 +44,8 @@ function getSettings($guid, $riskTemplateGateway) {
                     ->fromArray($templates)
                     ->selected($data['value'])
                     ->setRequired(true);
-            },
-            'process' => function ($data) use ($riskTemplateGateway) {
+            })
+            ->setProcessor(function ($data) use ($riskTemplateGateway) {
                 $data = intval($data);
 
                 if ($data > 0) {
@@ -61,41 +57,35 @@ function getSettings($guid, $riskTemplateGateway) {
                 }
 
                 return $data;
-
-            }
-        ],
-        'riskAssessmentTemplate' => [
-            'row' => false,
-            'render' => function ($data, $col) use ($guid) {
+            }),
+        (new Setting('riskAssessmentTemplate'))
+            ->setRow(false)
+            ->setRenderer(function ($data, $col) use ($guid) {
                 $col->addEditor($data['name'], $guid)
                     ->setValue($data['value'])
                     ->setRows(15);
-            },
-            'process' => function ($data) {
+            })
+            ->setProcessor(function ($data) {
                 return $data ?? '';
-            }
-        ],
-        'expiredUnapprovedFilter' => [
-            'row' => true,
-            'render' => function ($data, $row) {
+            }),
+        (new Setting('expiredUnapprovedFilter'))
+            ->setRenderer(function ($data, $row) {
                 $row->addCheckBox($data['name'])
                     ->checked(boolval($data['value']));
-            },
-            'process' => function ($data) {
+            })
+            ->setProcessor(function ($data) {
                 return $data === null ? 0 : 1;
-            } 
-        ],
-        'letterToParentsTemplate' => [
-            'row' => false,
-            'render' => function ($data, $col) use ($guid) {
+            }),
+        (new Setting('letterToParentsTemplate'))
+            ->setRow(false)
+            ->setRenderer(function ($data, $col) use ($guid) {
                 $col->addEditor($data['name'], $guid)
                     ->setValue($data['value'])
                     ->setRows(15);
-            },
-            'process' => function ($data) {
+            })
+            ->setProcessor(function ($data) {
                 return $data ?? '';
-            }
-        ],
+            })
     ];
 }
 

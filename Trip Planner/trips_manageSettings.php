@@ -38,27 +38,20 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
 
     $moduleName = $gibbon->session->get('module'); 
 
-    $form = Form::create("tripPlannerSettings", $_SESSION[$guid]["absoluteURL"] . "/modules/Trip Planner/trips_manageSettingsProcess.php");
+    $form = Form::create('tripPlannerSettings', $gibbon->session->get('absoluteURL') . '/modules/Trip Planner/trips_manageSettingsProcess.php');
     $form->addHiddenValue('address', $gibbon->session->get('address'));
     $form->setTitle(__('Trip Planner Settings'));
 
-    foreach (getSettings($guid, $riskTemplateGateway) as $key => $value) {
-        $setting = $settingGateway->getSettingByScope('Trip Planner', $key, true);
-        
+    foreach (getSettings($guid, $riskTemplateGateway) as $setting) {
+        $settingData = $settingGateway->getSettingByScope('Trip Planner', $setting->getName(), true);
         $row = $form->addRow();
-        if (!$value['row']) {
-            $row = $row->addColumn();
-        }
 
-        $row->addLabel($setting['name'], __($setting['nameDisplay']))
-            ->description($setting['description']);
-
-        $value['render']($setting, $row);
+        $setting->render($settingData, $row); 
     }
 
-    $fRow = $form->addRow();
-        $fRow->addFooter();
-        $fRow->addSubmit();
+    $row = $form->addRow();
+        $row->addFooter();
+        $row->addSubmit();
 
     print $form->getOutput();
 }   
