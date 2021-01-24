@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+use Gibbon\Module\TripPlanner\Domain\TripGateway;
 use Gibbon\Module\TripPlanner\Domain\TripPersonGateway;
 use Gibbon\Services\Format;
 use Gibbon\Tables\DataTable;
@@ -28,47 +29,48 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     //Acess denied
     echo Format::alert(__('You do not have access to this action.'));
 } else {    
-    $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
-    if ($highestAction != false) {
-        if (isset($_GET["tripPlannerRequestID"])) {
-            $tripPlannerRequestID = $_GET["tripPlannerRequestID"];
+    $tripPlannerRequestID = $_GET["tripPlannerRequestID"] ?? '';
 
-            $gibbonPersonID = $gibbon->session->get('gibbonPersonID');
+    $tripGateway = $container->get(TripGateway::class);
+    $trip = $tripGateway->getByID($tripPlannerRequestID);
 
-            if (hasAccess($container, $tripPlannerRequestID, $gibbonPersonID, $highestAction)) {
-                $tripPersonGateway = $container->get(TripPersonGateway::class);
+    if (!empty($trip)) {
+        $gibbonPersonID = $gibbon->session->get('gibbonPersonID');
+        $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
 
-                $criteria = $tripPersonGateway->newQueryCriteria()
-                    ->sortBy(['surname', 'preferredName'])
-                    ->filterBy('tripPlannerRequestID', $tripPlannerRequestID)
-                    ->filterBy('role', 'Student');
+        if (hasAccess($container, $tripPlannerRequestID, $gibbonPersonID, $highestAction)) {
+            $tripPersonGateway = $container->get(TripPersonGateway::class);
 
-                //TODO: Can this be done better?
-                $gridRenderer = new GridView($container->get('twig'));
-                $table = $container->get(DataTable::class)->setRenderer($gridRenderer);
-                $table->setTitle(__('Students in Trip'));
+            $criteria = $tripPersonGateway->newQueryCriteria()
+                ->sortBy(['surname', 'preferredName'])
+                ->filterBy('tripPlannerRequestID', $tripPlannerRequestID)
+                ->filterBy('role', 'Student');
 
-                $table->addMetaData('gridClass', 'rounded-sm bg-blue-100 border py-2');
-                $table->addMetaData('gridItemClass', 'w-1/2 sm:w-1/4 md:w-1/5 my-2 text-center');
-                
-                $table->addHeaderAction('print', __('Print'))
-                    ->setExternalURL('javascript:window.print()')
-                    ->displayLabel()
-                    ->addClass('mr-2 underline');
+            //TODO: Can this be done better?
+            $gridRenderer = new GridView($container->get('twig'));
+            $table = $container->get(DataTable::class)->setRenderer($gridRenderer);
+            $table->setTitle(__('Students in Trip'));
 
-                $table->addColumn('image_240')
-                    ->format(Format::using('userPhoto', ['image_240', 'sm', '']));
-                
-                $table->addColumn('name')
-                    ->setClass('text-xs font-bold mt-1')
-                    ->format(Format::using('name', ['title', 'preferredName', 'surname', 'Student', false, false]));
+            $table->addMetaData('gridClass', 'rounded-sm bg-blue-100 border py-2');
+            $table->addMetaData('gridItemClass', 'w-1/2 sm:w-1/4 md:w-1/5 my-2 text-center');
+            
+            $table->addHeaderAction('print', __('Print'))
+                ->setExternalURL('javascript:window.print()')
+                ->displayLabel()
+                ->addClass('mr-2 underline');
 
-                echo $table->render($tripPersonGateway->queryTripPeople($criteria));
-            } else {
-                echo Format::alert(__('You do not have access to this action.'));
-            }
-        } else {    
-            echo Format::alert(__('No request selected.'));
+            $table->addColumn('image_240')
+                ->format(Format::using('userPhoto', ['image_240', 'sm', '']));
+            
+            $table->addColumn('name')
+                ->setClass('text-xs font-bold mt-1')
+                ->format(Format::using('name', ['title', 'preferredName', 'surname', 'Student', false, false]));
+
+            echo $table->render($tripPersonGateway->queryTripPeople($criteria));
+        } else {
+            echo Format::alert(__('You do not have access to this action.'));
         }
+    } else {    
+        echo Format::alert(__('No request selected.'));
     }
 }
