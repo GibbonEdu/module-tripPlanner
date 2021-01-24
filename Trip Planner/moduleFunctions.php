@@ -137,23 +137,6 @@ function getOwner($connection2, $tripPlannerRequestID)
     return $result->fetch()["creatorPersonID"];
 }
 
-function getApprovers($connection2)
-{
-    try {
-        $sql = "SELECT tripPlannerApproverID, tripPlannerApprovers.gibbonPersonID, sequenceNumber, finalApprover FROM tripPlannerApprovers JOIN gibbonPerson ON tripPlannerApprovers.gibbonPersonID=gibbonPerson.gibbonPersonID ORDER BY ";
-        $requestApprovalType = getSettingByScope($connection2, "Trip Planner", "requestApprovalType");
-        if ($requestApprovalType == "Chain Of All") {
-            $sql .= "sequenceNumber, ";
-        }
-        $sql .= "surname, preferredName";
-        $result = $connection2->prepare($sql);
-        $result->execute();
-    } catch (PDOException $e) {
-    }
-
-    return $result;
-}
-
 function isApprover($connection2, $gibbonPersonID, $final=false)
 {
 
