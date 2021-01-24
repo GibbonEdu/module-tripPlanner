@@ -169,19 +169,6 @@ function isOwner($connection2, $tripPlannerRequestID, $gibbonPersonID)
     return ($result->rowCount() == 1);
 }
 
-function getOwner($connection2, $tripPlannerRequestID)
-{
-    try {
-        $data = array("tripPlannerRequestID" => $tripPlannerRequestID);
-        $sql = "SELECT creatorPersonID FROM tripPlannerRequests WHERE tripPlannerRequestID=:tripPlannerRequestID";
-        $result = $connection2->prepare($sql);
-        $result->execute($data);
-    } catch (PDOException $e) {
-    }
-
-    return $result->fetch()["creatorPersonID"];
-}
-
 function isApprover($connection2, $gibbonPersonID, $final=false)
 {
 
@@ -302,56 +289,6 @@ function getTrip($connection2, $tripPlannerRequestID) {
         print $e;
     }
     return null;
-}
-
-function getHOD($connection2, $gibbonPersonID)
-{
-    try {
-        $data = array("gibbonPersonID" => $gibbonPersonID);
-        $sql = "SELECT gibbonDepartmentID, nameShort FROM gibbonDepartment WHERE gibbonDepartmentID IN (SELECT gibbonDepartmentID FROM gibbonDepartmentStaff WHERE gibbonPersonID=:gibbonPersonID AND role='Coordinator')";
-        $result = $connection2->prepare($sql);
-        $result->execute($data);
-    } catch (PDOException $e) {
-    }
-
-    return $result;
-}
-
-function getDepartments($connection2, $gibbonPersonID)
-{
-    try {
-        $data = array("gibbonPersonID" => $gibbonPersonID);
-        $sql = "SELECT gibbonDepartmentID FROM gibbonDepartmentStaff WHERE gibbonPersonID=:gibbonPersonID";
-        $result = $connection2->prepare($sql);
-        $result->execute($data);
-    } catch (PDOException $e) {
-    }
-
-    $departments = array();
-
-    while ($row = $result->fetch()) {
-        $departments[] = $row["gibbonDepartmentID"];
-    }
-
-    return $departments;
-}
-
-function isInvolved($connection2, $tripPlannerRequestID, $gibbonPersonID)
-{
-    try {
-        $data = array("tripPlannerRequestID" => $tripPlannerRequestID, "gibbonPersonID" => $gibbonPersonID);
-        $sql = "SELECT teacherPersonIDs
-            FROM tripPlannerRequests
-                JOIN tripPlannerRequestPerson ON (tripPlannerRequestPerson.tripPlannerRequestID=tripPlannerRequests.tripPlannerRequestID)
-                WHERE tripPlannerRequests.tripPlannerRequestID=:tripPlannerRequestID
-                AND (teacherPersonIDs LIKE CONCAT('%', :gibbonPersonID, '%') OR (tripPlannerRequestPerson.gibbonPersonID=:gibbonPersonID AND role='Teacher'))";
-        $result = $connection2->prepare($sql);
-        $result->execute($data);
-    } catch (PDOException $e) {
-        echo $e->getMessage();
-    }
-
-    return ($result->rowCount() == 1);
 }
 
 function logEvent($connection2, $tripPlannerRequestID, $gibbonPersonID, $action, $comment = null)
