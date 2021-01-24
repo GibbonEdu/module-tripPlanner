@@ -78,20 +78,6 @@ function getSettings($guid, $riskTemplateGateway) {
                 return $data === null ? 0 : 1;
             } 
         ],
-        'missedClassWarningThreshold' => [
-            'row' => true,
-            'render' => function ($data, $row) {
-                $row->addNumber($data['name'])
-                    ->minimum(0)
-                    ->decimalPlaces(0)
-                    ->setRequired(true)
-                    ->setValue($data['value']);
-            },
-            'process' => function ($data) {
-                $data = intval($data);
-                return $data < 0 ? false : $data;
-            }
-        ], 
         'letterToParentsTemplate' => [
             'row' => false,
             'render' => function ($data, $col) use ($guid) {
@@ -277,7 +263,7 @@ function getTripStatus($connection2, $tripPlannerRequestID) {
 function getTrip($connection2, $tripPlannerRequestID) {
     try {
         $data = array("tripPlannerRequestID" => $tripPlannerRequestID);
-        $sql = "SELECT creatorPersonID, timestampCreation, title, description, location,  riskAssessment, letterToParents, status, (SELECT GROUP_CONCAT(CONCAT(tripPlannerRequestDays.startDate, ';', tripPlannerRequestDays.endDate, ';', tripPlannerRequestDays.allDay, ';', tripPlannerRequestDays.startTime, ';', tripPlannerRequestDays.endTime) SEPARATOR ', ') FROM tripPlannerRequestDays WHERE tripPlannerRequestDays.tripPlannerRequestID = tripPlannerRequests.tripPlannerRequestID ORDER BY tripPlannerRequestDays.startDate ASC) as multiDay, (SELECT GROUP_CONCAT(CONCAT(tripPlannerRequestPerson.gibbonPersonID, ';', tripPlannerRequestPerson.role) SEPARATOR ', ') FROM tripPlannerRequestPerson WHERE tripPlannerRequestPerson.tripPlannerRequestID = tripPlannerRequests.tripPlannerRequestID) as people FROM tripPlannerRequests WHERE tripPlannerRequests.tripPlannerRequestID=:tripPlannerRequestID";
+        $sql = "SELECT creatorPersonID, title, description, location,  riskAssessment, letterToParents, status, (SELECT GROUP_CONCAT(CONCAT(tripPlannerRequestDays.startDate, ';', tripPlannerRequestDays.endDate, ';', tripPlannerRequestDays.allDay, ';', tripPlannerRequestDays.startTime, ';', tripPlannerRequestDays.endTime) SEPARATOR ', ') FROM tripPlannerRequestDays WHERE tripPlannerRequestDays.tripPlannerRequestID = tripPlannerRequests.tripPlannerRequestID ORDER BY tripPlannerRequestDays.startDate ASC) as multiDay, (SELECT GROUP_CONCAT(CONCAT(tripPlannerRequestPerson.gibbonPersonID, ';', tripPlannerRequestPerson.role) SEPARATOR ', ') FROM tripPlannerRequestPerson WHERE tripPlannerRequestPerson.tripPlannerRequestID = tripPlannerRequests.tripPlannerRequestID) as people FROM tripPlannerRequests WHERE tripPlannerRequests.tripPlannerRequestID=:tripPlannerRequestID";
         $result = $connection2->prepare($sql);
         $result->execute($data);
         if($result->rowCount() == 1) {
@@ -287,34 +273,6 @@ function getTrip($connection2, $tripPlannerRequestID) {
     } catch (PDOException $e) {
         print $e;
     }
-    return null;
-}
-
-function getPeopleInTrip($connection2, $trips, $role=null)
-{
-    if(!is_array($trips) || empty($trips)) {
-        return null;
-    }
-
-    try {
-        $data = array();
-        $sql = "SELECT tripPlannerRequestID, gibbonPersonID, role FROM tripPlannerRequestPerson WHERE (";
-        foreach ($trips as $key => $trip) {
-            $tData = "trip" . $key;
-            $data[$tData] = $trip;
-            $sql .= "tripPlannerRequestID=:" . $tData . " OR ";
-        }
-        $sql = substr($sql, 0, -4) . ")";
-        if ($role != null) {
-            $data["role"] = $role;
-            $sql .= " AND role=:role";
-        }
-        $result = $connection2->prepare($sql);
-        $result->execute($data);
-        return $result;
-    } catch (PDOException $e) {
-    }
-
     return null;
 }
 
@@ -621,93 +579,6 @@ function requestNotification($guid, $connection2, $tripPlannerRequestID, $gibbon
     }
 }
 
-function notifyApprovers($guid, $connection2, $tripPlannerRequestID, $owner, $title)
-{
-    $approvers = getApprovers($connection2)->fetchAll();
-    if (isset($approvers) && !empty($approvers) && is_array($approvers)) {
-        $requestApprovalType = getSettingByScope($connection2, "Trip Planner", "requestApprovalType");
-        if($requestApprovalType != null) {
-            if ($requestApprovalType == "One Of" || $requestApprovalType == "Two Of") {
-                foreach ($approvers as $approver) {
-                    if ($approver["gibbonPersonID"] != $owner) {
-                        setNotification($connection2, $guid, $approver['gibbonPersonID'], "A new trip has been requested (" . $title .  ").", "Trip Planner", "/index.php?q=/modules/Trip Planner/trips_requestApprove.php&tripPlannerRequestID=" . $tripPlannerRequestID);
-                    }
-                }
-            } else {
-                setNotification($connection2, $guid, $approvers[0]['gibbonPersonID'], "A new trip has been requested (" . $title .  ").", "Trip Planner", "/index.php?q=/modules/Trip Planner/trips_requestApprove.php&tripPlannerRequestID=" . $tripPlannerRequestID);
-            }
-        }
-    }
-}
-
-//TODO: Depricate these functions
-function getPlannerOverlaps($connection2, $tripPlannerRequestID, $startDates, $endDates = array(), $startTimes = array(), $endTimes = array(), $people)
-{
-    if (!is_array($people) || empty($people) || !is_array($startDates) || empty($startDates) || !is_array($endDates) || !is_array($startTimes) || !is_array($endTimes)) {
-        return null;
-    }
-    try {
-        $data = array();
-        if ($tripPlannerRequestID != "" && $tripPlannerRequestID != null) {
-            $data["tripPlannerRequestID"] = $tripPlannerRequestID;
-        }
-        $sql = "SELECT DISTINCT gibbonCourse.gibbonCourseID, gibbonCourse.nameShort, gibbonCourseClass.gibbonCourseClassID, gibbonTTDayDate.date, timeStart, timeEnd" . ($tripPlannerRequestID != "" && $tripPlannerRequestID != null ? ", requiresCover" : "") . " FROM gibbonTTDayRowClass JOIN gibbonTTColumnRow ON (gibbonTTDayRowClass.gibbonTTColumnRowID = gibbonTTColumnRow.gibbonTTColumnRowID) JOIN gibbonCourseClassPerson ON (gibbonTTDayRowClass.gibbonCourseClassID = gibbonCourseClassPerson.gibbonCourseClassID) JOIN gibbonCourseClass ON (gibbonCourseClass.gibbonCourseClassID = gibbonTTDayRowClass.gibbonCourseClassID) JOIN gibbonCourse ON (gibbonCourse.gibbonCourseID = gibbonCourseClass.gibbonCourseID)" . ($tripPlannerRequestID != "" && $tripPlannerRequestID != null ? " LEFT JOIN tripPlannerRequestCover ON (tripPlannerRequestCover.gibbonCourseClassID = gibbonCourseClass.gibbonCourseClassID AND tripPlannerRequestID=:tripPlannerRequestID)" : "") . " LEFT JOIN gibbonTTDayDate ON (gibbonTTDayDate.gibbonTTDayID=gibbonTTDayRowClass.gibbonTTDayID) WHERE (";
-        for ($i = 0; $i < count($startDates); $i++) {
-            $sDayData = "startDate" . $i;
-            $eDayData = "endDate" . $i;
-            $eTimeData = "endTime" . $i;
-            $sTimeData = "startTime" . $i;
-            $data[$sDayData] = $startDates[$i];
-            if (isset($endDates[$i])) {
-                if ($endDates[$i] != null) {
-                    $data[$eDayData] = $endDates[$i];
-                }
-            }
-            if (isset($endTimes[$i]) && isset($startTimes[$i])) {
-                if ($endTimes[$i] != null && $startTimes[$i] != null) {
-                    $data[$eTimeData] = $endTimes[$i];
-                    $data[$sTimeData] = $startTimes[$i];
-                }
-            }
-            $sql .= "(";
-            if (isset($data[$eDayData])) {
-                $sql .= "gibbonTTDayDate.date >=:" . $sDayData . " AND gibbonTTDayDate.date <=:" . $eDayData;
-            } else {
-                $sql .= "gibbonTTDayDate.date =:" . $sDayData;
-            }
-            if (isset($data[$eTimeData]) && isset($data[$sTimeData])) {
-                $sql .= " AND timeStart <:" . $eTimeData . " AND timeEnd >:" . $sTimeData;
-            }
-            $sql .= ") OR ";
-        }
-        $sql = substr($sql, 0, -4) . ") AND gibbonPersonID IN (";
-        foreach ($people as $key => $id) {
-            $pData = "people" . $key;
-            $data[$pData] = $id;
-            $sql .= ":" . $pData . ",";
-        }
-        $sql = substr($sql, 0, -1) . ")";
-        $sql .= " ORDER BY gibbonCourse.nameShort ASC, gibbonTTDayDate.date ASC";
-        //print $sql;
-        $result = $connection2->prepare($sql);
-        $result->execute($data);
-    } catch (PDOException $e) {
-        print $e;
-    }
-    return $result;
-}
-
-function getTeachersOfClass($connection2, $gibbonCourseClassID) {
-    try {
-        $data = array("gibbonCourseClassID" => $gibbonCourseClassID);
-        $sql = "SELECT gibbonCourseClassPerson.gibbonPersonID FROM gibbonCourseClassPerson WHERE gibbonCourseClassID=:gibbonCourseClassID AND role='Teacher'";
-        $result = $connection2->prepare($sql);
-        $result->execute($data);
-    } catch (PDOException $e) {
-    }
-    return $result;
-}
-
 function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
     if(!isset($guid) || !isset($connection2) || !isset($tripPlannerRequestID)) {
         print "<div class='error'>";
@@ -923,13 +794,6 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                             <td colspan=2>
                                 <b><?php echo __m('Letter To Parents') ?></b>
                                 <?php
-                                    //TODO: make buttons works
-                                    // echo "<div class='linkTop' style='margin-top:-20px'>";
-                                    //     if(isActionAccessible($guid, $connection2, "/modules/Messenger/messenger_post.php", "New Message_readReceipts")) {
-                                    //         echo "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/modules/Trip Planner/trips_requestExternalReportProcess.php?tripPlannerRequestID=$tripPlannerRequestID&report=medical'>".__m('Send to Parents')."<img style='margin-right: 10px;margin-left: 5px' title='".__m('Send to Parents')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/delivery2.png'/></a>";
-                                    //     }
-                                    //     echo "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/report.php?q=/modules/Trip Planner/trips_letterToParents.php&tripPlannerRequestID=$tripPlannerRequestID'>".__m('Print')."<img style='margin-left: 5px' title='".__m('Print')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/print.png'/></a>";
-                                    // echo '</div>';
                                     echo '<p>';
                                     echo $request['letterToParents'];
                                     echo '</p>';
