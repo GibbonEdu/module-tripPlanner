@@ -22,15 +22,15 @@ class TripGateway extends QueryableGateway
         ->cols([
         'tripPlannerRequests.tripPlannerRequestID',
         'tripPlannerRequests.creatorPersonID',
-        'tripPlannerRequests.timestampCreation',
         'tripPlannerRequests.title as tripTitle',
         'tripPlannerRequests.description',
         'tripPlannerRequests.location',
         'tripPlannerRequests.status',
+        'tripPlannerRequests.messengerGroupID',
         'gibbonPerson.title',
         'gibbonPerson.preferredName',
         'gibbonPerson.surname',
-        '(SELECT startDate FROM tripPlannerRequestDays WHERE tripPlannerRequestID = tripPlannerRequests.tripPlannerRequestID ORDER BY startDate ASC LIMIT 1) as firstDayOfTrip'
+        '(SELECT startDate FROM tripPlannerRequestDays WHERE tripPlannerRequestID = tripPlannerRequests.tripPlannerRequestID ORDER BY startDate ASC LIMIT 1) as firstDayOfTrip',
         ]);
 
         if ($eutFilter) {
@@ -111,5 +111,17 @@ class TripGateway extends QueryableGateway
             },
         ]);
         return $this->runQuery($query, $criteria);
+    }
+
+    public function beginTransaction() {
+        $this->db()->beginTransaction();
+    }
+
+    public function commit() {
+        $this->db()->commit();
+    }
+
+    public function rollBack() {
+        $this->db()->rollBack();
     }
 }
