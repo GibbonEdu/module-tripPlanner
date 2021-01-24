@@ -33,6 +33,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         returnProcess($guid, $_GET['return'], null, null);
     }
 
+    $gibbonPersonID = $gibbon->session->get('gibbonPersonID');
+
     $tripGateway = $container->get(TripGateway::class);
 
     $tripPlannerRequestID = $_GET['tripPlannerRequestID'] ?? '';
@@ -41,7 +43,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     if (empty($trip)) {
         $page->addError(__('Invalid Trip Request Selected.'));
     } else {
-        if (($approvalReturn = needsApproval($connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"])) == 0 || ($status == "Awaiting Final Approval" && isApprover($connection2, $_SESSION[$guid]["gibbonPersonID"], true))) {
+        if (($approvalReturn = needsApproval($connection2, $tripPlannerRequestID, $gibbonPersonID)) == 0 || ($status == "Awaiting Final Approval" && isApprover($connection2, $gibbonPersonID, true))) {
             renderTrip($guid, $connection2, $tripPlannerRequestID, true);
         } else {
             switch ($approvalReturn) {

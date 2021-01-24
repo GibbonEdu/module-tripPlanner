@@ -94,7 +94,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         $year = $_POST['year'] ?? $gibbon->session->get('gibbonSchoolYearID');
 
         //Filter Form
-        $form = Form::create('tripFilters', $_SESSION[$guid]['absoluteURL'] . '/index.php?q=' . $_GET['q']);
+        $form = Form::create('tripFilters', $gibbon->session->get('absoluteURL') . '/index.php?q=' . $_GET['q']);
         $form->setFactory(DatabaseFormFactory::create($pdo));
         $form->setTitle(__('Filter'));
 

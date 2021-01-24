@@ -33,7 +33,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         if (isset($_GET["tripPlannerRequestID"])) {
             $tripPlannerRequestID = $_GET["tripPlannerRequestID"];
 
-            $gibbonPersonID = $_SESSION[$guid]["gibbonPersonID"];
+            $gibbonPersonID = $gibbon->session->get('gibbonPersonID');
 
             if (hasAccess($container, $tripPlannerRequestID, $gibbonPersonID, $highestAction)) {
                 $tripPersonGateway = $container->get(TripPersonGateway::class);

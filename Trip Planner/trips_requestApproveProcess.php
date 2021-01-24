@@ -7,7 +7,7 @@ include '../../gibbon.php';
 
 include "./moduleFunctions.php";
 
-$URL = $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/";
+$URL = $gibbon->session->get('absoluteURL') . "/index.php?q=/modules/Trip Planner/";
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php') || !isApprover($connection2, $_SESSION[$guid]["gibbonPersonID"])) {
     //Acess denied
