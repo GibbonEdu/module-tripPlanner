@@ -279,20 +279,20 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     //Block template
     $costBlock = $form->getFactory()->createTable()->setClass('blank');
         $row = $costBlock->addRow();
-            $row->addLabel('costName', __('Cost Name'));
-            $row->addTextfield('costName')
+            $row->addLabel('title', __('Cost Name'));
+            $row->addTextfield('title')
                 ->isRequired()
                 ->addClass('floatLeft');
         
-            $row->addLabel('costValue', __('Value'));
-            $row->addCurrency('costValue')
+            $row->addLabel('cost', __('Value'));
+            $row->addCurrency('cost')
                 ->isRequired()
                 ->addClass('floatNone')
                 ->minimum(0);
 
         $row = $costBlock->addRow()->addClass('showHide w-full');
             $col = $row->addColumn();
-                $col->addTextArea("costDescription")
+                $col->addTextArea('description')
                     ->setRows(2)
                     ->setClass('fullWidth floatNone')
                     ->placeholder(__('Cost Description'));
@@ -410,7 +410,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
         $costs = $tripCostGateway->queryTripCost($costCriteria);
         foreach ($costs as $cost) {
-            $costBlocks->addBlock($cost['tripPlannerCostBreakdownID'], ['costName' => $cost['title'], 'costDescription' => $cost['description'], 'costValue' => $cost['cost']]);
+            $costBlocks->addBlock($cost['tripPlannerCostBreakdownID'], $cost);
         }
 
         //Get Trip Date Data and Add to DateBlocks
@@ -424,7 +424,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             $day['startDate'] = Format::date($day['startDate']);
             $day['endDate'] = Format::date($day['endDate']);
 
-            if (boolval($day['allDay'])) {
+            if (boolval($day['allDay']) || empty($day['startTime']) || empty($day['endTime'])) {
                 unset($day['startTime']);
                 unset($day['endTime']);
             } else {
