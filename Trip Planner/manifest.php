@@ -40,11 +40,8 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerApprovers` (
 $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequests` (
     `tripPlannerRequestID` int(7) unsigned zerofill NOT NULL AUTO_INCREMENT,
     `creatorPersonID` int(10) unsigned zerofill NOT NULL,
-    `timestampCreation` timestamp,
     `title` varchar(60) NOT NULL,
     `description` text NOT NULL,
-    `teacherPersonIDs` text NOT NULL,
-    `studentPersonIDs` text NOT NULL,
     `location` text NOT NULL,
     `riskAssessment` text NULL,
     `status` ENUM('Requested', 'Approved', 'Rejected', 'Cancelled', 'Awaiting Final Approval') DEFAULT 'Requested' NOT NULL,
@@ -92,15 +89,6 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestLog` (
     PRIMARY KEY (`tripPlannerRequestLogID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
-$moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestCover` (
-    `tripPlannerRequestCoverID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
-    `tripPlannerRequestID` int(7) unsigned zerofill NOT NULL,
-    `gibbonCourseClassID` int(8) unsigned zerofill NOT NULL,
-    `requiresCover` boolean DEFAULT TRUE NOT NULL,
-    `date` date NOT NULL,
-    PRIMARY KEY (`tripPlannerRequestCoverID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
-
 $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRiskTemplates` (
     `tripPlannerRiskTemplateID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
     `name` varchar(30) NOT NULL,
@@ -112,15 +100,15 @@ $moduleTables[$tables++] = "INSERT INTO `gibbonSetting` (`gibbonSettingID`, `sco
 VALUES
 (NULL, 'Trip Planner', 'requestApprovalType', 'Request Approval Type', 'The type of approval that a trip request has to go through.', 'One Of'),
 (NULL, 'Trip Planner', 'riskAssessmentTemplate', 'Risk Assessment Template', 'The template for the Risk Assessment.', ''),
-(NULL, 'Trip Planner', 'missedClassWarningThreshold', 'Missed Class Warning Threshold', 'The threshold for displaying a warning that student has missed a class too many times. Set to 0 to disable warnings.', '5'),
 (NULL, 'Trip Planner', 'riskAssessmentApproval', 'Risk Assessment Approval', 'If this is enabled the Risk Assessment becomes an optional field until the trip has gone through approval. After this a Final Approval is required before the trip becomes approved.', '1'),
-(NULL, 'Trip Planner', 'requestEditing', 'Allow Requests to be Edited', 'If enabled Trip Requests may be edited by the owner, if edited the approval process is reset.', '0'),
 (NULL, 'Trip Planner', 'defaultRiskTemplate', 'Default Risk Assessment Template', 'If selected then this template will be automatically applied to the form.', '0'),
 (NULL, 'Trip Planner', 'expiredUnapprovedFilter', 'Disable View of Exipired Unapproved Requests', 'If selected then any trip which has not been approved and has passed the initial start date will no longer be shown.', '0'),
 (NULL, 'Trip Planner', 'letterToParentsTemplate', 'Letter To Parents Template', 'Template text for Letter To Parents for new trips.', '')";
 
 $moduleTables[$tables++] = "INSERT INTO `gibbonNotificationEvent` (`event`, `moduleName`, `actionName`, `type`, `scopes`, `active`)
-VALUES ('Trip Request Approval', 'Trip Planner', 'Manage Trips_full', 'Additional', 'All', 'Y');";
+VALUES
+('Trip Request Approval', 'Trip Planner', 'Manage Trips_full', 'Additional', 'All', 'Y'),
+('New Trip Request', 'Trip Planner', 'Manage Trips_full', 'Additional', 'All', 'Y');";
 
 //Actions
 $actionCount = 0;
