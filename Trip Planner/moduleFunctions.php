@@ -1,4 +1,11 @@
 <?php
+
+use Gibbon\Domain\Departments\DepartmentGateway;
+use Gibbon\Module\TripPlanner\Domain\ApproverGateway;
+use Gibbon\Module\TripPlanner\Domain\TripGateway;
+use Gibbon\Module\TripPlanner\Domain\TripPersonGateway;
+use Psr\Container\ContainerInterface;
+
 function getSettings($guid, $riskTemplateGateway) {
     $requestApprovalOptions = ['One Of', 'Two Of', 'Chain Of All'];
     return [
@@ -109,6 +116,44 @@ function getStatuses() {
         'Cancelled', 
         'Awaiting Final Approval',
     ];
+}
+
+function hasAccess(ContainerInterface $container, $tripPlannerRequestID, $gibbonPersonID, $highestAction) {
+
+    //Has full access?
+    if ($highestAction == 'Manage Trips_full') {
+        return true;
+    }
+
+    //Is Owner?
+    $tripGateway = $container->get(TripGateway::class);
+    $trip = $tripGateway->getByID($gibbonPersonID);
+
+    if (!empty($trip) && $trip['creatorPersonID'] == $gibbonPersonID) {
+        return true;
+    }
+
+    //Is Involved?
+    $tripPersonGateway = $container->get(TripPersonGateway::class);
+
+    if ($tripPersonGateway->isInvolved($tripPlannerRequestID, $gibbonPersonID)) {
+        return true;
+    }
+
+    //Is Approver?
+    $approverGateway = $container->get(ApproverGateway::class);
+
+    //TODO: Check if needs to approve?
+    if (empty($approverGateway->selectApproverByPerson($gibbonPersonID))) {
+        return true;
+    }
+
+    //Is HOD?
+    $departmentGateway = $container->get(DepartmentGateway::class);
+    $headOfDepartments = array_column($departmentGateway->selectDepartmentsByPerson($gibbonPersonID, 'Coordinator')->fetchAll(), 'gibbonDepartmentID');
+    $tripOwnerDepartments = array_column($departmentGateway->selectDepartmentsByPerson($trip['creatorPersonID']), 'gibbonDepartmentID');
+
+    return !empty(array_intersect($headOfDepartments, $tripOwnerDepartments));
 }
 
 function isOwner($connection2, $tripPlannerRequestID, $gibbonPersonID)
