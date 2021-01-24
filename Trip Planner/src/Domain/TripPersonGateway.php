@@ -37,4 +37,14 @@ class TripPersonGateway extends QueryableGateway
 
         return $this->runQuery($query, $criteria);
     }
+
+    public function isInvolved($tripPlannerRequestID, $gibbonPersonID) {
+        $result = $this->selectBy([
+            'tripPlannerRequestID'  => $tripPlannerRequestID,
+            'gibbonPersonID'        => $gibbonPersonID,
+            'role'                  => 'Teacher'
+        ]);
+
+        return $result->isNotEmpty();
+    }
 }
