@@ -11,24 +11,24 @@ use Gibbon\Domain\Traits\TableAware;
 trait BulkInsert
 {
 
-	use TableAware;
+    use TableAware;
 
-	public function bulkInsert($tripPlannerRequestID, $data) {
-		if (empty($data)) {
-			return;
-		}
+    public function bulkInsert($tripPlannerRequestID, $data) {
+        if (empty($data)) {
+            return;
+        }
 
-		$query = $this
-			->newInsert()
-			->into($this->getTableName());
+        $query = $this
+            ->newInsert()
+            ->into($this->getTableName());
 
-		foreach ($data as $row) {
-			$query->addRow($row);
-			$query->set('tripPlannerRequestID', $tripPlannerRequestID);
-		}
+        foreach ($data as $row) {
+            $query->addRow($row);
+            $query->set('tripPlannerRequestID', $tripPlannerRequestID);
+        }
 
-		return $this->runInsert($query);
-	}
+        return $this->runInsert($query);
+    }
 
 }
 
