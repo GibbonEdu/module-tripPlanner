@@ -38,7 +38,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     $tripPlannerRequestID = $_GET['tripPlannerRequestID'] ?? '';
     $trip = $tripGateway->getByID($tripPlannerRequestID);
 
-    if (empty($trip) {
+    if (empty($trip)) {
         $page->addError(__('Invalid Trip Request Selected.'));
     } else {
         if (($approvalReturn = needsApproval($connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"])) == 0 || ($status == "Awaiting Final Approval" && isApprover($connection2, $_SESSION[$guid]["gibbonPersonID"], true))) {
