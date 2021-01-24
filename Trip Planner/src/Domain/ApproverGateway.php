@@ -25,7 +25,7 @@ class ApproverGateway extends QueryableGateway
             ->newQuery()
             ->from($this->getTableName())
             ->cols([
-                'tripPlannerApproverID', 'title', 'preferredName', 'surname', 'sequenceNumber', 'finalApprover'
+                'tripPlannerApproverID', 'gibbonPerson.gibbonPersonID', 'title', 'preferredName', 'surname', 'sequenceNumber', 'finalApprover'
             ])
             ->leftJoin('gibbonPerson', 'tripPlannerApprovers.gibbonPersonID=gibbonPerson.gibbonPersonID');
 
@@ -107,6 +107,11 @@ class ApproverGateway extends QueryableGateway
             ->limit(1);
 
         return $this->runSelect($select);
+    }
+
+    public function selectApproverByPerson($gibbonPersonID) {
+        $approver = $this->selectBy(['gibbonPersonID' => $gibbonPersonID]);
+        return $approver->isNotEmpty() ? $approver->fetch() : [];
     }
 
 }
