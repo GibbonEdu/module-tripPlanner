@@ -146,7 +146,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     foreach ($costOrder as $order) {
         $cost = $_POST['cost'][$order];
 
-        if (empty($cost['costName']) || empty($cost['costValue']) || $cost['costValue'] < 0) {
+        if (empty($cost['title']) || empty($cost['cost']) || $cost['cost'] < 0) {
             $URL .= '&return=error1';
             header("Location: {$URL}");
             exit();
