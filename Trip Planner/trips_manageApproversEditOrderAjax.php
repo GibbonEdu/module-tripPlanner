@@ -23,12 +23,6 @@ $_POST['address'] = '/modules/Trip Planner/trips_manageApprovers.php';
 
 require_once '../../gibbon.php';
 
-?>
-<script type="text/javascript">
-    console.log('test');
-</script>
-<?php
-
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manageApprovers.php')) {
     exit();
 } else {
