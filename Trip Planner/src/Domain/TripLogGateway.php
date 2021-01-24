@@ -41,5 +41,14 @@ class TripLogGateway extends QueryableGateway
         return $this->runQuery($query, $criteria);
     }
 
+    public function selectLoggedPeople($tripPlannerRequestID) {
+        $query = $this->newSelect()
+            ->from($this->getTableName())
+            ->cols(['gibbonPersonID'])
+            ->distinct()
+            ->where('tripPlannerRequestID = :tripPlannerRequestID')
+            ->bindValue('tripPlannerRequestID', $tripPlannerRequestID);
 
+        return $this->runSelect($query);
+    }
 }
