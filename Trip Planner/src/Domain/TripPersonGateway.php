@@ -5,10 +5,11 @@ namespace Gibbon\Module\TripPlanner\Domain;
 use Gibbon\Domain\Traits\TableAware;
 use Gibbon\Domain\QueryCriteria;
 use Gibbon\Domain\QueryableGateway;
+use Gibbon\Module\TripPlanner\Domain\Traits\BulkInsert;
 
 class TripPersonGateway extends QueryableGateway
 {
-    use TableAware;
+    use BulkInsert;
 
     private static $tableName = 'tripPlannerRequestPerson';
     private static $primaryKey = 'tripPlannerRequestPersonID';
