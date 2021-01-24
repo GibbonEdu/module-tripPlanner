@@ -5,6 +5,7 @@ v1.3.00
 OOification
 Implmentation of Gateways
 Removed redundant columns from tripPlannerApprovers
+Removed Overlap, Cover and Missed Class System related pages and db entries.
 
 v1.2.00
 -------
