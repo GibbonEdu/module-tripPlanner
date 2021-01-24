@@ -22,18 +22,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     }
 
     $gibbonPersonID = $_SESSION[$guid]["gibbonPersonID"];
-    $departments = getHOD($connection2, $gibbonPersonID);
-    $departments2 = getDepartments($connection2, getOwner($connection2, $tripPlannerRequestID));
-    $isHOD = false;
 
-    foreach ($departments as $department) {
-        if (in_array($department["gibbonDepartmentID"], $departments2)) {
-            $isHOD = true;
-            break;
-        }
-    }
-
-    if (isApprover($connection2, $gibbonPersonID) || isOwner($connection2, $tripPlannerRequestID, $gibbonPersonID) || isInvolved($connection2, $tripPlannerRequestID, $gibbonPersonID) || $isHOD) {
+    $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
+    if (hasAccess($container, $tripPlannerRequestID, $gibbonPersonID, $highestAction)) {
         $URL .= "trips_requestView.php&tripPlannerRequestID=" . $tripPlannerRequestID;
         if (isset($_POST["comment"])) {
             $comment = $_POST["comment"];

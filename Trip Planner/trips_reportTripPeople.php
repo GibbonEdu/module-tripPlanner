@@ -34,19 +34,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             $tripPlannerRequestID = $_GET["tripPlannerRequestID"];
 
             $gibbonPersonID = $_SESSION[$guid]["gibbonPersonID"];
-            $departments = getHOD($connection2, $gibbonPersonID);
-            $departments2 = getDepartments($connection2, getOwner($connection2, $tripPlannerRequestID));
-            $isHOD = false;
 
-            foreach ($departments as $department) {
-                if (in_array($department["gibbonDepartmentID"], $departments2)) {
-                    $isHOD = true;
-                    break;
-                }
-            }
-
-            if (isApprover($connection2, $gibbonPersonID) || isOwner($connection2, $tripPlannerRequestID, $gibbonPersonID) || isInvolved($connection2, $tripPlannerRequestID, $gibbonPersonID) || $isHOD || $highestAction == "Manage Trips_full") {
-
+            if (hasAccess($container, $tripPlannerRequestID, $gibbonPersonID, $highestAction)) {
                 $tripPersonGateway = $container->get(TripPersonGateway::class);
 
                 $criteria = $tripPersonGateway->newQueryCriteria()
