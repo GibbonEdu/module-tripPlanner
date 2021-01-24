@@ -230,7 +230,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     $tripGateway->commit();
 
     if (!$edit) {
-        $notificationGateway = $container->get(notificationGateway::class);
+        $notificationGateway = $container->get(NotificationGateway::class);
         $notificationSender = new NotificationSender($notificationGateway, $gibbon->session);
 
         $event = new NotificationEvent('Trip Planner', 'New Trip Request');
