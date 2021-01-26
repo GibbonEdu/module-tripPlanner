@@ -22,7 +22,6 @@ use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Forms\Form;
 use Gibbon\Module\TripPlanner\Domain\ApproverGateway;
 use Gibbon\Module\TripPlanner\Domain\TripGateway;
-use Gibbon\Module\TripPlanner\Domain\TripLogGateway;
 use Gibbon\Services\Format;
 use Gibbon\Tables\DataTable;
 use Gibbon\Forms\DatabaseFormFactory;
@@ -86,8 +85,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             });
         }
 
-        $tripLogGateway = $container->get(TripLogGateway::class);
-
         //Filters
         $relationFilter = $_POST['relationFilter'] ?? $relationFilter ?? 'MR'; //'My Requests' is default, overrided by current value, overrided by post value (i.e. value from filter form).
         $statusFilter = $_POST['statusFilter'] ?? 'Requested';
@@ -129,36 +126,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         $table->setTitle(__('Requests'));
 
         if ($relationFilter == 'AMA' && $ama) {
-            $table->modifyRows(function ($trip, $row) use ($gibbonPersonID, $isApprover, $finalApprover, $requestApprovalType, $approverGateway, $tripLogGateway) {
-                if ($trip['status'] == 'Requested' && $isApprover) {
-                    if ($requestApprovalType == 'Two Of') {
-                        //Check if the user has already approved
-                        $approval = $tripLogGateway->selectBy([
-                            'tripPlannerRequestID' => $trip['tripPlannerRequestID'],
-                            'gibbonPersonID' => $gibbonPersonID,
-                            'action' => 'Approval - Partial'
-                        ]);
-
-                        if ($approval->isNotEmpty()) {
-                            $row = null;
-                        }
-                    } else if ($requestApprovalType == 'Chain Of All') {
-                        //Check if user is in line to approve
-                        $nextApprover = $approverGateway->selectNextApprover($trip['tripPlannerRequestID']);
-                        if ($nextApprover->isNotEmpty()) {
-                            $nextApprover = $nextApprover->fetch();
-                            if ($gibbonPersonID != $nextApprover['gibbonPersonID']) {
-                                $row = null;
-                            }
-                        } else {
-                            $row = null;
-                        }
-                    }
-                } else if ($trip['status'] != 'Awaiting Final Approval' || !$finalApprover) {
-                    $row = null;
-                }
-
-                return $row;
+            $table->modifyRows(function ($trip, $row) use ($container, $gibbonPersonID) {
+                //TODO: Migrate to gateway/SQL
+                return needsApproval($container, $gibbonPersonID, $trip['tripPlannerRequestID']) ? $row : null;
             });
         }
 
@@ -194,7 +164,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                    
         $table->addActionColumn()
           ->addParam('tripPlannerRequestID')
-          ->format(function ($row, $actions) use ($connection2, $gibbonPersonID, $finalApprover)  {
+          ->format(function ($row, $actions) use ($container, $gibbonPersonID)  {
               $actions->addAction('view', __('View Details'))
                 ->setURL('/modules/Trip Planner/trips_requestView.php');
 
@@ -204,8 +174,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                 ->setURL('/modules/Trip Planner/trips_submitRequest.php');
             }
             
-            if (($row['status'] == 'Requested' && needsApproval($connection2, $row['tripPlannerRequestID'], $gibbonPersonID) == 0)
-                || ($row['status'] == 'Awaiting Final Approval' && $finalApprover)) {
+            if (needsApproval($container, $gibbonPersonID, $trip['tripPlannerRequestID'])) {
                 $actions->addAction('approve', __('Approve/Reject'))
                     ->setURL('/modules/Trip Planner/trips_requestApprove.php')
                     ->setIcon('iconTick');

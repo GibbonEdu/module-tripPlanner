@@ -43,26 +43,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     if (empty($trip)) {
         $page->addError(__('Invalid Trip Request Selected.'));
     } else {
-        if (($approvalReturn = needsApproval($connection2, $tripPlannerRequestID, $gibbonPersonID)) == 0 || ($status == "Awaiting Final Approval" && isApprover($connection2, $gibbonPersonID, true))) {
+        if (needsApproval($container, $gibbonPersonID, $tripPlannerRequestID)) {
             renderTrip($guid, $connection2, $tripPlannerRequestID, true);
         } else {
-            switch ($approvalReturn) {
-                case 1:
-                    $page->addError(__('A Database error occured.'));
-                    break;
-
-                case 2:
-                    $page->addError(__('You do not have access to this action.'));
-                    break;
-
-                case 3:
-                    $page->addWarning(__('The trip has already been approved.'));
-                    break;
-
-                case 4:
-                    $page->addWarning(__('You have already approved this trip.'));
-                    break;
-            }
+            $page->addError(__('You do not have access to this action.'));
         }
     } 
 }   
