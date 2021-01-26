@@ -89,7 +89,7 @@ class ApproverGateway extends QueryableGateway
         return true;
     }
 
-    public function selectNextApprover($tripPlannerRequestID) { 
+    public function selectNextApprover($tripPlannerRequestID, $gibbonPersonID = null) { 
         $select = $this
             ->newSelect()
             ->from($this->getTableName())
@@ -105,6 +105,11 @@ class ApproverGateway extends QueryableGateway
             ->bindValue('tripPlannerRequestID', $tripPlannerRequestID)
             ->orderBy(['sequenceNumber'])
             ->limit(1);
+
+        if (!empty($gibbonPersonID)) {
+            $select->where('gibbonPersonID <> :gibbonPersonID')
+                ->bindValue('gibbonPersonID', $gibbonPersonID);
+        }
 
         return $this->runSelect($select);
     }
