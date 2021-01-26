@@ -1,184 +1,152 @@
 <?php
 
 use Gibbon\Comms\NotificationEvent;
+use Gibbon\Domain\System\SettingGateway;
+use Gibbon\Module\TripPlanner\Domain\ApproverGateway;
+use Gibbon\Module\TripPlanner\Domain\TripGateway;
+use Gibbon\Module\TripPlanner\Domain\TripLogGateway;
 
 require_once '../../gibbon.php';
 require_once "./moduleFunctions.php";
 
-$URL = $gibbon->session->get('absoluteURL') . "/index.php?q=/modules/Trip Planner/";
+$URL = $gibbon->session->get('absoluteURL') . '/index.php?q=/modules/' . $gibbon->session->get('module');
 
-if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php') || !isApprover($connection2, $_SESSION[$guid]["gibbonPersonID"])) {
+$gibbonPersonID = $gibbon->session->get('gibbonPersonID');
+
+$approverGateway = $container->get(ApproverGateway::class);
+$approver = $approverGateway->selectApproverByPerson($gibbonPersonID);
+$isApprover = !empty($approver);
+$finalApprover = $isApprover ? $approver['finalApprover'] : false;
+
+if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php') || !$isApprover) {
     //Acess denied
-    $URL .= "trips_manage.php&return=error0";
+    $URL .= '/trips_manage.php&return=error0';
     header("Location: {$URL}");
     exit();
 } else {
-    if (isset($_POST["tripPlannerRequestID"])) {
-        $tripPlannerRequestID = $_POST["tripPlannerRequestID"];
+    $tripPlannerRequestID = $_POST['tripPlannerRequestID'] ?? '';
 
-        try {
-            $data = array("tripPlannerRequestID" => $tripPlannerRequestID);
-            $sql = "SELECT * FROM `tripPlannerRequests` WHERE tripPlannerRequestID=:tripPlannerRequestID";
-            $result = $connection2->prepare($sql);
-            $result->execute($data);
-        } catch (PDOException $e) {
-            $URL .= "trips_manage.php&return=error2";
-            header("Location: {$URL}");
-            exit();
-        }
+    $tripGateway = $container->get(TripGateway::class);
+    $trip = $tripGateway->getByID($tripPlannerRequestID);
 
-        if ($result->rowCount() != 1) {
-            $URL .= "trips_manage.php&return=error2";
-            header("Location: {$URL}");
-            exit();
-        }
-        else {
-            $row = $result->fetch();
-            $title = $row['title'];
-            $riskAssessmentApproval = getSettingByScope($connection2, "Trip Planner", "riskAssessmentApproval");
-            $status = getTripStatus($connection2, $tripPlannerRequestID);
-            if (($approvalReturn = needsApproval($connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"])) == 0 || ($status == "Awaiting Final Approval" && isApprover($connection2, $_SESSION[$guid]["gibbonPersonID"], true))) {
-                $URL .= "trips_requestApprove.php&tripPlannerRequestID=" . $tripPlannerRequestID;
+    if (!empty($trip)) {
+        $settingGateway = $container->get(SettingGateway::class);
+        $riskAssessmentApproval = $settingGateway->getSettingByScope('Trip Planner', 'riskAssessmentApproval');
 
-                if (isset($_POST["approval"])) {
-                    $approval = $_POST["approval"];
-                } else {
-                    $URL .= "&return=error1";
-                    header("Location: {$URL}");
-                    exit();
-                }
+        $title = $trip['title'];
+        $status = $trip['status'];
+        if (needsApproval($container, $gibbonPersonID, $tripPlannerRequestID)) {
+            $URL .= '/trips_requestApprove.php&tripPlannerRequestID=' . $tripPlannerRequestID;
 
-                if (isset($_POST["comment"])) {
-                    $comment = $_POST["comment"];
-                } elseif ($approval == "Comment") {
-                    $URL .= "&return=error1";
-                    header("Location: {$URL}");
-                    exit();
-                }
+            $action = $_POST['action'] ?? '';
+            $comment = $_POST['comment'] ?? '';
 
-                if ($approval == "Approval - Partial") {
-                    if($status == "Awaiting Final Approval") {
-                        try {
-                            $data = array("tripPlannerRequestID" => $tripPlannerRequestID, "status" => $status);
-                            $sql = "UPDATE tripPlannerRequests SET status='Approved' WHERE tripPlannerRequestID=:tripPlannerRequestID";
-                            $result = $connection2->prepare($sql);
-                            $result->execute($data);
-                        } catch (PDOException $e) {
-                            $URL .= "trips_manage.php&return=error2";
-                            header("Location: {$URL}");
-                            exit();
-                        }
-
-                        requestNotification($guid, $connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"], "Approved");
-                    } else {
-                        $done = false;
-                        $requestApprovalType = getSettingByScope($connection2, "Trip Planner", "requestApprovalType");
-                        if ($requestApprovalType == "One Of") {
-                            $done = true;
-                        } elseif ($requestApprovalType == "Two Of") {
-                            $done = (getEvents($connection2, $tripPlannerRequestID, array("Approval - Partial"))->rowCount() == 1);
-                        } elseif ($requestApprovalType == "Chain Of All") {
-                            try {
-                                $data = array("gibbonPersonID" => $_SESSION[$guid]["gibbonPersonID"]);
-                                $sql = "SELECT * FROM `tripPlannerApprovers` WHERE sequenceNumber > (SELECT sequenceNumber FROM `tripPlannerApprovers` WHERE gibbonPersonID=:gibbonPersonID)";
-                                $result = $connection2->prepare($sql);
-                                $result->execute($data);
-                            } catch (PDOException $e) {
-                                $URL .= "trips_manage.php&return=error2";
-                                header("Location: {$URL}");
-                                exit();
-                            }
-
-                            $done = $result->rowCount() == 0;
-                        }
-
-                        if ($done) {
-                            $approval = "Approval - Final";
-                            try {
-                                $status = "Approved";
-                                if($riskAssessmentApproval) {
-                                    $status = "Awaiting Final Approval";
-                                    $approval = "Approval - Awaiting Final Approval";
-                                }
-
-                                $data = array("tripPlannerRequestID" => $tripPlannerRequestID, "status" => $status);
-                                $sql = "UPDATE tripPlannerRequests SET status=:status WHERE tripPlannerRequestID=:tripPlannerRequestID";
-                                $result = $connection2->prepare($sql);
-                                $result->execute($data);
-                            } catch (PDOException $e) {
-                                $URL .= "trips_manage.php&return=error2";
-                                header("Location: {$URL}");
-                                exit();
-                            }
-
-                            requestNotification($guid, $connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"], $status);
-
-                            if ($status == "Approved") {
-                                //Custom notifications for final approval
-                                $event = new NotificationEvent('Trip Planner', 'Trip Request Approval');
-
-                                $notificationText = sprintf(__m('Trip %1$s has been approved.'), $title);
-
-                                $event->setNotificationText($notificationText);
-                                $event->setActionLink('/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID='.$tripPlannerRequestID);
-
-                                $event->sendNotifications($pdo, $gibbon->session);
-                            }
-
-                        } elseif ($requestApprovalType == "Chain Of All") {
-                            try {
-                                $data = array("gibbonPersonID" => $_SESSION[$guid]["gibbonPersonID"]);
-                                $sql = "SELECT gibbonPersonID FROM `tripPlannerApprovers` WHERE sequenceNumber = (SELECT sequenceNumber FROM `tripPlannerApprovers` WHERE gibbonPersonID=:gibbonPersonID)+1";
-                                $result = $connection2->prepare($sql);
-                                $result->execute($data);
-                            } catch (PDOException $e) {
-                                $URL .= "trips_manage.php&return=error2";
-                                header("Location: {$URL}");
-                                exit();
-                            }
-
-                            $message = __m('A trip request is awaiting your approval.');
-                            setNotification($connection2, $guid, $result->fetch()["gibbonPersonID"], $message, 'Trip Planner', "/index.php?q=/modules/Trip Planner/trips_requestApprove.php&tripPlannerRequestID=$tripPlannerRequestID");
-                        }
-
-                        if (!logEvent($connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"], $approval, $comment)) {
-                            $URL .= "trips_manage.php&return=error2";
-                            header("Location: {$URL}");
-                            exit();
-                        }
-                    }
-                } elseif ($approval == "Rejection") {
-                    try {
-                        $data = array("tripPlannerRequestID" => $tripPlannerRequestID);
-                        $sql = "UPDATE tripPlannerRequests SET status='Rejected' WHERE tripPlannerRequestID=:tripPlannerRequestID";
-                        $result = $connection2->prepare($sql);
-                        $result->execute($data);
-                    } catch (PDOException $e) {
-                        $URL .= "trips_manage.php&return=error2";
-                        header("Location: {$URL}");
-                        exit();
-                    }
-                    requestNotification($guid, $connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"], "Rejected");
-                } elseif ($approval == "Comment") {
-                    if (!logEvent($connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"], "Comment", $comment)) {
-                        $URL .= "trips_manage.php&return=error2";
-                        header("Location: {$URL}");
-                        exit();
-                    }
-                    requestNotification($guid, $connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"], "Comment");
-                }
-
-                $URL = $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_manage.php&return=success0";
-                header("Location: {$URL}");
-                exit();
-            } else {
-                $URL .= "trips_requestView.php&tripPlannerRequestID=" . $tripPlannerRequestID . "&return=error0";
+            if (empty($action) || (empty($comment) && $action == 'Comment')) {
+                $URL .= '&return=error1';
                 header("Location: {$URL}");
                 exit();
             }
+            
+            $tripLogGateway = $container->get(TripLogGateway::class);
+
+            if ($approval == 'Approval') {
+                if($status == 'Awaiting Final Approval') {
+                    $tripGateway->update($tripPlannerRequestID, ['status' => 'Approved']);
+
+
+                    requestNotification($guid, $connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"], 'Approved');
+                } else {
+                    $done = false;
+                    $requestApprovalType = $settingGateway->getSettingByScope('Trip Planner', 'requestApprovalType');
+                    if ($requestApprovalType == 'One Of') {
+                        $done = true;
+                    } elseif ($requestApprovalType == 'Two Of') {
+                        $approvalLog = $tripLogGateway->selectBy([
+                            'tripPlannerRequestID' => $trip['tripPlannerRequestID'],
+                            'action' => 'Approval - Partial'
+                        ]);
+
+                        $done = ($approvalLog->rowCount() == 1);
+                    } elseif ($requestApprovalType == 'Chain Of All') {
+                        $nextApprover = $approverGateway->selectNextApprover($tripPlannerRequestID, $gibbonPersonID);
+                        $done = $nextApprover->rowCount() == 0;
+                    }
+
+                    if ($done) {
+                        $approval = "Approval - Final";
+                            $status = "Approved";
+                            if($riskAssessmentApproval) {
+                                $status = "Awaiting Final Approval";
+                                $approval = "Approval - Awaiting Final Approval";
+                            }
+
+                        if (!$tripGateway->update($tripPlannerRequestID, ['status' => $status])) {
+                            $URL .= 'trips_manage.php&return=error2';
+                            header("Location: {$URL}");
+                            exit();
+                        }
+
+                        requestNotification($guid, $connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"], $status);
+
+                        if ($status == "Approved") {
+                            //Custom notifications for final approval
+                            $event = new NotificationEvent('Trip Planner', 'Trip Request Approval');
+
+                            $notificationText = sprintf(__m('Trip %1$s has been approved.'), $title);
+
+                            $event->setNotificationText($notificationText);
+                            $event->setActionLink('/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID='.$tripPlannerRequestID);
+
+                            $event->sendNotifications($pdo, $gibbon->session);
+                        }
+
+                    } elseif ($nextApprover->isNotEmpty()) {
+                        $nextApprover = $nextApprover->fetch();
+
+                        $message = __('A trip request is awaiting your approval.');
+                        setNotification($connection2, $guid, $nextApprover["gibbonPersonID"], $message, 'Trip Planner', '/index.php?q=/modules/Trip Planner/trips_requestApprove.php&tripPlannerRequestID=$tripPlannerRequestID');
+                    }
+
+                    $tripPlannerRequestLogID = $tripLogGateway->insert([
+                        'tripPlannerRequestID' => $tripPlannerRequestID,
+                        'gibbonPersonID' => $gibbonPersonID,
+                        'action' => $approval,
+                        'comment' => $comment;
+                    ]);
+
+                    if (!$tripPlannerRequestLogID) {
+                        $URL .= "trips_manage.php&return=error2";
+                        header("Location: {$URL}");
+                        exit();
+                    }
+                }
+            } elseif ($action == 'Rejection') {
+                $tripGateway->update($tripPlannerRequestID, ['status' => 'Rejected']);
+
+                requestNotification($guid, $connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"], "Rejected");
+            } elseif ($approval == "Comment") {
+                $tripPlannerRequestLogID = $tripLogGateway->insert([
+                    'tripPlannerRequestID' => $tripPlannerRequestID,
+                    'gibbonPersonID' => $gibbonPersonID,
+                    'action' => 'Comment',
+                    'comment' => $comment
+                ]);
+
+                if (!$tripPlannerRequestLogID) {
+                    $URL .= 'trips_manage.php&return=error2';
+                    header("Location: {$URL}");
+                    exit();
+                }
+
+                requestNotification($guid, $connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"], "Comment");
+            }
+
+            $URL =  . "/index.php?q=/modules/Trip Planner/trips_manage.php&return=success0";
+            header("Location: {$URL}");
+            exit();
         }
     } else {
-        $URL .= "trips_manage.php&return=error1";
+        $URL .= '/trips_manage.php&return=error1';
         header("Location: {$URL}");
         exit();
     }
