@@ -1,9 +1,11 @@
 <?php
 
 use Gibbon\Domain\Departments\DepartmentGateway;
+use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Module\TripPlanner\Data\Setting;
 use Gibbon\Module\TripPlanner\Domain\ApproverGateway;
 use Gibbon\Module\TripPlanner\Domain\TripGateway;
+use Gibbon\Module\TripPlanner\Domain\tripLogGateway;
 use Gibbon\Module\TripPlanner\Domain\TripPersonGateway;
 use Psr\Container\ContainerInterface;
 
@@ -146,123 +148,53 @@ function hasAccess(ContainerInterface $container, $tripPlannerRequestID, $gibbon
     return !empty(array_intersect($headOfDepartments, $tripOwnerDepartments));
 }
 
-function isOwner($connection2, $tripPlannerRequestID, $gibbonPersonID)
-{
-    try {
-        $data = array("tripPlannerRequestID" => $tripPlannerRequestID, "gibbonPersonID" => $gibbonPersonID);
-        $sql = "SELECT title FROM tripPlannerRequests WHERE tripPlannerRequestID=:tripPlannerRequestID AND creatorPersonID=:gibbonPersonID";
-        $result = $connection2->prepare($sql);
-        $result->execute($data);
-    } catch (PDOException $e) {
+function needsApproval($container, $gibbonPersonID, $tripPlannerRequestID) {
+    $tripGateway = $container->get(TripGateway::class);
+    $trip = $tripGateway->getByID($tripPlannerRequestID);
+
+    if (empty($trip)) {
+        return false;
     }
 
-    return ($result->rowCount() == 1);
-}
+    $approverGateway = $container->get(ApproverGateway::class);
 
-function isApprover($connection2, $gibbonPersonID, $final=false)
-{
+    $approver = $approverGateway->selectApproverByPerson($gibbonPersonID);
+    $isApprover = !empty($approver);
+    $finalApprover = $isApprover ? $approver['finalApprover'] : false; 
 
-    try {
-        $data = array("gibbonPersonID" => $gibbonPersonID);
-        $sql = "SELECT tripPlannerApproverID, finalApprover FROM tripPlannerApprovers WHERE gibbonPersonID=:gibbonPersonID";
-        $result = $connection2->prepare($sql);
-        $result->execute($data);
-    } catch (PDOException $e) {
-    }
-    if($result->rowCount() == 1) {
-        return $result->fetch()["finalApprover"] || !$final;
-    }
-    return false;
-}
+    if ($trip['status'] == 'Requested' && $isApprover) {
+        $settingGateway = $container->get(SettingGateway::class);
+        $requestApprovalType = $settingGateway->getSettingByScope('Trip Planner', 'requestApprovalType');
 
-/*Return Values:
+        if ($requestApprovalType == 'Two Of') {
+            //Check if the user has already approved
+            $tripLogGateway = $container->get(TripLogGateway::class);
+            $approval = $tripLogGateway->selectBy([
+                'tripPlannerRequestID' => $trip['tripPlannerRequestID'],
+                'gibbonPersonID' => $gibbonPersonID,
+                'action' => 'Approval - Partial'
+            ]);
 
-0: Needs Approval
-1: Databse Error
-2: No permission
-3: Already Approved.
-4: Can't approve yet. (TODO)
-5: Already Approved by you.
-
-*/
-function needsApproval($connection2, $tripPlannerRequestID, $gibbonPersonID)
-{
-    if (isApprover($connection2, $gibbonPersonID)) {
-        try {
-            $data = array("tripPlannerRequestID" => $tripPlannerRequestID);
-            $sql = "SELECT status FROM tripPlannerRequests WHERE tripPlannerRequestID=:tripPlannerRequestID";
-            $result = $connection2->prepare($sql);
-            $result->execute($data);
-        } catch (PDOException $e) {
-            return 1;
-        }
-        $request = $result->fetch();
-        if ($request["status"] == "Requested") {
-            $requestApprovalType = getSettingByScope($connection2, "Trip Planner", "requestApprovalType");
-            if ($requestApprovalType == "One Of") {
-                return 0;
-            } elseif ($requestApprovalType == "Two Of") {
-                $events = getEvents($connection2, $tripPlannerRequestID, array("Approval - Partial"));
-                while ($event = $events->fetch()) {
-                    if ($event["gibbonPersonID"] == $gibbonPersonID) {
-                        return 5;
-                    }
-                }
-                if($events->rowCount() < 2) {
-                    return 0;
-                } else {
-                    return 3;
-                }
-            } elseif ($requestApprovalType == "Chain Of All") {
-                //Get notifiers in sequence
-                try {
-                    $dataApprovers = array('tripPlannerRequestID' => $tripPlannerRequestID);
-                    $sqlApprovers = "SELECT gibbonPerson.gibbonPersonID AS g1, tripPlannerRequestLog.gibbonPersonID AS g2 FROM tripPlannerApprovers JOIN gibbonPerson ON (tripPlannerApprovers.gibbonPersonID=gibbonPerson.gibbonPersonID) LEFT JOIN tripPlannerRequestLog ON (tripPlannerRequestLog.gibbonPersonID=tripPlannerApprovers.gibbonPersonID AND tripPlannerRequestLog.action='Approval - Partial' AND tripPlannerRequestLog.tripPlannerRequestID=:tripPlannerRequestID) WHERE gibbonPerson.status='Full' ORDER BY sequenceNumber, surname, preferredName";
-                    $resultApprovers = $connection2->prepare($sqlApprovers);
-                    $resultApprovers->execute($dataApprovers);
-                } catch (PDOException $e) {
-                    return 1;
-                }
-                if ($resultApprovers->rowCount() == 0) {
-                    return 1;
-                } else {
-                    $approvers = $resultApprovers->fetchAll();
-                    $gibbonPersonIDNext = null;
-                    foreach ($approvers as $approver) {
-                        if ($approver['g1'] != $approver['g2']) {
-                            if (is_null($gibbonPersonIDNext)) {
-                                $gibbonPersonIDNext = $approver['g1'];
-                                break;
-                            }
-                        }
-                    }
-
-                    if (is_null($gibbonPersonIDNext)) {
-                        return 1;
-                    } else if ($gibbonPersonIDNext == $gibbonPersonID) {
-                        return 0;
-                    }
-                }
+            if ($approval->isNotEmpty()) {
+                return false;
             }
-        } elseif($request["status"] == "Approved") {
-            return 3;
+        } else if ($requestApprovalType == 'Chain Of All') {
+            //Check if user is in line to approve
+            $nextApprover = $approverGateway->selectNextApprover($trip['tripPlannerRequestID']);
+            if ($nextApprover->isNotEmpty()) {
+                $nextApprover = $nextApprover->fetch();
+                if ($gibbonPersonID != $nextApprover['gibbonPersonID']) {
+                    return false;
+                }
+            } else {
+                return false;
+            }
         }
+    } else if ($trip['status'] != 'Awaiting Final Approval' || !$finalApprover) {
+        return false;
     }
-    return 2;
-}
 
-function getTripStatus($connection2, $tripPlannerRequestID) {
-    try {
-        $data = array("tripPlannerRequestID" => $tripPlannerRequestID);
-        $sql = "SELECT status FROM tripPlannerRequests WHERE tripPlannerRequestID=:tripPlannerRequestID";
-        $result = $connection2->prepare($sql);
-        $result->execute($data);
-        if($result->rowCount() == 1) {
-            return $result->fetch()["status"];
-        }
-    } catch(PDOException $e) {
-    }
-    return null;
+    return true;
 }
 
 function getTrip($connection2, $tripPlannerRequestID) {
@@ -570,7 +502,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
 
             $link = $_SESSION[$guid]['absoluteURL'].'/modules/Trip Planner/trips_request' . ($approveMode ? "Approve" : "View") . "Process.php";
 
-            if (isOwner($connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"])) {
+            if ($_SESSION[$guid]["gibbonPersonID"] == $request['creatorPersonID']) {
                 echo "<div class='linkTop'>";
                     echo "<a href='".$_SESSION[$guid]['absoluteURL']."/index.php?q=/modules/Trip Planner/trips_submitRequest.php&mode=edit&tripPlannerRequestID=$tripPlannerRequestID'>".__m('Edit')."<img style='margin-left: 5px' title='".__m('Edit')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/config.png'/></a>";
                 echo '</div>';
@@ -957,6 +889,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                             </td>
                         </tr>
                         <?php
+                        /*
                         if (needsApproval($connection2, $tripPlannerRequestID, $_SESSION[$guid]['gibbonPersonID']) != 0) {
                             ?>
                             <tr>
@@ -973,9 +906,9 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                                 </td>
                                 <td class="right">
                                     <?php
-                                    echo "<select name='approval' id='approval' style='width:302px'>";
+                                    echo "<select name='action' id='action' style='width:302px'>";
                                         echo "<option value='Please select...'>".__m('Please select...').'</option>';
-                                        echo "<option value='Approval - Partial'>".__m('Approve').'</option>';
+                                        echo "<option value='Approval'>".__m('Approve').'</option>';
                                         echo "<option value='Rejection'>".__m('Reject').'</option>';
                                         echo "<option value='Comment'>".__m('Comment').'</option>';
                                     echo '</select>';
@@ -987,7 +920,7 @@ function renderTrip($guid, $connection2, $tripPlannerRequestID, $approveMode) {
                                 </td>
                             </tr>
                             <?php
-                        }
+                        }*/
                     }
                     ?>
                     <tr>
