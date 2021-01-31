@@ -379,6 +379,24 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
 
             $peopleCriteria->filterBy('role', 'Student');
 
+            $table->addHeaderAction('studentList', __('Student List'))
+                ->setIcon('print')
+                ->displayLabel()
+                ->setURL('/report.php')
+                ->directLink()
+                ->addParam('q', '/modules/' . $moduleName . '/trips_reportTripPeople.php')
+                ->addParam('tripPlannerRequestID', $tripPlannerRequestID);
+
+            $table->addHeaderAction('tripOverview', __('Trip Overview'))
+                ->setIcon('print')
+                ->displayLabel()
+                ->setURL('/report.php')
+                ->directLink()
+                ->addParam('q', '/modules/' . $moduleName . '/trips_reportTripOverview.php')
+                ->addParam('tripPlannerRequestID', $tripPlannerRequestID)
+                ->addParam('format', 'print')
+                ->addParam('orientation', 'L');
+
             $col->addContent($table->render($tripPersonGateway->queryTripPeople($peopleCriteria)));
 
     $row = $form->addRow();
