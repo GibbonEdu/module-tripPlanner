@@ -12,6 +12,7 @@ use Gibbon\Module\TripPlanner\Domain\TripLogGateway;
 use Gibbon\Module\TripPlanner\Domain\TripPersonGateway;
 use Gibbon\Services\Format;
 use Gibbon\Tables\DataTable;
+use Gibbon\Tables\View\GridView;
 use Psr\Container\ContainerInterface;
 
 function getSettings($guid, $riskTemplateGateway) {
@@ -202,90 +203,6 @@ function needsApproval(ContainerInterface $container, $gibbonPersonID, $tripPlan
     return true;
 }
 
-function getPersonBlock($guid, $connection2, $gibbonPersonID, $role, $numPerRow=5, $emergency=false, $medical=false)
-{
-    try {
-        $data = array('gibbonPersonID' => $gibbonPersonID);
-        $sql = 'SELECT title, surname, preferredName, image_240, emergency1Name, emergency1Number1, emergency1Number2, emergency1Relationship, emergency2Name, emergency2Number1, emergency2Number2, emergency2Relationship FROM gibbonPerson WHERE gibbonPersonID=:gibbonPersonID';
-        $result = $connection2->prepare($sql);
-        $result->execute($data);
-    } catch (PDOException $e) {
-        // echo "<div class='error'>".$e->getMessage().'</div>';
-    }
-
-    try {
-        $dataFamily = array('gibbonPersonID' => $gibbonPersonID);
-        $sqlFamily = 'SELECT * FROM gibbonFamily JOIN gibbonFamilyChild ON (gibbonFamily.gibbonFamilyID=gibbonFamilyChild.gibbonFamilyID) WHERE gibbonPersonID=:gibbonPersonID';
-        $resultFamily = $connection2->prepare($sqlFamily);
-        $resultFamily->execute($dataFamily);
-    } catch (PDOException $e) {
-    }
-
-    if ($result->rowCount() == 1) {
-        $row = $result->fetch();
-        $width = 100.0 / $numPerRow;
-        print "<td style='border: 1px solid #rgba (1,1,1,0); width:$width%; text-align: center; vertical-align: top'>";
-            print "<div>";
-                print getUserPhoto($guid, $row['image_240'], 75);
-            print "</div>";
-            print "<div><b>";
-                print formatName($row['title'], $row['preferredName'], $row['surname'], $role);
-            print "</b><br/></div>";
-            if($emergency) {
-                print "<div id='em$gibbonPersonID' style='font-size:11px'>";
-                    if($resultFamily->rowCount() == 1) {
-                        $rowFamily = $resultFamily->fetch();
-                        try {
-                            $dataMember = array('gibbonFamilyID' => $rowFamily['gibbonFamilyID']);
-                            $sqlMember = 'SELECT * FROM gibbonFamilyAdult JOIN gibbonPerson ON (gibbonFamilyAdult.gibbonPersonID=gibbonPerson.gibbonPersonID) WHERE gibbonFamilyID=:gibbonFamilyID ORDER BY contactPriority, surname, preferredName';
-                            $resultMember = $connection2->prepare($sqlMember);
-                            $resultMember->execute($dataMember);
-                        } catch (PDOException $e) {
-                        }
-
-                        while ($rowMember = $resultMember->fetch()) {
-                            print "<b>" . formatName($rowMember['title'], $rowMember['preferredName'], $rowMember['surname'], 'Parent');
-                            try {
-                                $dataRelationship = array('gibbonPersonID1' => $rowMember['gibbonPersonID'], 'gibbonPersonID2' => $gibbonPersonID, 'gibbonFamilyID' => $rowFamily['gibbonFamilyID']);
-                                $sqlRelationship = 'SELECT * FROM gibbonFamilyRelationship WHERE gibbonPersonID1=:gibbonPersonID1 AND gibbonPersonID2=:gibbonPersonID2 AND gibbonFamilyID=:gibbonFamilyID';
-                                $resultRelationship = $connection2->prepare($sqlRelationship);
-                                $resultRelationship->execute($dataRelationship);
-                            } catch (PDOException $e) {
-                            }
-                            if ($resultRelationship->rowCount() == 1) {
-                                $rowRelationship = $resultRelationship->fetch();
-                                print " (" . $rowRelationship['relationship'] . ")";
-                            }
-                            print "</b><br/>";
-                            for ($i = 1; $i < 5; ++$i) {
-                                if ($rowMember['phone'.$i] != '') {
-                                    if ($rowMember['phone'.$i.'Type'] != '') {
-                                        print $rowMember['phone'.$i.'Type'].':</i> ';
-                                    }
-                                    if ($rowMember['phone'.$i.'CountryCode'] != '') {
-                                        print '+'.$rowMember['phone'.$i.'CountryCode'].' ';
-                                    }
-                                    print __m($rowMember['phone'.$i]).'<br/>';
-                                }
-                            }
-                        }
-                    }
-                    if($row["emergency1Name"] != "") {
-                            print "<b>" . $row["emergency1Name"] . " (" . $row["emergency1Relationship"] . ")</b><br/>";
-                            print $row["emergency1Number1"] . "<br/>";
-                            print $row["emergency1Number2"] . "<br/>";
-                    }
-                    if($row["emergency2Name"] != "") {
-                            print "<b>" . $row["emergency2Name"] . " (" . $row["emergency2Relationship"] . ")</b><br/>";
-                            print $row["emergency2Number1"] . "<br/>";
-                            print $row["emergency2Number2"];
-                    }
-                print "</div>";
-            }
-        print "</td>";
-    }
-}
-
 function requestNotification($guid, $connection2, $tripPlannerRequestID, $gibbonPersonID, $action)
 {
     $ownerOnly = true;
@@ -343,12 +260,26 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
     //TODO: Add header actions
     if ($gibbonPersonID == $trip['creatorPersonID']) {
         //Edit
+        $form->addHeaderAction('edit', __('Edit'))
+            ->setURL('/modules/' . $moduleName . '/trips_submitRequest.php')
+            ->addParam('tripPlannerRequestID', $tripPlannerRequestID)
+            ->addParam('mode', 'edit')
+            ->displayLabel();
     }
 
     if ($approveMode) {
         //View
+        $form->addHeaderAction('view', __('View'))
+            ->setURL('/modules/' . $moduleName . '/trips_requestView.php')
+            ->addParam('tripPlannerRequestID', $tripPlannerRequestID)
+            ->displayLabel();
     } else if (needsApproval($container, $gibbonPersonID, $tripPlannerRequestID)) {
         //Approve
+        $form->addHeaderAction('approve', __('Approve'))
+            ->setIcon('iconTick')
+            ->setURL('/modules/' . $moduleName . '/trips_requestApprove.php')
+            ->addParam('tripPlannerRequestID', $tripPlannerRequestID)
+            ->displayLabel();
     }
 
     //TODO: Show/Hide
@@ -420,12 +351,35 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
     $row = $form->addRow();
         $col = $row->addColumn();
             $col->addLabel('teachers', Format::bold(__('Teachers')));
-            $col->addContent('');
+
+            $tripPersonGateway = $container->get(TripPersonGateway::class);
+            $peopleCriteria = $tripPersonGateway->newQueryCriteria()
+                ->filterBy('tripPlannerRequestID', $tripPlannerRequestID)
+                ->filterBy('role', 'Teacher')
+                ->sortBy(['surname', 'preferredName']);
+
+            $gridRenderer = new GridView($container->get('twig'));
+            $table = $container->get(DataTable::class)->setRenderer($gridRenderer);
+
+            $table->addMetaData('gridClass', 'rounded-sm bg-blue-100 border py-2');
+            $table->addMetaData('gridItemClass', 'w-1/2 sm:w-1/4 md:w-1/5 my-2 text-center');
+            
+            $table->addColumn('image_240')
+                ->format(Format::using('userPhoto', ['image_240', 'sm', '']));
+            
+            $table->addColumn('name')
+                ->setClass('text-xs font-bold mt-1')
+                ->format(Format::using('name', ['title', 'preferredName', 'surname', 'Student', false, false]));
+
+            $col->addContent($table->render($tripPersonGateway->queryTripPeople($peopleCriteria)));
 
     $row = $form->addRow();
         $col = $row->addColumn();
             $col->addLabel('students', Format::bold(__('Students')));
-            $col->addContent('');
+
+            $peopleCriteria->filterBy('role', 'Student');
+
+            $col->addContent($table->render($tripPersonGateway->queryTripPeople($peopleCriteria)));
 
     $row = $form->addRow();
         $row->addHeading(__('Cost Breakdown'));
@@ -508,76 +462,5 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
     echo $form->getOutput();
 
     return;
-        /*
-            ?>
-            <form method="post" action="<?php echo $link ?>">
-                    <tbody id="peopleInfo">
-                        <tr>
-                            <td colspan=2>
-                                <b><?php echo __m('Teachers') ?></b>
-                                <table class='noIntBorder' cellspacing='0' style='width:100%;'>
-                                    <tr>
-                                        <?php
-                                            $teacherCount = count($teachers);
-                                            $teacherCount += 5 - ($teacherCount % 5);
-                                            for ($i = 0; $i < $teacherCount; $i++) {
-                                                if ($i % 5 == 0) {
-                                                    print "</tr>";
-                                                    print "<tr>";
-                                                }
-                                                if (isset($teachers[$i])) {
-                                                    getPersonBlock($guid, $connection2, $teachers[$i], "Staff");
-                                                } else {
-                                                    print "<td>";
-                                                    print "</td>";
-                                                }
-                                            }
-                                        ?>
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colspan=2>
-                                <?php if (!empty($students)) { ?>
-                                <b><?php echo __m('Students') ?></b>
-                                <?php
-                                    echo "<div class='linkTop'>";
-                                        echo "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/report.php?q=/modules/Trip Planner/trips_reportTripPeople.php&tripPlannerRequestID=$tripPlannerRequestID'>".__m('Student List')."<img style='margin-right: 10px;margin-left: 5px' title='".__m('Student List')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/print.png'/></a>";
-                                        echo "<a target='_blank' href='".$_SESSION[$guid]['absoluteURL']."/report.php?q=/modules/Trip Planner/trips_reportTripOverview.php&tripPlannerRequestID=$tripPlannerRequestID&format=print&orientation=L'>".__m('Trip Overview')."<img style='margin-left: 5px' title='".__m('Student List')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/print.png'/></a>";
-
-                                    echo '</div>';
-                                ?>
-                                <table class='noIntBorder' cellspacing='0' style='width:100%;'>
-                                    <tr>
-                                        <?php
-                                            $numPerRow = 5;
-                                            $studentCount = count($students);
-                                            $studentCount += $numPerRow - ($studentCount % $numPerRow);
-                                            for ($i = 0; $i < $studentCount; $i++) {
-                                                if ($i % $numPerRow == 0) {
-                                                    print "</tr>";
-                                                    print "<tr>";
-                                                }
-                                                if (isset($students[$i])) {
-                                                    getPersonBlock($guid, $connection2, $students[$i], "Student", $numPerRow);
-                                                } else {
-                                                    print "<td>";
-                                                    print "</td>";
-                                                }
-                                            }
-                                        ?>
-                                    </tr>
-                                </table>
-                                <?php } else {
-                                    print __("No students on this trip.");
-                                } ?>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </form>
-            <?php
-            */
 }
 ?>
