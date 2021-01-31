@@ -32,12 +32,13 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         returnProcess($guid, $_GET['return'], null, null);
     }
 
-    $tripPlannerRequestID = $_GET["tripPlannerRequestID"];
+    $tripPlannerRequestID = $_GET['tripPlannerRequestID'];
 
     $tripGateway = $container->get(TripGateway::class);
-    $trip = $tripGateway->getByID($tripPlannerRequestID);
 
-    if (!empty($trip)) {
+    if (empty($tripPlannerRequestID) || !$tripGateway->exists($tripPlannerRequestID)) {
+        $page->addError('No request selected.');
+    } else {
         $gibbonPersonID = $_SESSION[$guid]["gibbonPersonID"];
         $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
 
@@ -46,8 +47,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         } else {
             $page->addError(__('You do not have access to this action.'));
         }
-    } else {
-        $page->addError('No request selected.');
     }
 }
 ?>
