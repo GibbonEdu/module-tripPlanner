@@ -1,5 +1,7 @@
 <?php
 
+use Gibbon\Comms\NotificationSender;
+use Gibbon\Domain\System\NotificationGateway;
 use Gibbon\Module\TripPlanner\Domain\TripGateway;
 use Gibbon\Module\TripPlanner\Domain\TripLogGateway;
 
