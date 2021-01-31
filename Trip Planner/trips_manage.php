@@ -164,11 +164,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                    
         $table->addActionColumn()
           ->addParam('tripPlannerRequestID')
-          ->format(function ($row, $actions) use ($container, $gibbonPersonID)  {
+          ->format(function ($trip, $actions) use ($container, $gibbonPersonID)  {
               $actions->addAction('view', __('View Details'))
                 ->setURL('/modules/Trip Planner/trips_requestView.php');
 
-            if ($gibbonPersonID == $row['creatorPersonID'] && !in_array($row['status'], ['Cancelled', 'Rejected'])) {
+            if ($gibbonPersonID == $trip['creatorPersonID'] && !in_array($trip['status'], ['Cancelled', 'Rejected'])) {
                 $actions->addAction('edit', __('Edit'))
                 ->addParam('mode', 'edit')
                 ->setURL('/modules/Trip Planner/trips_submitRequest.php');
