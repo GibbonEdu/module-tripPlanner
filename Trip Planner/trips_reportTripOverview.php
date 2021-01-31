@@ -60,10 +60,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
 
             $students = $tripPersonGateway->queryTripPeople($personCriteria)->getColumn('gibbonPersonID');
 
-            if (empty($students)) {
-                return;
-            }
-
             $settingGateway = $container->get(SettingGateway::class);
 
             $cutoffDate = $settingGateway->getSettingByScope('Data Updater', 'cutoffDate');
