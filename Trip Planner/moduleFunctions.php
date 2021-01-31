@@ -138,11 +138,8 @@ function hasAccess(ContainerInterface $container, $tripPlannerRequestID, $gibbon
         return true;
     }
 
-    //Is Approver?
-    $approverGateway = $container->get(ApproverGateway::class);
-
-    //TODO: Check if needs to approve?
-    if (empty($approverGateway->selectApproverByPerson($gibbonPersonID))) {
+    //Is Approver (and needs their approval)?
+    if (needsApproval($container, $gibbonPersonID, $tripPlannerRequestID)) {
         return true;
     }
 
@@ -201,44 +198,6 @@ function needsApproval(ContainerInterface $container, $gibbonPersonID, $tripPlan
     }
 
     return true;
-}
-
-function requestNotification($guid, $connection2, $tripPlannerRequestID, $gibbonPersonID, $action)
-{
-    $ownerOnly = true;
-
-    if ($action == "Approved") {
-        $message = __m('Your trip request has been fully approved.');
-    } elseif ($action == "Awaiting Final Approval") {
-        $message = __m('Your trip request is awaiting final approval.');
-    } elseif ($action == "Rejected") {
-        $message = __m('Your trip request has been rejected.');
-    } else {
-        $message = __m('Someone has commented on a trip request.');
-        $ownerOnly = false;
-    }
-
-    if($ownerOnly) {
-        $owner = getOwner($connection2, $tripPlannerRequestID);
-        if($owner != $gibbonPersonID) {
-            setNotification($connection2, $guid, $owner, $message, "Trip Planner", "/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID=" . $tripPlannerRequestID);
-        }
-    } else {
-        try {
-            $data = array('tripPlannerRequestID' => $tripPlannerRequestID);
-            $sql = 'SELECT DISTINCT gibbonPersonID FROM tripPlannerRequestLog WHERE tripPlannerRequestLog.tripPlannerRequestID=:tripPlannerRequestID ORDER BY timestamp';
-            $result = $connection2->prepare($sql);
-            $result->execute($data);
-        } catch (PDOException $e) {
-            echo "<div class='error'>".$e->getMessage().'</div>';
-        }
-
-        while($row = $result->fetch()) {
-            if($row["gibbonPersonID"] != $gibbonPersonID) {
-                setNotification($connection2, $guid, $row["gibbonPersonID"], $message, "Trip Planner", "/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID=" . $tripPlannerRequestID);
-            }
-        }
-    }
 }
 
 /**
