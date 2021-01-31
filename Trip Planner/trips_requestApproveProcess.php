@@ -176,7 +176,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             //Send notifications
             $notificationSender->sendNotifications();
 
-            //TODO: Change Redirect on approvale
+            //TODO: Change Redirect on approval
             $URL .= '&return=success0';
             header("Location: {$URL}");
             exit();

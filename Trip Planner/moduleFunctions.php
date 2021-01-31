@@ -216,7 +216,6 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
     $form->addHiddenValue('address', $gibbon->session->get('address'));
     $form->addHiddenValue('tripPlannerRequestID', $tripPlannerRequestID);
 
-    //TODO: Add header actions
     if ($gibbonPersonID == $trip['creatorPersonID']) {
         //Edit
         $form->addHeaderAction('edit', __('Edit'))

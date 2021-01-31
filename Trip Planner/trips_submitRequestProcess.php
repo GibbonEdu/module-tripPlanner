@@ -238,8 +238,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         $event->setNotificationText(sprintf(__('A new Trip has been Requested (%1$s).'), $tripData['title']));
         $event->setActionLink('/index.php?q=/modules/Trip Planner/trips_requestApprove.php&tripPlannerRequestID=' . $tripPlannerRequestID);
 
-        //TODO: Add scope?
-
         $requestApprovalType = $settingGateway->getSettingByScope('Trip Planner', 'requestApprovalType');
         $approverGateway = $container->get(ApproverGateway::class);
 

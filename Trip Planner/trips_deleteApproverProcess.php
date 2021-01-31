@@ -20,7 +20,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_delete
         header("Location: {$URL}");
         exit(); 
     } else {
-        //TODO: Fix sequence numbers?
         if ($approverGateway->delete($tripPlannerApproverID)) {
             $URL .= '&return=success0';
         } else {

@@ -92,7 +92,6 @@ $page->breadcrumbs->add(__('Manage Approvers'));
                             ->modalWindow();
                 }
                 if ($deleteAllowed) {
-                    //TODO: create page
                     $actions->addAction('delete', __('Delete'))
                             ->setURL('/modules/' . $moduleName . '/trips_deleteApprover.php');
                 }
