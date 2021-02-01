@@ -1,7 +1,6 @@
 <?php
 
 use Gibbon\Domain\System\SettingGateway;
-use Gibbon\Module\TripPlanner\Domain\RiskTemplateGateway;
 
 require_once '../../gibbon.php';
 require_once "./moduleFunctions.php";
@@ -17,9 +16,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     $return = 'success0';
 
     $settingGateway = $container->get(SettingGateway::class);
-    $riskTemplateGateway = $container->get(RiskTemplateGateway::class);
 
-    foreach (getSettings($guid, $riskTemplateGateway) as $setting) {
+    foreach (getSettings($container, $guid) as $setting) {
         $data = $_POST[$setting->getName()] ?? null;
 
         $data = $setting->process($data);
@@ -32,7 +30,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         if (!$settingGateway->updateSettingByScope('Trip Planner', $setting->getName(), $data)) {
             $return = 'warning1';
         }
-
     }
 
     $URL .= '/trips_manageSettings.php&return=' . $return;
