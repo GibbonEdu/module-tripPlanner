@@ -46,7 +46,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                 ->filterBy('tripPlannerRequestID', $tripPlannerRequestID)
                 ->filterBy('role', 'Student');
 
-            //TODO: Can this be done better?
             $gridRenderer = new GridView($container->get('twig'));
             $table = $container->get(DataTable::class)->setRenderer($gridRenderer);
             $table->setTitle(__('Students in Trip'));
