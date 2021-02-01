@@ -145,15 +145,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                     $notificationSender->addNotification($owner, __('Your trip request has been rejected.'), $moduleName, $notificationURL);
                 }
             } elseif ($action == 'Comment') {
-                //TODO: Move this to function (DRY)
-                $text = __('Someone has commented on a trip request.');
-
-                $people = $tripLogGateway->selectLoggedPeople($tripPlannerRequestID);
-                while ($row = $people->fetch()) {
-                    //Skip current user
-                    if ($row['gibbonPersonID'] == $gibbonPersonID) continue;
-                    $notificationSender->addNotification($row['gibbonPersonID'], $text, $moduleName, $notificationURL);
-                }
+                tripCommentNotifications($tripPlannerRequestID, $gibbonPersonID, $tripLogGateway, $notificationSender);
             } else {
                 $URL .= '&return=error1';
                 header("Location: {$URL}");
@@ -176,7 +168,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             //Send notifications
             $notificationSender->sendNotifications();
 
-            //TODO: Change Redirect on approval
+            //When PHP 8 is supported, replace this with str_starts_with
+            $approval = 'Approval';
+            if (substr($action, 0, strlen($approval)) == $approval) {
+                $URL = $absoluteURL . '/index.php?q=/modules/' . $moduleName . '/trips_manage.php';
+            }
+
             $URL .= '&return=success0';
             header("Location: {$URL}");
             exit();

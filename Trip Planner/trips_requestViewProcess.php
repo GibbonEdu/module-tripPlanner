@@ -42,9 +42,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             exit();
         }
 
-        $logGateway = $container->get(TripLogGateway::class);
+        $tripLogGateway = $container->get(TripLogGateway::class);
 
-        $tripPlannerRequestLogID = $logGateway->insert([
+        $tripPlannerRequestLogID = $tripLogGateway->insert([
             'tripPlannerRequestID'  => $tripPlannerRequestID,
             'gibbonPersonID'        => $gibbonPersonID,
             'action'                => 'Comment',
@@ -60,12 +60,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         $notificationGateway = $container->get(NotificationGateway::class);
         $notificationSender = new NotificationSender($notificationGateway, $gibbon->session);
 
-        $text = __('Someone has commented on a trip request.');
-
-        $people = $logGateway->selectLoggedPeople($tripPlannerRequestID);
-        while ($row = $people->fetch()) {
-            $notificationSender->addNotification($row['gibbonPersonID'], $text, $moduleName, $URL);
-        }
+        tripCommentNotifications($tripPlannerRequestID, $gibbonPersonID, $tripLogGateway, $notificationSender);
 
         $notificationSender->sendNotifications();
 
