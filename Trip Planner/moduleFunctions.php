@@ -5,6 +5,7 @@ use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Forms\Form;
 use Gibbon\Module\TripPlanner\Data\Setting;
 use Gibbon\Module\TripPlanner\Domain\ApproverGateway;
+use Gibbon\Module\TripPlanner\Domain\RiskTemplateGateway;
 use Gibbon\Module\TripPlanner\Domain\TripCostGateway;
 use Gibbon\Module\TripPlanner\Domain\TripDayGateway;
 use Gibbon\Module\TripPlanner\Domain\TripGateway;
@@ -15,7 +16,10 @@ use Gibbon\Tables\DataTable;
 use Gibbon\Tables\View\GridView;
 use Psr\Container\ContainerInterface;
 
-function getSettings($guid, $riskTemplateGateway) {
+function getSettings(ContainerInterface $container, $guid) {
+    $riskTemplateGateway = $container->get(RiskTemplateGateway::class);
+    $tripGateway = $container->get(TripGateway::class);
+
     $requestApprovalOptions = ['One Of', 'Two Of', 'Chain Of All'];
     return [
         (new Setting('requestApprovalType'))
@@ -33,9 +37,23 @@ function getSettings($guid, $riskTemplateGateway) {
                 $row->addCheckBox($data['name'])
                     ->checked(boolval($data['value']));
             })
-            ->setProcessor(function ($data) {
-                //TODO: Update trip's status?
-                return $data === null ? 0 : 1;
+            ->setProcessor(function ($data) use ($tripGateway) {
+                $enabled = $data !== null;
+
+                if (!$enabled) {
+                    //TODO: Get trips that will be changed, send notification once changed
+
+                    $success = $tripGateway->updateWhere(
+                        ['status' => 'Awaiting Final Approval'],
+                        ['status' => 'Approved']
+                    );
+
+                    if (!$success) {
+                        return false;
+                    }
+                }
+
+                return $enabled ? 1 : 0;
             }),
         (new Setting('defaultRiskTemplate'))
             ->setRenderer(function ($data, $row) use ($riskTemplateGateway) {
@@ -198,6 +216,21 @@ function needsApproval(ContainerInterface $container, $gibbonPersonID, $tripPlan
     }
 
     return true;
+}
+
+function tripCommentNotifications($tripPlannerRequestID, $gibbonPersonID, $tripLogGateway, $notificationSender) {
+    global $gibbon;
+
+    $text = __('Someone has commented on a trip request.');
+    $moduleName = $gibbon->session->get('module');
+    $notificationURL = $gibbon->session->get('absoluteURL') . '/index.php?q=/modules/' . $moduleName . '/trips_requestView.php&tripPlannerRequestID=' . $tripPlannerRequestID;
+
+    $people = $tripLogGateway->selectLoggedPeople($tripPlannerRequestID);
+    while ($row = $people->fetch()) {
+        //Skip current user
+        if ($row['gibbonPersonID'] == $gibbonPersonID) continue;
+        $notificationSender->addNotification($row['gibbonPersonID'], $text, $moduleName, $notificationURL);
+    }
 }
 
 /**
