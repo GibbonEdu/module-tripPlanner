@@ -104,23 +104,36 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     //Load Trip Days
     $tripDays = [];
 
+    $dateFormat = 'd/m/Y';
+
     $dateTimeOrder = $_POST['dateTimeOrder'] ?? [];
     foreach ($dateTimeOrder as $order) {
         $day = $_POST['dateTime'][$order];
 
-        //TODO: Validation
-        if (empty($day['startDate']) || empty($day['endDate'])) {
+        $startDate = Format::createDateTime($day['startDate'], $dateFormat);
+        $endDate = Format::createDateTime($day['endDate'], $dateFormat);
+
+        if (!$startDate || !$endDate || $endDate < $startDate) {
             $URL .= '&return=error1';
             header("Location: {$URL}");
             exit();
-        }
+        } 
 
-        $day['startDate'] = Format::dateConvert($day['startDate']);
-        $day['endDate'] = Format::dateConvert($day['endDate']);
+        $day['startDate'] = $startDate->format('Y-m-d');
+        $day['endDate'] = $endDate->format('Y-m-d');
 
         if (!empty($day['startTime']) && !empty($day['endTime'])) {
             $day['allDay'] = '0';
-            //TODO: Validate start and end time
+
+            $startTime = DateTime::createFromFormat('H:i', $day['startTime']);
+            $endTime = DateTime::createFromFormat('H:i', $day['endTime']);
+
+            if ($endTime <= $startTime) {
+                $URL .= '&return=error1';
+                header("Location: {$URL}");
+                exit();
+            }
+
         } else {
             $day['allDay'] = '1';
             unset($day['startTime']);
