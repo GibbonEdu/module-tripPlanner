@@ -28,10 +28,7 @@ $page->breadcrumbs
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php')) {
     $page->addError(__('You do not have access to this action.'));
 } else {
-    if (isset($_GET['return'])) {
-        returnProcess($guid, $_GET['return'], null, null);
-    }
-
+    
     $tripPlannerRequestID = $_GET['tripPlannerRequestID'];
 
     $tripGateway = $container->get(TripGateway::class);

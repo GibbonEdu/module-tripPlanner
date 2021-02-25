@@ -27,13 +27,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     //Acess denied
     $page->addError(__('You do not have access to this action.'));
 } else {
-    if (isset($_GET['return'])) {
-        $editLink = null;
-        if(isset($_GET['tripPlannerRiskTemplateID'])) {
-            $editLink = $gibbon->session->get('absoluteURL') . '/index.php?q=/modules/' . $gibbon->session->get('module') . '/trips_editRiskTemplate.php&tripPlannerRiskTemplateID=' . $_GET['tripPlannerRiskTemplateID'];
-        }
-        returnProcess($guid, $_GET['return'], $editLink, null);
-    }   
+    if(isset($_GET['tripPlannerRiskTemplateID'])) {
+        $page->return->setEditLink($gibbon->session->get('absoluteURL') . '/index.php?q=/modules/' . $gibbon->session->get('module') . '/trips_editRiskTemplate.php&tripPlannerRiskTemplateID=' . $_GET['tripPlannerRiskTemplateID']);
+    }
 
     $form = Form::create('addRiskTemplate', $gibbon->session->get('absoluteURL') . '/modules/' . $gibbon->session->get('module') . '/trips_addRiskTemplateProcess.php');
     $form->addHiddenValue('address', $gibbon->session->get('address'));

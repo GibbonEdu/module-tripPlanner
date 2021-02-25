@@ -30,10 +30,6 @@ $page->breadcrumbs->add(__('Manage Approvers'));
     //Acess denied
     $page->addError(__('You do not have access to this action.'));
 } else {
-    if (isset($_GET['return'])) {
-        returnProcess($guid, $_GET['return'], null, null);
-    }
-
     $moduleName = $gibbon->session->get('module');
     $settingGateway = $container->get(SettingGateway::class);
     $approverGateway = $container->get(ApproverGateway::class);

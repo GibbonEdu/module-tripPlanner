@@ -33,11 +33,6 @@ $page->breadcrumbs->add(__('Manage Trip Requests'));
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php')) {
     $page->addError(__('You do not have access to this action.'));
 } else {
-
-    if (isset($_GET['return'])) {
-        returnProcess($guid, $_GET['return'], null, null);
-    }
-
     $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
     if ($highestAction != false) { 
         $gibbonPersonID = $gibbon->session->get('gibbonPersonID');

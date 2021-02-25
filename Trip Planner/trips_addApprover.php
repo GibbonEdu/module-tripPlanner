@@ -22,16 +22,14 @@ use Gibbon\Forms\DatabaseFormFactory;
 use Gibbon\Module\TripPlanner\Domain\ApproverGateway;
 
 $page->breadcrumbs
-        ->add(__('Manage Approvers'), 'trips_manageApprovers.php')
-        ->add(__('Add Approver'));
+    ->add(__('Manage Approvers'), 'trips_manageApprovers.php')
+    ->add(__('Add Approver'));
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_addApprover.php')) {
     //Acess denied
     $page->addError(__('You do not have access to this action.'));
 } else {
-    if (isset($_GET['return'])) {
-        returnProcess($guid, $_GET['return'], $gibbon->session->get('absoluteURL') . '/index.php?q=/modules/' . $gibbon->session->get('module') . '/trips_manageApprovers.php', null);
-    }   
+    $page->return->setEditLink($gibbon->session->get('absoluteURL') . '/index.php?q=/modules/' . $gibbon->session->get('module') . '/trips_manageApprovers.php');
 
     $approverGateway = $container->get(ApproverGateway::class);
 

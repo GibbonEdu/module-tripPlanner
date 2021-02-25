@@ -28,10 +28,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     //Acess denied
     $page->addError(__('You do not have access to this action.'));
 } else {
-    if (isset($_GET['return'])) {
-        returnProcess($guid, $_GET['return'], null, null);
-    }
-
+    
     $settingGateway = $container->get(SettingGateway::class);
 
     $moduleName = $gibbon->session->get('module'); 
