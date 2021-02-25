@@ -273,34 +273,44 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
             ->displayLabel();
     }
 
-    //TODO: Show/Hide
-    $row = $form->addRow();
-        $row->addHeading(__('Basic Information'));
+    $on = './themes/'.$gibbon->session->get("gibbonThemeName").'/img/minus.png';
+    $off = './themes/'.$gibbon->session->get("gibbonThemeName").'/img/plus.png';
+
+    function toggleSection(&$row, $section, $icon) {
+        $row->addWebLink(sprintf('<img title=%1$s src="%2$s" style="margin-right:4px;" />', __('Show/Hide'), $icon))
+            ->setURL('#')
+            ->onClick('toggleSection($(this), "'.$section.'"); return false;'); 
+    }
 
     $row = $form->addRow();
+        $row->addHeading(__('Basic Information'));
+        toggleSection($row, 'basicInfo', $on);
+
+    $row = $form->addRow()->addClass('basicInfo');
         $row->addLabel('titleLabel', Format::bold(__('Title')));
         $row->addTextfield('title')
             ->readonly();
 
-    $row = $form->addRow();
+    $row = $form->addRow()->addClass('basicInfo');
         $col = $row->addColumn();
             $col->addLabel('description', Format::bold(__('Description')));
             $col->addContent($trip['description']);
 
-    $row = $form->addRow();
+    $row = $form->addRow()->addClass('basicInfo');
         $row->addLabel('locationLabel', Format::bold(__('Location')));
         $row->addTextfield('location')
             ->readonly();
 
-    $row = $form->addRow();
+    $row = $form->addRow()->addClass('basicInfo');
         $row->addLabel('statusLabel', Format::bold(__('Status')));
         $row->addTextfield('status')
             ->readOnly();
 
     $row = $form->addRow();
         $row->addHeading(__('Date & Time'));
+        toggleSection($row, 'dateTime', $on);
 
-    $row = $form->addRow();
+    $row = $form->addRow()->addClass('dateTime');
             
         $tripDayGateway = $container->get(tripDayGateway::class);
         $dayCriteria = $tripDayGateway->newQueryCriteria()
@@ -325,21 +335,23 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
         
     $row = $form->addRow();
         $row->addHeading(__('Risk Assessment & Communication'));
+        toggleSection($row, 'riskAssess', $on);
 
-    $row = $form->addRow();
+    $row = $form->addRow()->addClass('riskAssess');
         $col = $row->addColumn();
             $col->addLabel('riskAssessment', Format::bold(__('Risk Assessment')));
             $col->addContent($trip['riskAssessment']);
 
-    $row = $form->addRow();
+    $row = $form->addRow()->addClass('riskAssess');
         $col = $row->addColumn();
             $col->addLabel('letterToParents', Format::bold(__('Letter To Parents')));
             $col->addContent($trip['letterToParents']);   
 
     $row = $form->addRow();
         $row->addHeading(__('Participants'));
+        toggleSection($row, 'participants', $on);
 
-    $row = $form->addRow();
+    $row = $form->addRow()->addClass('participants');
         $col = $row->addColumn();
             $col->addLabel('teachers', Format::bold(__('Teachers')));
 
@@ -364,7 +376,7 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
 
             $col->addContent($table->render($tripPersonGateway->queryTripPeople($peopleCriteria)));
 
-    $row = $form->addRow();
+    $row = $form->addRow()->addClass('participants');
         $col = $row->addColumn();
             $col->addLabel('students', Format::bold(__('Students')));
 
@@ -392,8 +404,9 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
 
     $row = $form->addRow();
         $row->addHeading(__('Cost Breakdown'));
+        toggleSection($row, 'costBreakdown', $on);
 
-    $row = $form->addRow();
+    $row = $form->addRow()->addClass('costBreakdown');
 
         $tripCostGateway = $container->get(TripCostGateway::class);
         $costCriteria = $tripCostGateway->newQueryCriteria()
@@ -413,7 +426,7 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
 
         $row->addContent($table->render($tripCosts));
 
-    $row = $form->addRow();
+    $row = $form->addRow()->addClass('costBreakdown');
         $row->addLabel('totalCostLabel', Format::bold(__('Total Cost')));
         $row->addTextfield('totalCost')
             ->setValue(Format::currency($totalCost))
@@ -421,8 +434,9 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
 
     $row = $form->addRow();
         $row->addHeading(__('Log'));
+        toggleSection($row, 'logs', $on);
 
-    $row = $form->addRow();
+    $row = $form->addRow()->addClass('logs');
 
         $tripLogGateway = $container->get(TripLogGateway::class);
         $logCiteria = $tripLogGateway->newQueryCriteria()
@@ -470,6 +484,21 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
     $form->loadAllValuesFrom($trip);
     echo $form->getOutput();
 
-    return;
+    ?>
+    <script type="text/javascript">
+        function toggleSection(button, section) {
+            var rows = $('.' + section);
+            if (rows.hasClass('showHide')) {
+                button.find('img').attr('src', '<?php echo $on ?>');
+                rows.removeClass('showHide');
+                rows.show();
+            } else {
+                button.find('img').attr('src', '<?php echo $off ?>');
+                rows.addClass('showHide');
+                rows.hide();
+            }
+        } 
+    </script>
+    <?php
 }
 ?>
