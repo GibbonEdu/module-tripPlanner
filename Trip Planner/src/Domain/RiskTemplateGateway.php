@@ -6,10 +6,7 @@ use Gibbon\Domain\QueryCriteria;
 use Gibbon\Domain\QueryableGateway;
 
 /**
- * Technician Gateway
- *
- * @version v20
- * @since   v20
+ * Risk Template Gateway
  */
 class RiskTemplateGateway extends QueryableGateway
 {

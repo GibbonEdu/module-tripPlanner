@@ -6,6 +6,9 @@ use Gibbon\Domain\Traits\TableAware;
 use Gibbon\Domain\QueryCriteria;
 use Gibbon\Domain\QueryableGateway;
 
+/**
+ * Trip Log Gateway
+ */
 class TripLogGateway extends QueryableGateway
 {
     use TableAware;

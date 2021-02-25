@@ -7,6 +7,9 @@ use Gibbon\Domain\QueryCriteria;
 use Gibbon\Domain\QueryableGateway;
 use Gibbon\Module\TripPlanner\Domain\Traits\BulkInsert;
 
+/**
+ * Trip Person Gateway
+ */
 class TripPersonGateway extends QueryableGateway
 {
     use BulkInsert;

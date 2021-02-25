@@ -7,10 +7,7 @@ use Gibbon\Domain\QueryableGateway;
 use Gibbon\Services\Format;
 
 /**
- * Technician Gateway
- *
- * @version v20
- * @since   v20
+ * Approver Gateway
  */
 class ApproverGateway extends QueryableGateway
 {
