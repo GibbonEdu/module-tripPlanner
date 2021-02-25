@@ -71,12 +71,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     $riskTemplateGateway = $container->get(RiskTemplateGateway::class);
 
     //Return Message
-    if (isset($_GET['return'])) {
-        $editLink = null;
-        if(!$edit && !empty($tripPlannerRequestID)) {
-            $editLink = $gibbon->session->get('absoluteURL') . '/index.php?q=/modules/' . $moduleName . '/trips_requestView.php&tripPlannerRequestID=' . $tripPlannerRequestID;
-        }
-        returnProcess($guid, $_GET['return'], $editLink, null);
+    if(!$edit && !empty($tripPlannerRequestID)) {
+        $page->return->setEditLink($gibbon->session->get('absoluteURL') . '/index.php?q=/modules/' . $moduleName . '/trips_requestView.php&tripPlannerRequestID=' . $tripPlannerRequestID);
     }
 
     //Templates
@@ -444,22 +440,83 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
     ?>
     <script>
+        var date = 'input[id*="Date"]';
+        var time = 'input[id*="Time"]';
+
         //Fix for datepicker in custom blocks
         $(document).on('click', '.addBlock', function () {
-            $('input[id*="Date"]').removeClass('hasDatepicker').datepicker({onSelect: function(){$(this).blur();}, onClose: function(){$(this).change();} });
+            $(date).removeClass('hasDatepicker').datepicker({onSelect: function(){$(this).blur();}, onClose: function(){$(this).change();} });
+            $(time).removeClass('hasTimepicker').timepicker({onSelect: function(){$(this).blur();}, onClose: function(){$(this).change();} });
+        });
+
+        function setTimepicker(input) {
+            input.removeClass('hasTimepicker').timepicker({
+                    'scrollDefault': 'now',
+                    'timeFormat': 'H:i',
+                    'minTime': '00:00',
+                    'maxTime': '23:59',
+                    onSelect: function(){$(this).blur();},
+                    onClose: function(){$(this).change();}
+                });
+        }
+
+        $(document).ready(function(){
+            $(date).removeClass('hasDatepicker').datepicker({onSelect: function(){$(this).blur();}, onClose: function(){$(this).change();} });
+
+            //This is to ensure that loaded blocks have timepickers
+            $(time).each(function() {
+                setTimepicker($(this));
+            });
+
+            //Ensure that loaded dates have correct max and min dates.
+            $('input[id^=startDate]').each(function() {
+                var endDate = $('#' + $(this).prop('id').replace('start', 'end'));
+                $(this).datepicker('option', {'maxDate': endDate.val()});
+                endDate.datepicker('option', {'minDate': $(this).val()});
+            });
+
+            //Ensure that loaded endTimes are properly chained.
+            $('input[id^=endTime]').each(function() {
+                var startTime = $('#' + $(this).prop('id').replace('end', 'start'));
+                if (startTime.val() != "") {
+                    $(this).timepicker('option', {'minTime': startTime.val(), 'timeFormat': 'H:i', 'showDuration': true});
+                }
+            });
+        });
+
+        $(document).on('change', 'input[id^=startDate]', function() {
+            var endDate = $('#' + $(this).prop('id').replace('start', 'end'));
+            if (endDate.val() == "" || $(this).val() > endDate.val()) {
+                endDate.val($(this).val());
+            }
+            endDate.datepicker('option', {'minDate': $(this).val()});
+        });
+
+        $(document).on('change', 'input[id^=endDate]', function() {
+            var startDate = $('#' + $(this).prop('id').replace('end', 'start'));
+            if (startDate.val() == "" || $(this).val() < startDate.val()) {
+                startDate.val($(this).val());
+            }
+            startDate.datepicker('option', {'maxDate': $(this).val()});
+        });
+
+        $(document).on('changeTime', 'input[id^=startTime]', function() {
+            var endTime = $('#' + $(this).prop('id').replace('start', 'end'));
+            if (endTime.val() == "" || $(this).val() > endTime.val()) {
+                endTime.val($(this).val());
+            }
+            endTime.timepicker('option', {'minTime': $(this).val(), 'timeFormat': 'H:i', 'showDuration': true});
         });
 
         //Javascript to change risk assessment when template selector is changed.
         <?php echo 'var templates = ' . json_encode($templates) . ';'; ?>
-        $(document).ready(function(){
-            $("select[name=riskAssessmentTemplates]").on('change', function(){
-                var templateID = $(this).val();
-                if (templateID != '' && templateID >= 0) {
-                    if(confirm('Are you sure you want to use this template. Warning: This will overwrite any thing currently written.')) {
-                        tinyMCE.get('riskAssessment').setContent(templates[templateID]);
-                    }
+        $("select[name=riskAssessmentTemplates]").on('change', function(){
+            var templateID = $(this).val();
+            if (templateID != '' && templateID >= 0) {
+                if(confirm('Are you sure you want to use this template. Warning: This will overwrite any thing currently written.')) {
+                    tinyMCE.get('riskAssessment').setContent(templates[templateID]);
                 }
-            });
+            }
         });
 
         //function to add a group to the students list.
