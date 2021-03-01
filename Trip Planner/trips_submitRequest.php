@@ -224,7 +224,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     $row = $form->addRow();
         $row->addHeading(__('Date & Time'));
 
-    //TODO: Fix chaining when/if it gets fixed in core.
     $dateTimeBlock = $form->getFactory()->createTable()->setClass('blank');
         $row = $dateTimeBlock->addRow();
             $row->addLabel('date', 'Start and End Dates for this block.')
@@ -440,6 +439,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
     ?>
     <script>
+        //Once date and time chaining is fixed in the core, most of this can go.
         var date = 'input[id*="Date"]';
         var time = 'input[id*="Time"]';
 
