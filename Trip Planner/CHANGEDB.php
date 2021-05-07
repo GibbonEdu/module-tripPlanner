@@ -129,4 +129,7 @@ INSERT INTO gibbonAction SET name='Today\'s Trips', precedence=0, category='Repo
 INSERT INTO `gibbonPermission` (`permissionID` ,`gibbonRoleID` ,`gibbonActionID`) VALUES (NULL , '1', (SELECT gibbonActionID FROM gibbonAction JOIN gibbonModule ON (gibbonAction.gibbonModuleID=gibbonModule.gibbonModuleID) WHERE gibbonModule.name='Trip Planner' AND gibbonAction.name='Today\'s Trips'));end
 
 ";
-?>
+
+
+$sql[$count][0]="1.3.00";
+$sql[$count++][1]="";
