@@ -188,8 +188,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
     $students = array_reduce($studentGateway->queryStudentsBySchoolYear($studentCriteria, $gibbonSchoolYearID)->toArray(), function ($array, $student) use ($tripPeople) {
         $list = in_array($student['gibbonPersonID'], $tripPeople) ? 'destination' : 'source';
-        $array['students'][$list][$student['gibbonPersonID']] = Format::name($student['title'], $student['preferredName'], $student['surname'], 'Student', true) . ' - ' . $student['rollGroup']; 
-        $array['form'][$student['gibbonPersonID']] = $student['rollGroup'];
+        $array['students'][$list][$student['gibbonPersonID']] = Format::name($student['title'], $student['preferredName'], $student['surname'], 'Student', true) . ' - ' . $student['formGroup']; 
+        $array['form'][$student['gibbonPersonID']] = $student['formGroup'];
         return $array;
     });
 
