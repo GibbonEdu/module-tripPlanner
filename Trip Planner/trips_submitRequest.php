@@ -227,7 +227,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     $dateTimeBlock = $form->getFactory()->createTable()->setClass('blank');
         $row = $dateTimeBlock->addRow();
             $row->addLabel('date', 'Start and End Dates for this block.')
-                ->addClass('w-full sm:max-w-full font-bold');
+                ->addClass('font-bold');
 
         $row = $dateTimeBlock->addRow();
                 $row->addLabel('startDate', __('Start Date'));
@@ -240,9 +240,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                     ->isRequired()
                     ->placeholder('End Date');
 
+        $dateTimeBlock->addRow()->addClass('h-2');
+
         $row = $dateTimeBlock->addRow();
             $row->addLabel('time', 'Start and End Times for each day. Leave blank if all day.')
-                ->addClass('w-full sm:max-w-full font-bold border-t border-gray-500');
+                ->addClass('font-bold');
 
         $row = $dateTimeBlock->addRow();
             $row->addLabel('startTime', __('Start Time'));
