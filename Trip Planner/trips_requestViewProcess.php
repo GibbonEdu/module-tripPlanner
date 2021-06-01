@@ -1,65 +1,74 @@
 <?php
 
-//Module includes
-include '../../gibbon.php';
+use Gibbon\Comms\NotificationSender;
+use Gibbon\Domain\System\NotificationGateway;
+use Gibbon\Module\TripPlanner\Domain\TripGateway;
+use Gibbon\Module\TripPlanner\Domain\TripLogGateway;
 
-include "./moduleFunctions.php";
+require_once '../../gibbon.php';
+require_once './moduleFunctions.php';
 
-$URL = $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/";
+$moduleName = $gibbon->session->get('module');
+
+$URL = $gibbon->session->get('absoluteURL') . '/index.php?q=/modules/' . $moduleName;
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php')) {
     //Acess denied
-    $URL .= "trips_manage.php&return=error0";
+    $URL .= '/trips_manage.php&return=error0';
     header("Location: {$URL}");
     exit();
 } else {
-    if (isset($_POST["tripPlannerRequestID"])) {
-        $tripPlannerRequestID = $_POST["tripPlannerRequestID"];
-    } else {
-        $URL .= "trips_manage.php&return=error1";
+    $tripPlannerRequestID = $_POST['tripPlannerRequestID'] ?? '';
+
+    $tripGateway = $container->get(TripGateway::class);
+
+    if (empty($tripPlannerRequestID) || !$tripGateway->exists($tripPlannerRequestID)) {
+        $URL .= '/trips_manage.php&return=error1';
         header("Location: {$URL}");
         exit();
     }
 
-    $gibbonPersonID = $_SESSION[$guid]["gibbonPersonID"];
-    $departments = getHOD($connection2, $gibbonPersonID);
-    $departments2 = getDepartments($connection2, getOwner($connection2, $tripPlannerRequestID));
-    $isHOD = false;
+    $gibbonPersonID = $gibbon->session->get('gibbonPersonID');
+    $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
 
-    foreach ($departments as $department) {
-        if (in_array($department["gibbonDepartmentID"], $departments2)) {
-            $isHOD = true;
-            break;
-        }
-    }
+    if (hasAccess($container, $tripPlannerRequestID, $gibbonPersonID, $highestAction)) {
+        $URL .= '/trips_requestView.php&tripPlannerRequestID=' . $tripPlannerRequestID;
 
-    if (isApprover($connection2, $gibbonPersonID) || isOwner($connection2, $tripPlannerRequestID, $gibbonPersonID) || isInvolved($connection2, $tripPlannerRequestID, $gibbonPersonID) || $isHOD) {
-        $URL .= "trips_requestView.php&tripPlannerRequestID=" . $tripPlannerRequestID;
-        if (isset($_POST["comment"])) {
-            $comment = $_POST["comment"];
-            if ($comment == "" || $comment == null) {
-                $URL .= "&return=error1";
-                header("Location: {$URL}");
-                exit();
-            }
-        } else {
-            $URL .= "&return=error1";
+        $comment = $_POST['comment'] ?? '';
+
+        if (empty($comment)) {
+            $URL .= '&return=error1';
             header("Location: {$URL}");
             exit();
         }
 
-        if (!logEvent($connection2, $tripPlannerRequestID, $gibbonPersonID, "Comment", $comment)) {
-            $URL .= "&return=error2";
+        $tripLogGateway = $container->get(TripLogGateway::class);
+
+        $tripPlannerRequestLogID = $tripLogGateway->insert([
+            'tripPlannerRequestID'  => $tripPlannerRequestID,
+            'gibbonPersonID'        => $gibbonPersonID,
+            'action'                => 'Comment',
+            'comment'               => $comment
+        ]);
+
+        if (!$tripPlannerRequestID) {
+            $URL .= '&return=error2';
             header("Location: {$URL}");
             exit();
         }
-        requestNotification($guid, $connection2, $tripPlannerRequestID, $_SESSION[$guid]["gibbonPersonID"], "Comment");
 
-        $URL .= "&return=success0";
+        $notificationGateway = $container->get(NotificationGateway::class);
+        $notificationSender = new NotificationSender($notificationGateway, $gibbon->session);
+
+        tripCommentNotifications($tripPlannerRequestID, $gibbonPersonID, $tripLogGateway, $notificationSender);
+
+        $notificationSender->sendNotifications();
+
+        $URL .= '&return=success0';
         header("Location: {$URL}");
         exit();
     } else {
-        $URL .= "trips_manage.php&return=error0";
+        $URL .= '/trips_manage.php&return=error0';
         header("Location: {$URL}");
         exit();
     }

@@ -17,76 +17,59 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-//Module includes
-include './modules/Trip Planner/moduleFunctions.php';
+use Gibbon\Module\TripPlanner\Domain\TripGateway;
+use Gibbon\Module\TripPlanner\Domain\TripPersonGateway;
+use Gibbon\Services\Format;
+use Gibbon\Tables\DataTable;
+use Gibbon\Tables\View\GridView;
+
+require_once __DIR__ . '/moduleFunctions.php';
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php')) {
     //Acess denied
-    echo "<div class='error'>";
-    echo __m('You do not have access to this action.');
-    echo '</div>';
+    echo Format::alert(__('You do not have access to this action.'));
 } else {    
-    $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
-    if ($highestAction != false) {
-        if (isset($_GET["tripPlannerRequestID"])) {
-            $tripPlannerRequestID = $_GET["tripPlannerRequestID"];
+    $tripPlannerRequestID = $_GET["tripPlannerRequestID"] ?? '';
 
-            $gibbonPersonID = $_SESSION[$guid]["gibbonPersonID"];
-            $departments = getHOD($connection2, $gibbonPersonID);
-            $departments2 = getDepartments($connection2, getOwner($connection2, $tripPlannerRequestID));
-            $isHOD = false;
+    $tripGateway = $container->get(TripGateway::class);
+    $trip = $tripGateway->getByID($tripPlannerRequestID);
 
-            foreach ($departments as $department) {
-                if (in_array($department["gibbonDepartmentID"], $departments2)) {
-                    $isHOD = true;
-                    break;
-                }
-            }
+    if (!empty($trip)) {
+        $gibbonPersonID = $gibbon->session->get('gibbonPersonID');
+        $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
 
-            if (isApprover($connection2, $gibbonPersonID) || isOwner($connection2, $tripPlannerRequestID, $gibbonPersonID) || isInvolved($connection2, $tripPlannerRequestID, $gibbonPersonID) || $isHOD || $highestAction == "Manage Trips_full") {
-                ?>
-                <table class='noIntBorder' cellspacing='0' style='width:100%;'>
-                    <tr>
-                        <?php
-                            echo '<h2>';
-                                echo __m('Students in Trip');
-                            echo '</h2>';
-                            echo "<div class='linkTop'>";
-                                echo "<a href='javascript:window.print()'>".__m('Print')."<img style='margin-left: 5px' title='".__m('Print')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/print.png'/></a>";
-                            echo '</div>';
-                            $students = array();
-                            $peopleInTrip = getPeopleInTrip($connection2, array($tripPlannerRequestID), "Student");
-                            while ($people = $peopleInTrip->fetch()) {
-                                $students[] = $people['gibbonPersonID'];
-                            }
-                            $numPerRow = 5;
-                            $studentCount = count($students);
-                            $studentCount += $numPerRow - ($studentCount % $numPerRow);
-                            for ($i = 0; $i < $studentCount; $i++) {
-                                if ($i % $numPerRow == 0) {
-                                    print "</tr>";
-                                    print "<tr>";
-                                } 
-                                if (isset($students[$i])) {
-                                    getPersonBlock($guid, $connection2, $students[$i], "Student", $numPerRow);
-                                } else {
-                                    print "<td>";
-                                    print "</td>";
-                                }
-                            } 
-                        ?>
-                    </tr>
-                </table>
-                <?php
-            } else {
-                print "<div class='error'>";
-                    print "You do not have access to this action.";
-                print "</div>";
-            }
-        } else {    
-            print "<div class='error'>";
-                print "No request selected.";
-            print "</div>";
+        if (hasAccess($container, $tripPlannerRequestID, $gibbonPersonID, $highestAction)) {
+            $tripPersonGateway = $container->get(TripPersonGateway::class);
+
+            $criteria = $tripPersonGateway->newQueryCriteria()
+                ->sortBy(['surname', 'preferredName'])
+                ->filterBy('tripPlannerRequestID', $tripPlannerRequestID)
+                ->filterBy('role', 'Student');
+
+            $gridRenderer = new GridView($container->get('twig'));
+            $table = $container->get(DataTable::class)->setRenderer($gridRenderer);
+            $table->setTitle(__('Students in Trip'));
+
+            $table->addMetaData('gridClass', 'rounded-sm bg-blue-100 border py-2');
+            $table->addMetaData('gridItemClass', 'w-1/2 sm:w-1/4 md:w-1/5 my-2 text-center');
+            
+            $table->addHeaderAction('print', __('Print'))
+                ->setExternalURL('javascript:window.print()')
+                ->displayLabel()
+                ->addClass('mr-2 underline');
+
+            $table->addColumn('image_240')
+                ->format(Format::using('userPhoto', ['image_240', 'sm', '']));
+            
+            $table->addColumn('name')
+                ->setClass('text-xs font-bold mt-1')
+                ->format(Format::using('name', ['title', 'preferredName', 'surname', 'Student', false, false]));
+
+            echo $table->render($tripPersonGateway->queryTripPeople($criteria));
+        } else {
+            echo Format::alert(__('You do not have access to this action.'));
         }
+    } else {    
+        echo Format::alert(__('No request selected.'));
     }
 }

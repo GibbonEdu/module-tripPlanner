@@ -1,65 +1,38 @@
 <?php
 
-//Module includes
-include '../../gibbon.php';
+use Gibbon\Domain\System\SettingGateway;
 
-include "./moduleFunctions.php";
+require_once '../../gibbon.php';
+require_once "./moduleFunctions.php";
 
-$URL = $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_manageSettings.php";
+$URL = $gibbon->session->get('absoluteURL') . '/index.php?q=/modules/' . $gibbon->session->get('module');
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manageSettings.php')) {
     //Acess denied
-    $URL .= "&return=error0";
+    $URL .= '/trips_manage.php&return=error0';
     header("Location: {$URL}");
     exit();
 } else {
+    $return = 'success0';
 
-    $settings = array("requestApprovalType", "riskAssessmentTemplate", "missedClassWarningThreshold", "riskAssessmentApproval", "defaultRiskTemplate", "expiredUnapprovedFilter", "letterToParentsTemplate");
+    $settingGateway = $container->get(SettingGateway::class);
 
-    foreach ($settings as $setting) {
-        $value = null;
-        if (isset($_POST[$setting])) {
-            if ($_POST[$setting] != null && $_POST[$setting] != "") {
-                if($setting == "missedClassWarningThreshold") {
-                    $value = abs($_POST[$setting]);
-                } else if($setting == "riskAssessmentApproval" || $setting == "expiredUnapprovedFilter") {
-                    $value = 1;
-                } else {
-                    $value = $_POST[$setting];
-                }
-            }
-        } else if($setting == "riskAssessmentApproval" || $setting == "expiredUnapprovedFilter") {
-            $value = 0;
+    foreach (getSettings($container, $guid) as $setting) {
+        $data = $_POST[$setting->getName()] ?? null;
+
+        $data = $setting->process($data);
+
+        if ($data === false) {
+            $return = 'warning1';
+            continue;
         }
 
-        if ($value === null && ($setting != "riskAssessmentTemplate" && $setting != "letterToParentsTemplate")) {
-            $URL .= "&return=error1";
-            header("Location: {$URL}");
-            exit();
-        }
-
-        try {
-            $data = array("value" => $value, "setting" => $setting);
-            $sql = "UPDATE gibbonSetting SET value=:value WHERE scope='Trip Planner' AND name=:setting;";
-            $result = $connection2->prepare($sql);
-            $result->execute($data);
-        } catch (PDOException $e) {
-            $URL .= "&return=error2";
-            header("Location: {$URL}");
-            exit();
-        }
-
-        if($setting == "riskAssessmentApproval") {
-            try {
-                $sql = "UPDATE tripPlannerRequests SET status='Requested' WHERE status='Awaiting Final Approval'";
-                $result = $connection2->prepare($sql);
-                $result->execute();
-            } catch (PDOException $e) {
-            }
+        if (!$settingGateway->updateSettingByScope('Trip Planner', $setting->getName(), $data)) {
+            $return = 'warning1';
         }
     }
- 
-    $URL .= "&return=success0";
+
+    $URL .= '/trips_manageSettings.php&return=' . $return;
     header("Location: {$URL}");
     exit();
 }   

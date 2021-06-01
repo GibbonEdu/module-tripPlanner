@@ -17,262 +17,167 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-include "./modules/Trip Planner/moduleFunctions.php";
-
+use Gibbon\Domain\Departments\DepartmentGateway;
+use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Forms\Form;
+use Gibbon\Module\TripPlanner\Domain\ApproverGateway;
+use Gibbon\Module\TripPlanner\Domain\TripGateway;
+use Gibbon\Services\Format;
+use Gibbon\Tables\DataTable;
+use Gibbon\Forms\DatabaseFormFactory;
+
+require_once __DIR__ . '/moduleFunctions.php';
+
+$page->breadcrumbs->add(__('Manage Trip Requests'));
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php')) {
-    print "<div class='error'>";
-        print "You do not have access to this action.";
-    print "</div>";
+    $page->addError(__('You do not have access to this action.'));
 } else {
     $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
-    if ($highestAction != false) {
-        print "<div class='trail'>";
-            print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . _("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . _(getModuleName($_GET["q"])) . "</a> > </div><div class='trailEnd'>" . _('Manage Trip Requests') . "</div>";
-        print "</div>";
+    if ($highestAction != false) { 
+        $gibbonPersonID = $gibbon->session->get('gibbonPersonID');
 
-        if (isset($_GET['return'])) {
-            returnProcess($guid, $_GET['return'], null, null);
-        }
+        //Settings
+        $settingGateway = $container->get(SettingGateway::class);
+        
+        $requestApprovalType = $settingGateway->getSettingByScope('Trip Planner', 'requestApprovalType');
+        $riskAssessmentApproval = $settingGateway->getSettingByScope('Trip Planner', 'riskAssessmentApproval');
+        $eutFilter = $settingGateway->getSettingByScope('Trip Planner', 'expiredUnapprovedFilter');
 
-        $expenseApprovalType = getSettingByScope($connection2, "Trip Planner", "requestApprovalType");
-        $riskAssessmentApproval = getSettingByScope($connection2, "Trip Planner", "riskAssessmentApproval");
+        //Permissions
+        $approverGateway = $container->get(ApproverGateway::class);
+        
+        $approver = $approverGateway->selectApproverByPerson($gibbonPersonID);
+        $isApprover = !empty($approver);
+        $finalApprover = $isApprover ? boolval($approver['finalApprover']) : false;
 
-        $ama = (isApprover($connection2, $_SESSION[$guid]["gibbonPersonID"]) && $expenseApprovalType == "Chain Of All") || ($riskAssessmentApproval && isApprover($connection2, $_SESSION[$guid]["gibbonPersonID"], true));
-        $departments = getHOD($connection2, $_SESSION[$guid]["gibbonPersonID"]);
-        $isHOD = $departments->rowCount() > 0;
+        $ama = ($isApprover && $requestApprovalType == 'Chain Of All')
+            || ($riskAssessmentApproval && $finalApprover);
 
-        $data = array();
-        $sql = "SELECT tripPlannerRequests.tripPlannerRequestID, tripPlannerRequests.timestampCreation, tripPlannerRequests.title, tripPlannerRequests.description, tripPlannerRequests.status, gibbonPerson.preferredName, gibbonPerson.surname, gibbonPerson.gibbonPersonID FROM tripPlannerRequests LEFT JOIN gibbonPerson ON tripPlannerRequests.creatorPersonID = gibbonPerson.gibbonPersonID";
-        $connector = " WHERE ";
+        //Department Data
+        $departmentGateway = $container->get(DepartmentGateway::class);
+        $departments = $departmentGateway->selectDepartmentsByPerson($gibbonPersonID, 'Coordinator');
 
-        $relations = array();
-        $relationFilter = "MR";
+        //Relations Filter set up
+        $relations = [
+            'MR' => 'My Requests',
+            'I' => 'Involved',
+        ];
 
-        if ($highestAction == "Manage Trips_full") {
-            $relations[""] = "All Requests";
-            $relationFilter = "";
-        }
-
-        $relations["MR"] = "My Requests";
-        $relations["I"] = "Involved";
-
-        if ($isHOD) {
-            while ($department = $departments->fetch()) {
-                $relations["DR" . $department["gibbonDepartmentID"]] = "Department Requests - " . $department["nameShort"];
-            }
-        }
+        if ($highestAction == 'Manage Trips_full') {
+            $relations = ['' => 'All Requests'] + $relations;
+        } 
 
         if ($ama) {
-            $relations["AMA"] = "Awaiting My Approval";
-            $relationFilter = "AMA";
+            $relations['AMA'] = 'Awaiting My Approval';
+            $relationFilter = 'AMA';
+        }
+        
+        if ($departments->isNotEmpty()) {
+            $relations['Department Requests'] = array_reduce($departments->fetchAll(), function ($group, $department) {
+                $group['DR' . $department['gibbonDepartmentID']] = $department['name'];
+                return $group;
+            });
         }
 
-        $statusFilter = "Requested";
-        $yearFilter = $_SESSION[$guid]["gibbonSchoolYearID"];
+        //Filters
+        $relationFilter = $_POST['relationFilter'] ?? $relationFilter ?? 'MR'; //'My Requests' is default, overrided by current value, overrided by post value (i.e. value from filter form).
+        $statusFilter = $_POST['statusFilter'] ?? 'Requested';
+        $year = $_POST['year'] ?? $gibbon->session->get('gibbonSchoolYearID');
 
-        if (isset($_POST["statusFilter"])) {
-            $statusFilter = $_POST["statusFilter"];
-        }
-
-        if (isset($_POST["yearFilter"])) {
-            $yearFilter = $_POST["yearFilter"];
-        }
-
-        if (isset($_POST["relationFilter"])) {
-            $relationFilter = $_POST["relationFilter"];
-        }
-
-        $eutFilter = getSettingByScope($connection2, "Trip Planner", "expiredUnapprovedFilter");
-
-        //This must be the FIRST filter check!
-        if ($relationFilter == "I") {
-            $data["teacherPersonID"] = $_SESSION[$guid]["gibbonPersonID"];
-            $sql .= " JOIN tripPlannerRequestPerson ON (tripPlannerRequestPerson.tripPlannerRequestID = tripPlannerRequests.tripPlannerRequestID) WHERE (tripPlannerRequestPerson.role='Teacher' AND :teacherPersonID = tripPlannerRequestPerson.gibbonPersonID OR teacherPersonIDs LIKE CONCAT('%', :teacherPersonID, '%'))";
-            $connector = " AND ";
-        } elseif ($relationFilter == "MR") {
-            $data["creatorPersonID"] = $_SESSION[$guid]["gibbonPersonID"];
-            $sql .= $connector . "tripPlannerRequests.creatorPersonID=:creatorPersonID";
-            if ($connector == " WHERE ") {
-                $connector = " AND ";
-            }
-        } elseif ($relationFilter == "AMA") {
-            $statusFilter = "All";
-        } elseif (strpos($relationFilter, "DR") !== false) {
-            $data["gibbonDepartmentID"] = substr($relationFilter, 2);
-            $sql .= $connector . ":gibbonDepartmentID IN (SELECT gibbonDepartmentID FROM gibbonDepartmentStaff WHERE gibbonPersonID = tripPlannerRequests.creatorPersonID)";
-            if ($connector == " WHERE ") {
-                $connector = " AND ";
-            }
-        }
-
-        if ($statusFilter != "All") {
-            $data["status"] = $statusFilter;
-            $sql .= $connector . "tripPlannerRequests.status=:status";
-            if ($connector == " WHERE ") {
-                $connector = " AND ";
-            }
-        }
-
-        if ($yearFilter != "All Years") {
-            $data["gibbonSchoolYearID"] = $yearFilter;
-            $sql .= $connector . "tripPlannerRequests.gibbonSchoolYearID=:gibbonSchoolYearID";
-            if ($connector == " WHERE ") {
-                $connector = " AND ";
-            }
-        }
-
-        try {
-            $sqlYear = "SELECT gibbonSchoolYearID, name FROM gibbonSchoolYear";
-            $resultYear = $connection2->prepare($sqlYear);
-            $resultYear->execute();
-        } catch (PDOException $e) {
-        }
-
-        $years = array();
-
-        while ($row = $resultYear->fetch()) {
-            $years[$row['gibbonSchoolYearID']] = $row['name'];
-        }
-
-        print "<h3>";
-            print __m("Filter");
-        print "</h3>";
-
-        $form = Form::create("tripFilters", $_SESSION[$guid]["absoluteURL"] . "/index.php?q=" . $_GET["q"]);
+        //Filter Form
+        $form = Form::create('tripFilters', $gibbon->session->get('absoluteURL') . '/index.php?q=' . $_GET['q']);
+        $form->setFactory(DatabaseFormFactory::create($pdo));
+        $form->setTitle(__('Filter'));
 
         $row = $form->addRow();
-            $row->addLabel("statusFilterLabel", "Status Filter");
-            $row->addSelect("statusFilter")->fromArray(array("All", "Requested", "Approved", "Rejected", "Cancelled", "Awaiting Final Approval"))->selected($statusFilter);
+            $row->addLabel('relationFilter', 'Relation');
+            $row->addSelect('relationFilter')
+                ->fromArray($relations)
+                ->selected($relationFilter);
 
         $row = $form->addRow();
-            $row->addLabel("relationFilterLabel", "Relation Filter");
-            $row->addSelect("relationFilter")->fromArray($relations)->selected($relationFilter);
-
-        $row = $form->addRow();
-            $row->addLabel("yearFilterLabel", "Year Filter");
-            $row->addSelect("yearFilter")->fromArray($years)->selected($yearFilter);
+            $row->addLabel('year', 'Year');
+            $row->addSelectSchoolYear('year')
+                ->selected($year);
 
         $row = $form->addRow();
             $row->addFooter();
             $row->addSubmit();
 
-        print $form->getOutput();
+        print $form->getOutput(); 
 
-        try {
-            $result = $connection2->prepare($sql);
-            $result->execute($data);
-        } catch (PDOException $e) {
+        //Trips Data
+        $tripGateway = $container->get(TripGateway::class);
+        $criteria = $tripGateway->newQueryCriteria(true)
+            ->filterBy('status', $statusFilter)
+            ->filterBy('year', $year)
+            ->fromPOST();
+
+        $trips = $tripGateway->queryTrips($criteria, $gibbonPersonID, $relationFilter, $eutFilter);
+
+        //Trips Table
+        $table = DataTable::createPaginated('trips', $criteria);
+        $table->setTitle(__('Requests'));
+
+        if ($relationFilter == 'AMA' && $ama) {
+            $table->modifyRows(function ($trip, $row) use ($container, $gibbonPersonID) {
+                //TODO: Migrate to gateway/SQL
+                return needsApproval($container, $gibbonPersonID, $trip['tripPlannerRequestID']) ? $row : null;
+            });
         }
-        ?>
 
-        <h3>
-            Requests
-        </h3>
+        $statusFilters = array_reduce(getStatuses(), function($filters, $status) {
+            $filters['status:' . $status] = __('Status') . ': ' . __($status);
+            return $filters;
+        });
+        $table->addMetaData('filterOptions', $statusFilters);
+      
+        $table->addHeaderAction('add', __('Submit Request'))
+          ->displayLabel()
+          ->setURL('/modules/Trip Planner/trips_submitRequest.php');
+      
+        $table->addExpandableColumn('contents')
+            ->format(function ($trip) {
+                $output = '';
 
-        <div class="linkTop">
-            <a style='position:relative; bottom:10px; float:right;' href='<?php print $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_submitRequest.php" ?>'>
-                <?php
-                    print __m("Submit Request");
-                ?>
-                <img style='margin-left: -2px' title='<?php print __m("Sumbit") ?>' src='<?php print $_SESSION[$guid]["absoluteURL"] . "/themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/page_new.png" ?>'/>
-            </a>
-        </div>
+                $output .= formatExpandableSection(__('Description'), $trip['description']);
 
-        <table cellspacing = '0' style = 'width: 100% !important'>
-            <tr>
-                <th>
-                    Title
-                </th>
-                <th>
-                    Description
-                </th>
-                <th>
-                    Owner
-                </th>
-                <th>
-                    Status
-                </th>
-                <th>
-                    Action
-                </th>
-            </tr>
-        <?php
-        if ($result->rowCount() == 0) {
-            ?>
-            <tr>
-                <td colspan=5>
-                    There are no records to display
-                </td>
-            </tr>
-        <?php
-        } else {
-            $rowCount = 0;
-            $descriptionLength = 100;
-            while ($row = $result->fetch()) {
-                $show = true;
-                if ($relationFilter == "AMA" && $ama) {
-                    if (!($row["status"] == "Requested" && needsApproval($connection2, $row["tripPlannerRequestID"], $_SESSION[$guid]["gibbonPersonID"])) == 0 && !($row["status"] == "Awaiting Final Approval" && isApprover($connection2, $_SESSION[$guid]["gibbonPersonID"], true))) {
-                        $show = false;
-                    }
-                }
+                return $output;
+            });
 
-                if ($eutFilter) {
-                    $startDate = getFirstDayOfTrip($connection2, $row["tripPlannerRequestID"]);
-                    if (strtotime($startDate) < mktime(0, 0, 0) && $row["status"] != "Approved") {
-                        $show = false;
-                    }
-                }
-                if ($show) {
-                    $class = "odd";
-                    if ($rowCount % 2 == 0) {
-                        $class = "even";
-                    }
-                    print "<tr class='$class'>";
-                        print "<td style='width:20%'>" . $row['title'] . "</td>";
-                        $descriptionText = strip_tags($row['description']);
-                        if (strlen($descriptionText)>$descriptionLength) {
-                            $descriptionText = substr($descriptionText, 0, $descriptionLength) . "...";
-                        }
-                        print "<td>" . $descriptionText . "</td>";
-                        print "<td style='width:20%'>" . $row['preferredName'] . " " . $row["surname"] . "</td>";
-                        print "<td style='width:12%'>";
-                            print $row['status'] . "</br>";
-                            //print "<span style='font-size: 85%; font-style: italic'>" . dateConvertBack($guid, $row['timestampCreation']) . "</span>";
-                        print "</td>";
-                        print "<td style='width:16.5%'>";
-                            //TODO: Add duplicate function
-                            print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID=" . $row["tripPlannerRequestID"] . "'><img title='" . _('View') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/plus.png'/></a> ";
-                            if ($row["status"] != "Cancelled" && $row["status"] != "Rejected" && $row['gibbonPersonID'] == $_SESSION[$guid]['gibbonPersonID']) {
-                                print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_submitRequest.php&mode=edit&tripPlannerRequestID=" . $row["tripPlannerRequestID"] . "'><img title='" . _('Edit') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/config.png'/></a> ";
-                            }
-                            if (($row["status"] == "Requested" && needsApproval($connection2, $row["tripPlannerRequestID"], $_SESSION[$guid]["gibbonPersonID"])) == 0 || ($row["status"] == "Awaiting Final Approval" && isApprover($connection2, $_SESSION[$guid]["gibbonPersonID"], true))) {
-                                print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_requestApprove.php&tripPlannerRequestID=" . $row["tripPlannerRequestID"] . "'><img title='" . __m('Approve/Reject') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/iconTick.png'/></a> ";
-                            }
-                        print "</td>";
-                    print "</tr>";
-                    $rowCount++;
-                }
+        $table->addColumn('tripTitle', __('Title'));
+
+        $table->addColumn('owner', __('Owner'))
+          ->format(Format::using('name', ['title', 'preferredName', 'surname', 'Staff', false, true]))
+          ->sortable('surname');
+
+        $table->addColumn('firstDayOfTrip', __('First Day of Trip'))
+            ->format(Format::using('dateReadable', ['firstDayOfTrip']));
+
+        $table->addColumn('status', __('Status'));
+                   
+        $table->addActionColumn()
+          ->addParam('tripPlannerRequestID')
+          ->format(function ($trip, $actions) use ($container, $gibbonPersonID)  {
+              $actions->addAction('view', __('View Details'))
+                ->setURL('/modules/Trip Planner/trips_requestView.php');
+
+            if ($gibbonPersonID == $trip['creatorPersonID'] && !in_array($trip['status'], ['Cancelled', 'Rejected'])) {
+                $actions->addAction('edit', __('Edit'))
+                ->addParam('mode', 'edit')
+                ->setURL('/modules/Trip Planner/trips_submitRequest.php');
             }
-
-            if($rowCount == 0) {
-                  ?>
-                <tr>
-                    <td colspan=5>
-                        There are no records to display
-                    </td>
-                </tr>
-            <?php
+            
+            if (needsApproval($container, $gibbonPersonID, $trip['tripPlannerRequestID'])) {
+                $actions->addAction('approve', __('Approve/Reject'))
+                    ->setURL('/modules/Trip Planner/trips_requestApprove.php')
+                    ->setIcon('iconTick');
             }
-        }
-        ?>
-        </table>
-        <?php
+          });
+          
+          echo $table->render($trips);
     } else {
-        print "<div class='error'>";
-            print "Highest grouped action could not be determined.";
-        print "</div>";
+        $page->addError(__('Highest grouped action could not be determined.'));
     }
 }
-?>

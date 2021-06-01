@@ -17,122 +17,58 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-include "./modules/Trip Planner/moduleFunctions.php";
+require_once __DIR__ . '/moduleFunctions.php';
 
 use Gibbon\Forms\Form;
+use Gibbon\Module\TripPlanner\Domain\TripGateway;
+use Gibbon\Services\Format;
+use Gibbon\Tables\DataTable;
+
+$page->breadcrumbs->add(__('Today\'s Trips'));
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_reportToday.php')) {
-    print "<div class='error'>";
-        print "You do not have access to this action.";
-    print "</div>";
+    $page->addError(__('You do not have access to this action.'));
 } else {
-    print "<div class='trail'>";
-        print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . _("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . _(getModuleName($_GET["q"])) . "</a> > </div><div class='trailEnd'>" . _('Today\'s Trips') . "</div>";
-    print "</div>";
+    $moduleName = $gibbon->session->get('module');
+  
+    $tripGateway = $container->get(TripGateway::class);
+    $criteria = $tripGateway->newQueryCriteria(true)
+      ->filterBy('tripDay', date('Y-m-d'))
+      ->filterBy('statuses', serialize([
+        'Requested',
+        'Approved',
+        'Awaiting Final Approval'
+      ]))
+      ->fromPOST();
 
-    try {
-        $data = array('date' => date('Y-m-d'));
-        $sql = "SELECT
-                tripPlannerRequests.tripPlannerRequestID, tripPlannerRequests.timestampCreation, tripPlannerRequests.title, tripPlannerRequests.description, tripPlannerRequests.status, gibbonPerson.preferredName, gibbonPerson.surname, gibbonPerson.gibbonPersonID
-            FROM tripPlannerRequests
-                JOIN tripPlannerRequestDays ON (tripPlannerRequestDays.tripPlannerRequestID=tripPlannerRequests.tripPlannerRequestID)
-                LEFT JOIN gibbonPerson ON tripPlannerRequests.creatorPersonID = gibbonPerson.gibbonPersonID
-            WHERE
-                tripPlannerRequestDays.startDate <= :date
-                AND tripPlannerRequestDays.endDate >= :date
-                AND tripPlannerRequests.status IN ('Requested','Approved','Awaiting Final Approval')
-            ";
-        $result = $connection2->prepare($sql);
-        $result->execute($data);
-    } catch (PDOException $e) {
-        echo $e->getMessage();
-    }
-    ?>
+    $trips = $tripGateway->queryTrips($criteria);
 
-    <h3>
-        Today's Trips
-    </h3>
+    $table = DataTable::createPaginated('todaysTrips', $criteria);
+    $table->setTitle(__("Today's Trips"));
+  
+    $table->addExpandableColumn('description')
+        ->format(function ($trip) {
+            $output = '';
 
-    <table cellspacing = '0' style = 'width: 100% !important'>
-        <tr>
-            <th>
-                Title
-            </th>
-            <th>
-                Description
-            </th>
-            <th>
-                Owner
-            </th>
-            <th>
-                Status
-            </th>
-            <th>
-                Action
-            </th>
-        </tr>
-    <?php
-    if ($result->rowCount() == 0) {
-        ?>
-        <tr>
-            <td colspan=5>
-                There are no records to display
-            </td>
-        </tr>
-    <?php
-    } else {
-        $rowCount = 0;
-        $descriptionLength = 100;
-        while ($row = $result->fetch()) {
-            $show = true;
-            if ($relationFilter == "AMA" && $ama) {
-                if (!($row["status"] == "Requested" && needsApproval($connection2, $row["tripPlannerRequestID"], $_SESSION[$guid]["gibbonPersonID"])) == 0 && !($row["status"] == "Awaiting Final Approval" && isApprover($connection2, $_SESSION[$guid]["gibbonPersonID"], true))) {
-                    $show = false;
-                }
-            }
+            $output .= formatExpandableSection(__('Description'), $trip['description']);
 
-            if ($eutFilter) {
-                $startDate = getFirstDayOfTrip($connection2, $row["tripPlannerRequestID"]);
-                if (strtotime($startDate) < mktime(0, 0, 0) && $row["status"] != "Approved") {
-                    $show = false;
-                }
-            }
-            if ($show) {
-                $class = "odd";
-                if ($rowCount % 2 == 0) {
-                    $class = "even";
-                }
-                print "<tr class='$class'>";
-                    print "<td style='width:20%'>" . $row['title'] . "</td>";
-                    $descriptionText = strip_tags($row['description']);
-                    if (strlen($descriptionText)>$descriptionLength) {
-                        $descriptionText = substr($descriptionText, 0, $descriptionLength) . "...";
-                    }
-                    print "<td>" . $descriptionText . "</td>";
-                    print "<td style='width:20%'>" . $row['preferredName'] . " " . $row["surname"] . "</td>";
-                    print "<td style='width:12%'>";
-                        print $row['status'] . "</br>";
-                    print "</td>";
-                    print "<td style='width:16.5%'>";
-                        print "<a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID=" . $row["tripPlannerRequestID"] . "'><img title='" . _('View') . "' src='./themes/" . $_SESSION[$guid]["gibbonThemeName"] . "/img/plus.png'/></a> ";
-                    print "</td>";
-                print "</tr>";
-                $rowCount++;
-            }
-        }
+            return $output;
+        });
+  
+    $table->addColumn('tripTitle', __('Title'));
+    
+    $table->addColumn('owner', __('Owner'))
+        ->format(Format::using('name', ['title', 'preferredName', 'surname', 'Staff', false, true]))
+        ->sortable('surname');
 
-        if($rowCount == 0) {
-              ?>
-            <tr>
-                <td colspan=5>
-                    There are no records to display
-                </td>
-            </tr>
-        <?php
-        }
-    }
-    ?>
-    </table>
-    <?php
+    $table->addColumn('status', __('Status'));
+  
+    $table->addActionColumn()
+        ->addParam('tripPlannerRequestID')
+        ->format(function ($trip, $actions) use ($moduleName) {
+            $actions->addAction('view', __('View'))
+                ->setURL('/modules/' . $moduleName . '/trips_requestView.php');
+        });
+
+    echo $table->render($trips);
 }
-?>

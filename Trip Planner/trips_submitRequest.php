@@ -17,523 +17,420 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+use Gibbon\Domain\Activities\ActivityGateway;
+use Gibbon\Domain\Messenger\GroupGateway;
+use Gibbon\Domain\Staff\StaffGateway;
+use Gibbon\Domain\Students\StudentGateway;
+use Gibbon\Domain\System\SettingGateway;
+use Gibbon\Domain\Timetable\CourseGateway;
 use Gibbon\Forms\Form;
+use Gibbon\Module\TripPlanner\Domain\RiskTemplateGateway;
+use Gibbon\Module\TripPlanner\Domain\TripCostGateway;
+use Gibbon\Module\TripPlanner\Domain\TripDayGateway;
+use Gibbon\Module\TripPlanner\Domain\TripGateway;
+use Gibbon\Module\TripPlanner\Domain\TripPersonGateway;
+use Gibbon\Services\Format;
 
+require_once __DIR__ . '/moduleFunctions.php';
 
-//Module includes
-include "./modules/Trip Planner/moduleFunctions.php";
-
+//Checking if editing mode should be enabled
 $edit = false;
-if (isset($_GET['mode']) && isset($_GET['tripPlannerRequestID'])) {
-    $edit = true;
-    $tripPlannerRequestID = $_GET['tripPlannerRequestID'];
+$prefix = 'Submit';
+
+$mode = $_GET['mode'] ?? '';
+$tripPlannerRequestID = $_GET['tripPlannerRequestID'] ?? '';
+
+//Check if a mode and id are given
+if (!empty($mode) && !empty($tripPlannerRequestID)) {
+    //Get trip from gateway
+    $tripGateway = $container->get(TripGateway::class);
+    $trip = $tripGateway->getByID($tripPlannerRequestID);    
+
+    //If the trip exists, set to edit mode
+    if (!empty($trip)) {
+        $edit = true;
+        $prefix = 'Edit';
+    }
 }
 
-if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submitRequest.php') || ($edit && !isOwner($connection2, $tripPlannerRequestID, $_SESSION[$guid]['gibbonPersonID']))) {
-    //Acess denied
-    print "<div class='error'>";
-        print "You do not have access to this action.";
-    print "</div>";
+$page->breadcrumbs->add(__($prefix . ' Trip Request'));
+
+$gibbonPersonID = $gibbon->session->get('gibbonPersonID');
+
+if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submitRequest.php') || ($edit && $trip['creatorPersonID'] != $gibbonPersonID)) {
+//If the action isn't accesible, or in edit mode and the current user isn't the owner, throw error.
+    $page->addError(__('You do not have access to this action.'));
+} else if ((isset($trip) && empty($trip)) || (!empty($mode) && !$edit)) {
+    //If a trip is provided, but doesn't exit, Or the mode is set, but edit isn't enabled, throw error.
+    $page->addError(__('Invalid Trip.'));
 } else {
+    $moduleName = $gibbon->session->get('module');
+    $gibbonSchoolYearID = $gibbon->session->get('gibbonSchoolYearID');
 
-    if ($edit) {
-        $trip = getTrip($connection2, $tripPlannerRequestID);
-        $tripTeachers = array();
-        $tripStudents = array();
-        foreach (explode(", ", $trip["people"]) as $person) {
-            $person = explode(";", $person);
-            if(count($person) != 2) continue;
-            if ($person[1] == "Student") {
-                $tripStudents[] = $person[0];
-            } else {
-                $tripTeachers[] = $person[0];
-            }
-        }
+    $settingGateway = $container->get(SettingGateway::class);
+    $riskTemplateGateway = $container->get(RiskTemplateGateway::class);
+
+    //Return Message
+    if(!$edit && !empty($tripPlannerRequestID)) {
+        $page->return->setEditLink($gibbon->session->get('absoluteURL') . '/index.php?q=/modules/' . $moduleName . '/trips_requestView.php&tripPlannerRequestID=' . $tripPlannerRequestID);
     }
 
-    print "<div class='trail'>";
-        print "<div class='trailHead'><a href='" . $_SESSION[$guid]["absoluteURL"] . "'>" . _("Home") . "</a> > <a href='" . $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/" . getModuleName($_GET["q"]) . "/" . getModuleEntry($_GET["q"], $connection2, $guid) . "'>" . _(getModuleName($_GET["q"])) . "</a> > </div><div class='trailEnd'>" . _(($edit ? "Edit" : "Submit") . ' Trip Request') . "</div>";
-    print "</div>";
+    //Templates
+    $defaultRiskTemplate = $settingGateway->getSettingByScope('Trip Planner', 'defaultRiskTemplate');
+    
+    $templateNames = [
+        '-1' => 'None',
+        '0' => 'Custom'
+    ];
 
-    if (isset($_GET['return'])) {
-        $editLink = null;
-        if(isset($_GET['tripPlannerRequestID']) && !$edit) {
-            $editLink = $_SESSION[$guid]["absoluteURL"] . "/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID=" . $_GET['tripPlannerRequestID'];
-        }
-        returnProcess($guid, $_GET['return'], $editLink, null);
+    $templates = [
+        '-1' => null,
+        '0' => $settingGateway->getSettingByScope('Trip Planner', 'riskAssessmentTemplate')
+    ];
+    
+    $criteria = $riskTemplateGateway->newQueryCriteria()
+        ->sortBy(['name', 'tripPlannerRiskTemplateID']);
+
+    $riskTemplates = $riskTemplateGateway->queryTemplates($criteria);
+    foreach ($riskTemplates as $riskTemplate) {
+        $templateNames[$riskTemplate['tripPlannerRiskTemplateID']] = $riskTemplate['name'];
+        $templates[$riskTemplate['tripPlannerRiskTemplateID']] = $riskTemplate['body'];
     }
 
-    ?>
+    //Add By Groups
+    $courseGateway = $container->get(CourseGateway::class);
+    $activityGateway = $container->get(ActivityGateway::class);
+    $groupGateway = $container->get(GroupGateway::class);
 
-    <script type="text/javascript">
-        function descReveal(id) {
-            var descBlock = $("textarea[name=\"costDescription[" + id + "]\"]");
-            var descLabel = $("[for=\"costDescription[" + id + "]\"]");
-            descLabel.css("display", descBlock.is(":visible") ? "none" : "block");
-            descBlock.css("display", descBlock.is(":visible") ? "none" : "table-cell");
-        }
-    </script>
+    //TODO: Honestly, this whole bodge should really just be its own Gateway method at this point, but I can't be botherd rn. If, for some reason, you feel like doing that, be my guest.
+    $courseCriteria = $courseGateway->newQueryCriteria()
+        ->filterBy('bodge', 'This is very hacky')
+        ->addFilterRule('bodge', function ($query, $bodge) {
+            return $query->resetCols()
+                ->cols(['gibbonCourseClass.gibbonCourseClassID', 'gibbonCourse.name', 'gibbonCourse.nameShort', 'gibbonCourseClass.nameShort as classNameShort'])
+                ->resetGroupBy();
+        })
+        ->sortBy(['nameShort', 'classNameShort']);
 
-    <style>
-        #costName {
-            float: none; border: 1px dotted #aaa; background: none; margin-left: 3px; <?php print "color: #999;" ?> margin-top: 0px; font-size: 140%; font-weight: bold; width: 350px
-        }
+    $activityCriteria = $activityGateway->newQueryCriteria()
+        ->sortBy(['name']);;
 
-        #costValue {
-            float: none; border: 1px dotted #aaa; background: none; margin-left: 3px; <?php print "color: #999;" ?> margin-top: 2px; font-size: 110%; font-style: italic; width: 95px
-        }
+    $groupCriteria = $groupGateway->newQueryCriteria()
+        ->sortBy(['name']);
 
-        #costDescription {
-            width: 99.2%; resize:vertical; display: none; margin-top: -15px;
-        }
+    $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_submitRequest.php', $connection2);
+    if ($highestAction == 'Submit Request_all') {
+        //Query all classes
+        $classes = $courseGateway->queryCoursesBySchoolYear($courseCriteria, $gibbonSchoolYearID);
 
-        .borderNone {
-            border:none !important;
-        }
+        //Disable Messenger Group filtering by Owner
+        $gibbonPersonIDOwner = null;
+    } else {
+        //Query Classes run by person
+        $classes = $courseGateway->queryCoursesByDepartmentStaff($courseCriteria, $gibbonSchoolYearID, $gibbonPersonID);
 
-        [for^="costDescription"] { display: none; margin-top: 5px; margin-left: 0.4%; }
-    </style>
-
-    <?php
-
-    $defaultRiskTemplate = getSettingByScope($connection2, "Trip Planner", "defaultRiskTemplate");
-    try {
-        $sqlTemplates = "SELECT tripPlannerRiskTemplateID, name, body FROM tripPlannerRiskTemplates ORDER BY name ASC";
-        $resultTemplates = $connection2->prepare($sqlTemplates);
-        $resultTemplates->execute();
-    } catch(PDOException $e) {
-    }
-    $templates = array("0"=>getSettingByScope($connection2, "Trip Planner", "riskAssessmentTemplate"));
-    $templateNames = array("-1" => "None", "0" => "Custom");
-    while ($rowTemplate = $resultTemplates->fetch()) {
-        $templates[$rowTemplate['tripPlannerRiskTemplateID']] = $rowTemplate['body'];
-        $templateNames[$rowTemplate['tripPlannerRiskTemplateID']] = $rowTemplate['name'];
-    }
-
-    $highestAction2 = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_submitRequest.php', $connection2);
-    try {
-        if ($highestAction2 == 'Submit Request_all') {
-            $dataSelect = array('gibbonSchoolYearID' => $_SESSION[$guid]['gibbonSchoolYearID']);
-            $sqlSelect = 'SELECT gibbonCourseClassID, gibbonCourse.name, gibbonCourse.nameShort AS course, gibbonCourseClass.nameShort AS class FROM gibbonCourse JOIN gibbonCourseClass ON (gibbonCourse.gibbonCourseID=gibbonCourseClass.gibbonCourseID) WHERE gibbonSchoolYearID=:gibbonSchoolYearID ORDER BY course, class';
-        } else {
-            $dataSelect = array('gibbonSchoolYearID' => $_SESSION[$guid]['gibbonSchoolYearID'], 'gibbonPersonID' => $_SESSION[$guid]['gibbonPersonID']);
-            $sqlSelect = "SELECT gibbonCourseClass.gibbonCourseClassID, gibbonCourse.name, gibbonCourse.nameShort AS course, gibbonCourseClass.nameShort AS class FROM gibbonCourse JOIN gibbonCourseClass ON (gibbonCourse.gibbonCourseID=gibbonCourseClass.gibbonCourseID) JOIN gibbonCourseClassPerson ON (gibbonCourseClassPerson.gibbonCourseClassID=gibbonCourseClass.gibbonCourseClassID) WHERE role='Teacher' AND gibbonSchoolYearID=:gibbonSchoolYearID AND gibbonPersonID=:gibbonPersonID ORDER BY course, class";
-        }
-        $resultSelect = $connection2->prepare($sqlSelect);
-        $resultSelect->execute($dataSelect);
-    } catch (PDOException $e) {
-    }
-
-    $classes = array();
-    while ($rowSelect = $resultSelect->fetch()) {
-        $classes["Class:" . $rowSelect['gibbonCourseClassID']] = htmlPrep($rowSelect['course']).'.'.htmlPrep($rowSelect['class']).' - '.$rowSelect['name'];
-    }
-
-    try {
-        if ($highestAction2 == 'Submit Request_all') {
-            $dataSelect = array('gibbonSchoolYearID' => $_SESSION[$guid]['gibbonSchoolYearID']);
-            $sqlSelect = 'SELECT gibbonActivityID, name FROM gibbonActivity WHERE gibbonSchoolYearID=:gibbonSchoolYearID ORDER BY name ASC';
-        } else {
-            $dataSelect = array('gibbonSchoolYearID' => $_SESSION[$guid]['gibbonSchoolYearID'], 'gibbonPersonID' => $_SESSION[$guid]['gibbonPersonID']);
-            $sqlSelect = "SELECT gibbonActivity.gibbonActivityID, gibbonActivity.name FROM gibbonActivity JOIN gibbonActivityStaff ON (gibbonActivity.gibbonActivityID=gibbonActivityStaff.gibbonActivityID) WHERE role='Organiser' AND gibbonSchoolYearID=:gibbonSchoolYearID AND gibbonPersonID=:gibbonPersonID ORDER BY name ASC";
-        }
-        $resultSelect = $connection2->prepare($sqlSelect);
-        $resultSelect->execute($dataSelect);
-    } catch (PDOException $e) {
-    }
-
-    $activities = array();
-    while ($rowSelect = $resultSelect->fetch()) {
-        $activities["Activity:" . $rowSelect['gibbonActivityID']] = htmlPrep($rowSelect['name']);
-    }
-
-    try {
-        if ($highestAction2 == 'Submit Request_all') {
-            $dataSelect = array('gibbonSchoolYearID' => $_SESSION[$guid]['gibbonSchoolYearID']);
-            $sqlSelect = 'SELECT gibbonGroupID, name FROM gibbonGroup WHERE gibbonSchoolYearID=:gibbonSchoolYearID ORDER BY name ASC';
-        } else {
-            $dataSelect = array('gibbonSchoolYearID' => $_SESSION[$guid]['gibbonSchoolYearID'], 'gibbonPersonID' => $_SESSION[$guid]['gibbonPersonID']);
-            $sqlSelect = "SELECT gibbonGroupID, name FROM gibbonGroup WHERE gibbonSchoolYearID=:gibbonSchoolYearID AND gibbonPersonIDOwner=:gibbonPersonID ORDER BY name ASC";
-        }
-        $resultSelect = $connection2->prepare($sqlSelect);
-        $resultSelect->execute($dataSelect);
-    } catch (PDOException $e) {
-    }
-
-    $groups = array();
-    while ($rowSelect = $resultSelect->fetch()) {
-        $groups["Group:" . $rowSelect['gibbonGroupID']] = htmlPrep($rowSelect['name']);
-    }
-
-    $groups = array("By Class" => $classes, "By Activity" => $activities, "By Group" => $groups);
-    ?>
-
-    <script type="text/javascript">
-        <?php print "var templates = " . json_encode($templates) . ";"; ?>
-        $(document).ready(function(){
-
-            $('input[id=removeButton]').parent().css("display", "inline-block");
-            $('input[id=addButton]').parent().css("display", "inline-block");
-            $('input[id=removeDays]').parent().css("display", "inline-block");
-            $('input[id=addDays]').parent().css("display", "inline-block");
-
-            $("select[name=riskAssessmentTemplates]").on('change', function(){
-                var templateID = $(this).val();
-                if (templateID != "" && templateID >= 0) {
-                    if(confirm("Are you sure you want to use this template. Warning: This will overwrite any thing currently written.")) {
-                        tinyMCE.get("riskAssessment").setContent(templates[templateID]);
-                    }
-                }
-            });
-
-            $("input[name=allDay]").on('change', function(){
-                var enabled = $(this).prop("checked");
-                $('tr[id=timeRow]').each(function(){
-                    $(this).css("display", enabled ? "none" : "flex");
-                });
-                modifyDayList($(this), 2);
-            });
-
-            $("#removeDays").attr("disabled", "");
-
-            $("select[id=dayList]").on('change', function(){
-                var id = $(this).find(":selected").val();
-                if (isNaN(id)) {
-                    $("#startDate").val("");
-                    $("#endDate").val("");
-                    $("#allDay").prop("checked", "").change();
-                    $("#startTime").val("");
-                    $("#endTime").val("");
-                    $("#addDays").removeAttr("disabled");
-                    $("#removeDays").attr("disabled", "disabled");
-                } else if (id != dayID) {
-                    $("#startDate").val(daysList[id][0]);
-                    $("#endDate").val(daysList[id][1]);
-                    $("#allDay").prop("checked", daysList[id][2]).change();
-                    $("#startTime").val(daysList[id][3]);
-                    $("#endTime").val(daysList[id][4]);
-                    $("#addDays").attr("disabled", "disabled");
-                    $("#removeDays").removeAttr("disabled");
-                    updateSelectedDayList();
-                }
-            });
-
-            $("input[name=startDate]").on('change', function() {
-                var endDate = $("input[name=endDate]");
-                if (endDate.val() == "" || (new Date($(this).val()) > new Date(endDate.val()))) {
-                    endDate.val($(this).val());
-                }
-                modifyDayList($(this), 0);
-
-             });
-            $("input[name=endDate]").on('change', function() { modifyDayList($(this), 1); });
-            $("input[name=startTime]").on('change', function() { modifyDayList($(this), 3); });
-            $("input[name=endTime]").on('change', function() { modifyDayList($(this), 4); });
-
-            $("input[type=\'Submit\']", $("select[id=dayList]").parents('form')).click(function() {
-                $("select[id=dayList] option:last").attr("selected", "selected");
-            });
-
-            var form = $("#requestForm");
-            form.submit(function(){
-                var names = ["startDate", "endDate", "allDay", "startTime", "endTime"];
-                for (var i = 0; i < daysList.length; i++) {
-                    if (daysList[i] != null) {
-                        for (var j = 0; j < 5; j++) {
-                            $("<input>").attr({
-                                type: 'hidden',
-                                name: "days[" + i + "][" + names[j] + "]"
-                            }).val(daysList[i][j]).appendTo(form);
-                        }
-                    }
-                }
-            });
+        //Filter Activities by user who organises them
+        $activityCriteria->filterBy('role', ['role' => 'Organiser', 'gibbonPersonID' => $gibbonPersonID]);
+        $activityCriteria->addFilterRule('role', function ($query, $role){
+            return $query->leftJoin('gibbonActivityStaff', 'gibbonActivityStaff.gibbonActivityID = gibbonActivity.gibbonActivityID')
+                ->where('gibbonActivityStaff.role = :role')
+                ->where('gibbonActivityStaff.gibbonPersonID = :gibbonPersonID')
+                ->bindValues($role);
         });
 
-        function addClass(type) {
-            var gibbonCourseClassID = document.getElementById("addStudentsByClass").value;
-            if(gibbonCourseClassID != "") {
-                $("#addClassDiv").load("<?php print $_SESSION[$guid]["absoluteURL"] . '/modules/Trip%20Planner/trips_submitRequestAddClassAjax.php'?>", "gibbonCourseClassID=" + gibbonCourseClassID + "&type=" + type);
-            }
-        }
-
-        var dayID = 0;
-        var daysList = new Array();
-
-        function addDay() {
-            var dayList = $("#dayList");
-            var startDate = $("#startDate");
-            var endDate = $("#endDate");
-            var allDay = $("#allDay");
-            var startTime = $("#startTime");
-            var endTime = $("#endTime");
-
-            if (startDate.val() == "" || endDate.val() == "") {
-                alert(<?php print "'" . __("Please set a start date and end date.") . "'"?>);
-                return;
-            } else if((startTime.val() == "" || endTime.val() == "") && !allDay.prop("checked")) {
-                alert(<?php print "'" . __("Please set a start time and end time or check the all day box.") . "'"?>);
-                return;
-            }
-            if ((new Date(startDate.val()) > new Date(endDate.val()))) {
-                alert(<?php print "'" . __("Start date must be before end date.") . "'"?>);
-                return;
-            }
-            if (!(new Date(startDate.val()) == new Date(endDate.val())) && (startTime.val() > endTime.val()) && !allDay.prop("checked")) {
-                alert(<?php print "'" . __("Start time must be before end time for one day times.") . "'"?>);
-                return;
-            }
-
-            daysList[dayID] = [startDate.val(), endDate.val(), allDay.prop("checked"), startTime.val(), endTime.val()];
-            dayList.append($("<option>", {value: dayID, text: startDate.val() + (startDate.val() != endDate.val() ? " - " + endDate.val() : "") + " (" + (allDay.prop("checked") ? "All Day" : startTime.val() + "-" + endTime.val()) + ")"}));
-
-            dayList.val(dayID);
-            $("#addDays").attr("disabled", "disabled");
-            $("#removeDays").removeAttr("disabled");
-            dayID++;
-        }
-
-        function remDay() {
-            if (confirm("Are you sure you want to delete these days?")) {
-                var dayList = $("#dayList");
-                var id = dayList.find(":selected").val();
-                daysList[id] = null;
-                dayList.find("option[value=" + id + "]").detach().remove();
-                $("#addDays").removeAttr("disabled");
-                $("#removeDays").attr("disabled", "disabled");
-            }
-        }
-
-        function modifyDayList(selector, index) {
-            var id = $("select[id=dayList]").find(":selected").val();
-            if (!isNaN(id)) {
-                if (index == 0) {
-                    if (selector.val()>daysList[id][1]) {
-                        alert(<?php print "'" . __("Start date must be before end date.") . "'"?>);
-                        selector.val(daysList[id][index]);
-                        return;
-                    }
-                } else if (index == 1) {
-                    if (selector.val()<daysList[id][0]) {
-                        alert(<?php print "'" . __("End date must be after start date.") . "'"?>);
-                        selector.val(daysList[id][index]);
-                        return;
-                    }
-                } else if (index == 3) {
-                    if (selector.val()>daysList[id][4] && daysList[id][0]==daysList[id][1]) {
-                        alert(<?php print "'" . __("Start time must be before end time for one day times.") . "'"?>);
-                        //TODO: Make this actually revert time
-                        selector.val(daysList[id][index]);
-                        return;
-                    }
-                } else if (index == 4) {
-                    if (selector.val()<daysList[id][3] && daysList[id][0]==daysList[id][1]) {
-                        alert(<?php print "'" . __("End time must be after start time for one day times.") . "'"?>);
-                        //TODO: Make this actually revert time
-                        selector.val(daysList[id][index]);
-                        return;
-                    }
-                }
-                daysList[id][index] = index == 2 ? selector.prop("checked") : selector.val();
-                updateSelectedDayList();
-            }
-        }
-
-        function updateSelectedDayList() {
-            var dayList = $("#dayList");
-            var startDate = $("#startDate");
-            var endDate = $("#endDate");
-            var allDay = $("#allDay");
-            var startTime = $("#startTime");
-            var endTime = $("#endTime");
-
-            $("select[id=dayList]").find(":selected").text(startDate.val() + (startDate.val() != endDate.val() ? " - " + endDate.val() : "") + " (" + (allDay.prop("checked") ? "All Day" : startTime.val() + "-" + endTime.val()) + ")");
-        }
-
-    </script>
-
-    <div id="addClassDiv"></div>
-
-    <?php
-
-    $teachers = array();
-
-    try {
-        $sqlTeachers = "SELECT gibbonPersonID, preferredName, surname, title, gibbonRole.category FROM gibbonPerson JOIN gibbonRole ON (gibbonPerson.gibbonRoleIDPrimary = gibbonRole.gibbonRoleID) WHERE gibbonRole.category='Staff' AND gibbonPerson.status='Full' ORDER BY gibbonPerson.surname, gibbonPerson.preferredName ASC";
-        $resultTeachers = $connection2->prepare($sqlTeachers);
-        $resultTeachers->execute();
-    } catch (PDOException $e) {
+        //Set Messenger Group filtering
+        $gibbonPersonIDOwner = $gibbonPersonID;
     }
 
-    while (($row = $resultTeachers->fetch()) != null) {
-        $teachers[$row["gibbonPersonID"]] = formatName($row['title'], $row["preferredName"], $row["surname"], $row["category"], true, true);
-    }
+    //Collect and Proccess all group data
+    $addGroups = array_filter([
+        'By Class' => array_reduce($classes->toArray(), function ($array, $course) {
+            $array['Class:' . $course['gibbonCourseClassID']] = htmlPrep($course['nameShort']) . '.' . htmlPrep($course['classNameShort']) . ' - ' . htmlPrep($course['name']);
+            return $array;
+        }),
 
-    $students = array();
-    $studentsForm = array();
+        'By Activity' => array_reduce($activityGateway->queryActivitiesBySchoolYear($activityCriteria, $gibbonSchoolYearID)->toArray(), function ($array, $activity) {
+            $array['Activity:' . $activity['gibbonActivityID']] = htmlPrep($activity['name']);
+            return $array;
+        }),
+        
+        'By Group' => array_reduce($groupGateway->queryGroups($groupCriteria, $gibbonSchoolYearID, $gibbonPersonIDOwner)->toArray(), function ($array, $group) {
+            $array['Group:' . $group['gibbonGroupID']] = htmlPrep($group['name']);
+            return $array;
+        })
+    ]);
 
-    try {
-        $dataStudents = array('gibbonSchoolYearID' => $_SESSION[$guid]['gibbonSchoolYearID']);
-        $sqlStudents = "SELECT gibbonPerson.gibbonPersonID, preferredName, surname, gibbonFormGroup.name AS name FROM gibbonPerson, gibbonStudentEnrolment, gibbonFormGroup WHERE gibbonPerson.gibbonPersonID=gibbonStudentEnrolment.gibbonPersonID AND gibbonStudentEnrolment.gibbonFormGroupID=gibbonFormGroup.gibbonFormGroupID AND status='FULL' AND (dateStart IS NULL OR dateStart<='".date('Y-m-d')."') AND (dateEnd IS NULL  OR dateEnd>='".date('Y-m-d')."') AND gibbonFormGroup.gibbonSchoolYearID=:gibbonSchoolYearID ORDER BY surname, preferredName, name";
-        $resultStudents = $connection2->prepare($sqlStudents);
-        $resultStudents->execute($dataStudents);
-    } catch (PDOException $e) {
-    }
-    while ($row = $resultStudents->fetch()) {
-        $students[$row["gibbonPersonID"]] = formatName('', $row["preferredName"], $row["surname"], 'Student', true) . " - " . $row["name"];
-        $studentsForm[$row["gibbonPersonID"]] = $row["name"];
-    }
-
-    print "<h3>";
-        print "Request";
-    print "</h3>";
-
+    //Trip People Data for Staff and Student data processing
+    $tripPeople = [];
     if ($edit) {
-        echo "<div class='linkTop'>";
-            echo "<a href='".$_SESSION[$guid]['absoluteURL']."/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID=$tripPlannerRequestID'>".__m('View')."<img style='margin-left: 5px' title='".__m('Edit')."' src='./themes/".$_SESSION[$guid]['gibbonThemeName']."/img/plus.png'/></a>";
-        echo '</div>';
+        $tripPersonGateway = $container->get(TripPersonGateway::class);
+        $tripPersonCriteria = $tripPersonGateway->newQueryCriteria()
+            ->filterBy('tripPlannerRequestID', $tripPlannerRequestID);
+
+        $tripPeople = $tripPersonGateway->queryTripPeople($tripPersonCriteria)->getColumn('gibbonPersonID');
     }
 
-    $form = Form::create("requestForm", $_SESSION[$guid]["absoluteURL"] . "/modules/Trip Planner/trips_submitRequestProcess.php" . ($edit ? "?mode=edit&tripPlannerRequestID=" . $tripPlannerRequestID : ""));
+    //Staff/Teacher Data for Multi-Select
+    $staffGateway = $container->get(StaffGateway::class);
+    $staffCriteria = $staffGateway->newQueryCriteria()
+        ->sortBy(['surname', 'preferredName']);
+
+    $teachers = array_reduce($staffGateway->queryAllStaff($staffCriteria)->toArray(), function ($array, $staff) use ($tripPeople) {
+        $list = in_array($staff['gibbonPersonID'], $tripPeople) ? 'destination' : 'source';
+        $array[$list][$staff['gibbonPersonID']] = Format::name($staff['title'], $staff['preferredName'], $staff['surname'], 'Staff', true, true);
+        return $array;
+    });
+
+    //Student Data for Multi-Select
+    $studentGateway = $container->get(StudentGateway::class);
+    $studentCriteria = $studentGateway->newQueryCriteria()
+        ->sortBy(['surname', 'preferredName']);
+
+    $students = array_reduce($studentGateway->queryStudentsBySchoolYear($studentCriteria, $gibbonSchoolYearID)->toArray(), function ($array, $student) use ($tripPeople) {
+        $list = in_array($student['gibbonPersonID'], $tripPeople) ? 'destination' : 'source';
+        $array['students'][$list][$student['gibbonPersonID']] = Format::name($student['title'], $student['preferredName'], $student['surname'], 'Student', true) . ' - ' . $student['formGroup']; 
+        $array['form'][$student['gibbonPersonID']] = $student['formGroup'];
+        return $array;
+    });
+
+    //Submit Request Form
+    $form = Form::create('requestForm', $gibbon->session->get('absoluteURL') . '/modules/' . $moduleName . '/trips_submitRequestProcess.php');
+    $form->addHiddenValue('address', $gibbon->session->get('address'));
+    $form->setTitle(__('Request'));
+
+    //Basic Information Section
+    $row = $form->addRow();
+        $row->addHeading('Basic Information');
 
     $row = $form->addRow();
-        $row->addHeading("Basic Information");
+        $row->addLabel('title', 'Title');
+        $row->addTextfield('title')
+            ->setRequired(true);
 
     $row = $form->addRow();
-        $row->addLabel("title", "Title");
-        $row->addTextfield("title")->setRequired(true)->setValue($edit ? $trip['title'] : '');
+        $col = $row->addColumn();
+        $col->addLabel('description', 'Description');
+        $col->addEditor("description", $guid)
+            ->setRequired(true)
+            ->showMedia(true)
+            ->setRows(10);
 
     $row = $form->addRow();
-        $column = $row->addColumn();
-        $column->addLabel("description", "Description");
-        $column->addEditor("description", $guid)->setRequired(true)->showMedia(true)->setRows(10)->setValue($edit ? $trip['description'] : '');
+        $row->addLabel('location', 'Location');
+        $row->addTextfield('location')
+            ->setRequired(true);
 
+    //Date & Time Section
     $row = $form->addRow();
-        $row->addLabel("location", "Location");
-        $row->addTextfield("location")->setRequired(true)->setValue($edit ? $trip['location'] : '');
+        $row->addHeading(__('Date & Time'));
 
+    $dateTimeBlock = $form->getFactory()->createTable()->setClass('blank');
+        $row = $dateTimeBlock->addRow();
+            $row->addLabel('date', 'Start and End Dates for this block.')
+                ->addClass('font-bold');
+
+        $row = $dateTimeBlock->addRow();
+                $row->addLabel('startDate', __('Start Date'));
+                $row->addDate('startDate')
+                    ->isRequired()
+                    ->placeholder('Start Date');
+
+                $row->addLabel('endDate', __('End Date'));
+                $row->addDate('endDate')
+                    ->isRequired()
+                    ->placeholder('End Date');
+
+        $dateTimeBlock->addRow()->addClass('h-2');
+
+        $row = $dateTimeBlock->addRow();
+            $row->addLabel('time', 'Start and End Times for each day. Leave blank if all day.')
+                ->addClass('font-bold');
+
+        $row = $dateTimeBlock->addRow();
+            $row->addLabel('startTime', __('Start Time'));
+            $row->addTime('startTime')
+                ->placeholder('Start Time');
+
+            $row->addLabel('endTime', __('End Time'));
+            $row->addTime('endTime')
+                ->placeholder('End Time');
+
+    $addDateTimeBlockButton = $form->getFactory()->createButton(__('Add Date & Time'))->addClass('addBlock');
+
+    //TODO: Require atleast one entry
+    //TODO: Date/Time overlap checking? Is that even possible???
     $row = $form->addRow();
-        $row->addHeading("Date & Time")->append(__("To add a new day to the trip request, select the Add New Days option in the dropdown menu and fill in the the boxs below and click the Add Days button. To edit or remove an existing day, select the day from the dropdown menu and either change the details or click the Remove Days button."));
+        $dateBlocks = $row->addCustomBlocks('dateTime', $gibbon->session)
+            ->fromTemplate($dateTimeBlock)
+            ->settings([
+                'placeholder' => __('Date/Time Blocks will appear here...'),
+                'sortable' => true,
+                'orderName' => 'dateTimeOrder'
+            ])
+            ->addToolInput($addDateTimeBlockButton);
 
+    //Costs Section
     $row = $form->addRow();
-        $row->addLabel("startDate", "Start Date");
-        $row->addDate("startDate");
+        $row->addHeading(__('Costs'));
 
-    $row = $form->addRow("multipleRow");
-        $row->addLabel("endDate", "End Date");
-        $row->addDate("endDate");
-
-    $row = $form->addRow();
-        $row->addLabel("allDay","All Day");
-        $row->addCheckbox("allDay");
-
-    $row = $form->addRow("timeRow");
-        $row->addLabel("startTime", "Start Time")->description("Format: hh:mm (24hr)");
-        $row->addTime("startTime");
-
-    $row = $form->addRow("timeRow");
-        $row->addLabel("endTime", "End Time")->description("Format: hh:mm (24hr)");
-        //TODO:Consider if ->chainedTo("startTime"); will work for this
-        $row->addTime("endTime");
-
-
-    $row = $form->addRow("multipleRow");
-        //Not showing required symbol
-        $row->addLabel("dayList", "Days *");
-        $column = $row->addColumn()->addClass("right flex-wrap");
-            $column->addSelect("dayList")->placeholder(__("Add New Days"))->isRequired()->setClass('w-full');
-            $column->addButton("Add Days", "addDay()")->addClass("flex-1 w-full mr-1")->setID("addDays");
-            $column->addButton("Remove Days", "remDay()")->addClass("flex-1 w-full")->setID("removeDays");
-
-    $row = $form->addRow();
-        $row->addHeading("Costs");
-
-    // Block template
+    //Block template
     $costBlock = $form->getFactory()->createTable()->setClass('blank');
         $row = $costBlock->addRow();
-            $row->addTextfield("costName")->isRequired()->placeholder("Cost Name")->addClass('floatNone');
+            $row->addLabel('title', __('Cost Name'));
+            $row->addTextfield('title')
+                ->isRequired()
+                ->addClass('floatLeft');
+        
+            $row->addLabel('cost', __('Value'));
+            $row->addCurrency('cost')
+                ->isRequired()
+                ->addClass('floatNone')
+                ->minimum(0);
 
-        $row = $costBlock->addRow();
-            $row->addNumber("costValue")->isRequired()->addClass('floatNone')->minimum(0)->decimalPlaces(2)
-                ->placeholder("Value" . (($_SESSION[$guid]["currency"]!="") ? " (" . $_SESSION[$guid]["currency"] . ")" : ""));
+        $row = $costBlock->addRow()->addClass('showHide w-full');
+            $col = $row->addColumn();
+                $col->addTextArea('description')
+                    ->setRows(2)
+                    ->setClass('fullWidth floatNone')
+                    ->placeholder(__('Cost Description'));
 
-        $row = $costBlock->addRow()->addClass('showHide');
-            $column = $row->addColumn();
-                $column->addLabel("costDescription", "Description");
-                $column->addTextArea("costDescription")->setRows(2)->setClass('fullWidth floatNone');
+    //Tool Button
+    $addBlockButton = $form->getFactory()
+        ->createButton(__("Add Cost Block"))
+        ->addClass('addBlock');
 
-    // Tool Button
-    $addBlockButton = $form->getFactory()->createButton(__("Add Block"))->addClass('addBlock');
-
-    // Custom Blocks
+    //Custom Blocks
     $row = $form->addRow();
         $costBlocks = $row->addCustomBlocks("cost", $gibbon->session)
             ->fromTemplate($costBlock)
-            ->settings(array('sortable' => true))
+            ->settings([
+                'placeholder' => __('Cost Blocks will appear here...'),
+                'sortable' => true,
+                'orderName' => 'costOrder'
+            ])
             ->addBlockButton('showHide', 'Show/Hide', 'plus.png')
             ->addToolInput($addBlockButton);
 
-    // Add existing costs in edit mode
-    if ($edit) {
-        try {
-            $dataCosts = array("tripPlannerRequestID" => $tripPlannerRequestID);
-            $sqlCosts = 'SELECT title as costName, description as costDescription, cost as costValue FROM tripPlannerCostBreakdown WHERE tripPlannerRequestID=:tripPlannerRequestID ORDER BY tripPlannerCostBreakdownID';
-            $resultCosts = $connection2->prepare($sqlCosts);
-            $resultCosts->execute($dataCosts);
-        } catch (PDOException $e) {
-        }
-
-        $costs = $resultCosts->fetchAll();
-
-        foreach ($costs as $index => $cost) {
-            $costBlocks->addBlock($index+1, $cost);
-        }
-    }
+    //Risk Assessment and Letter to Parents
+    $row = $form->addRow();
+        $row->addHeading(__('Risk Assessment & Communication'));
 
     $row = $form->addRow();
-        $row->addHeading("Risk Assessment & Communication");
+        $row->addLabel('riskAssessmentTemplates', __('Risk Assessment Templates'));
+        $row->addSelect('riskAssessmentTemplates')
+            ->fromArray($templateNames)
+            ->selected($defaultRiskTemplate);
 
     $row = $form->addRow();
-        $row->addLabel("riskAssessmentTemplates", "Risk Assessment Templates");
-        $row->addSelect("riskAssessmentTemplates")->fromArray($templateNames)->selected($defaultRiskTemplate);
+        $col = $row->addColumn();
+            $col->addLabel('riskAssessment', __('Risk Assessment'));
+            $col->addEditor('riskAssessment', $guid)
+                ->setRequired(true)
+                ->showMedia(true)
+                ->setRows(25)
+                ->setValue($templates[$defaultRiskTemplate]);
+
+    $letterToParentsTemplate = $settingGateway->getSettingByScope('Trip Planner', 'letterToParentsTemplate');
+    $row = $form->addRow();
+        $col = $row->addColumn();
+            $col->addLabel('letterToParents', __('Letter to Parents'));
+            $col->addEditor('letterToParents', $guid)
+                ->showMedia(true)
+                ->setRows(25)
+                ->setValue($letterToParentsTemplate);
+
+    //Participants section
+    $row = $form->addRow();
+        $row->addHeading(__('Participants'));
 
     $row = $form->addRow();
-        $column = $row->addColumn();
-            $column->addLabel("riskAssessment", "Risk Assessment");
-            $column->addEditor("riskAssessment", $guid)->setRequired(true)->showMedia(true)->setRows(25)->setValue($edit ? $trip["riskAssessment"] : $templates[$defaultRiskTemplate]);
+        $col = $row->addColumn();
+            $col->addLabel('teachers', __('Teachers'));
 
-    $letterToParentsTemplate = getSettingByScope($connection2, "Trip Planner", "letterToParentsTemplate");
-    $row = $form->addRow();
-        $column = $row->addColumn();
-            $column->addLabel("letterToParents", "Letter to Parents");
-            $column->addEditor("letterToParents", $guid)->showMedia(true)->setRows(25)->setValue($edit ? $trip['letterToParents'] : $letterToParentsTemplate);
+            $multiSelect = $col->addMultiSelect('teachers')
+                ->isRequired();
 
-    $row = $form->addRow();
-        $row->addHeading("Participants");
+            $multiSelect->source()->fromArray($teachers['source'] ?? []);
+            $multiSelect->destination()->fromArray($teachers['destination'] ?? []);
 
     $row = $form->addRow();
-        $column = $row->addColumn();
-            $column->addLabel("teachers", "Teachers");
-            $column->addMultiSelect("teachers")->isRequired()->source()->fromArray($teachers);
+        $col = $row->addColumn();
+            $col->addLabel('students', __('Students'));
+
+            $multiSelect = $col->addMultiSelect('students')
+                ->addSortableAttribute('Form', $students['form']);
+
+            $multiSelect->source()->fromArray($students['students']['source'] ?? []);
+            $multiSelect->destination()->fromArray($students['students']['destination'] ?? []);
 
     $row = $form->addRow();
-        $column = $row->addColumn()->addClass("borderNone");
-            $column->addLabel("students", "Students");
-            $multiSelect = $column->addMultiSelect("students");
-            $multiSelect->source()->fromArray($students);
-            $multiSelect->addSortableAttribute("Form", $studentsForm);
+        $row->addLabel('addByGroup', __('Add by Group'))
+            ->description(__('Add or remove students to trip by Class, Activity or Messenger Group.'));
 
-    $row = $form->addRow();
-        $row->addLabel("addByGroup", "Add by Group")->description("Add or remove students to trip by Class, Activity or Messenger Group.");
-        $column = $row->addColumn()->addClass("right flex-wrap");
-            $column->addSelect("addStudentsByClass")->fromArray($groups)->placeholder("None")->setClass('w-full');
-            $column->addButton("Add", "addClass('Add')")->addClass("flex-1 w-full mr-1")->setID("addButton");
-            $column->addButton("Remove", "addClass('Remove')")->addClass("flex-1 w-full")->setID("removeButton");
+        $col = $row->addColumn()
+            ->addClass('right flex-wrap');
+
+            $col->addSelect('addStudentsByGroup')
+                ->fromArray($addGroups)
+                ->placeholder('None')
+                ->setClass('w-full');
+
+            $col->addButton(__('Add'), 'addGroup("Add")')
+                ->addClass('flex-1 w-full mr-1');
+
+            $col->addButton(__('Remove'), 'addGroup("Remove")')
+                ->addClass('flex-1 w-full');
 
     if (!$edit) {
         $row = $form->addRow();
             $row->addLabel('createGroup', __('Create Messenger Group?'));
-            $row->addYesNo('createGroup')->selected('N');
+            $row->addYesNo('createGroup')
+                ->selected('N');
+    } else {
+        //Add parameters for editing
+        $form->addHiddenValue('mode', 'edit');
+        $form->addHiddenValue('tripPlannerRequestID', $tripPlannerRequestID);
+        
+        //Add view Header
+        $form->addHeaderAction('view', __('View'))
+            ->setURL('/modules/' . $moduleName . '/trips_requestView.php')
+            ->addParam('tripPlannerRequestID', $tripPlannerRequestID);
+
+        //Load values into form
+        $form->loadAllValuesFrom($trip);
+
+        //Get Trip Cost Data and add to CostBlocks
+        $tripCostGateway = $container->get(TripCostGateway::class);
+        $costCriteria = $tripCostGateway->newQueryCriteria()
+            ->filterBy('tripPlannerRequestID', $tripPlannerRequestID)
+            ->sortBy(['tripPlannerCostBreakdownID']);
+
+        $costs = $tripCostGateway->queryTripCost($costCriteria);
+        foreach ($costs as $cost) {
+            $costBlocks->addBlock($cost['tripPlannerCostBreakdownID'], $cost);
+        }
+
+        //Get Trip Date Data and Add to DateBlocks
+        $tripDayGateway = $container->get(TripDayGateway::class);
+        $dayCriteria = $tripDayGateway->newQueryCriteria()
+            ->filterBy('tripPlannerRequestID', $tripPlannerRequestID)
+            ->sortBy(['tripPlannerRequestDaysID']);
+
+        $days = $tripDayGateway->queryTripDay($dayCriteria);
+        foreach ($days as $day) {
+            $day['startDate'] = Format::date($day['startDate']);
+            $day['endDate'] = Format::date($day['endDate']);
+
+            if (boolval($day['allDay']) || empty($day['startTime']) || empty($day['endTime'])) {
+                unset($day['startTime']);
+                unset($day['endTime']);
+            } else {
+                $day['startTime'] = Format::time($day['startTime']);
+                $day['endTime'] = Format::time($day['endTime']);
+            }
+
+            $dateBlocks->addBlock($day['tripPlannerRequestDaysID'], $day);
+        }
     }
 
     $row = $form->addRow();
@@ -542,46 +439,98 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
     print $form->getOutput();
 
-    if ($edit) {
-
-        $daysList = array();
-        foreach (explode(", ", $trip["multiDay"]) as $day) {
-            $temp = explode(";", $day);
-            if(count($temp) != 5) continue;
-            $temp[0] = DateTime::createFromFormat("Y-m-d", $temp[0])->format("d/m/Y");
-            $temp[1] = DateTime::createFromFormat("Y-m-d", $temp[1])->format("d/m/Y");
-            $temp[2] = $temp[2] == 1;
-            $temp[3] = DateTime::createFromFormat("H:i:s", $temp[3])->format("H:i");
-            $temp[4] = DateTime::createFromFormat("H:i:s", $temp[4])->format("H:i");
-            $daysList[] = $temp;
-        }
-
     ?>
-    <script type="text/javascript">
-        function addOption(name, people) {
-            $('#' + name + "Source").find('option').each(function(){
-                if (people.indexOf($(this).val()) >= 0) {
-                    $('#' + name).append($(this).clone());
-                    $(this).detach().remove();
-                }
-            });
-            sortSelects(name);
+    <script>
+        //Once date and time chaining is fixed in the core, most of this can go.
+        var date = 'input[id*="Date"]';
+        var time = 'input[id*="Time"]';
+
+        //Fix for datepicker in custom blocks
+        $(document).on('click', '.addBlock', function () {
+            $(date).removeClass('hasDatepicker').datepicker({onSelect: function(){$(this).blur();}, onClose: function(){$(this).change();} });
+            $(time).removeClass('hasTimepicker').timepicker({onSelect: function(){$(this).blur();}, onClose: function(){$(this).change();} });
+        });
+
+        function setTimepicker(input) {
+            input.removeClass('hasTimepicker').timepicker({
+                    'scrollDefault': 'now',
+                    'timeFormat': 'H:i',
+                    'minTime': '00:00',
+                    'maxTime': '23:59',
+                    onSelect: function(){$(this).blur();},
+                    onClose: function(){$(this).change();}
+                });
         }
 
         $(document).ready(function(){
-            addOption('teachers', <?php print json_encode($tripTeachers)?>);
-            addOption('students', <?php print json_encode($tripStudents)?>);
+            $(date).removeClass('hasDatepicker').datepicker({onSelect: function(){$(this).blur();}, onClose: function(){$(this).change();} });
 
-            daysList = <?php print json_encode($daysList) ?>;
-            dayID = daysList.length;
-            for (var i = 0; i < daysList.length; i++) {
-                if (daysList[i] != null) {
-                    $("#dayList").append($("<option>", {value: i, text: daysList[i][0] + (daysList[i][0] != daysList[i][1] ? " - " + daysList[i][1] : "")}));
+            //This is to ensure that loaded blocks have timepickers
+            $(time).each(function() {
+                setTimepicker($(this));
+            });
+
+            //Ensure that loaded dates have correct max and min dates.
+            $('input[id^=startDate]').each(function() {
+                var endDate = $('#' + $(this).prop('id').replace('start', 'end'));
+                $(this).datepicker('option', {'maxDate': endDate.val()});
+                endDate.datepicker('option', {'minDate': $(this).val()});
+            });
+
+            //Ensure that loaded endTimes are properly chained.
+            $('input[id^=endTime]').each(function() {
+                var startTime = $('#' + $(this).prop('id').replace('end', 'start'));
+                if (startTime.val() != "") {
+                    $(this).timepicker('option', {'minTime': startTime.val(), 'timeFormat': 'H:i', 'showDuration': true});
+                }
+            });
+        });
+
+        $(document).on('change', 'input[id^=startDate]', function() {
+            var endDate = $('#' + $(this).prop('id').replace('start', 'end'));
+            if (endDate.val() == "" || $(this).val() > endDate.val()) {
+                endDate.val($(this).val());
+            }
+            endDate.datepicker('option', {'minDate': $(this).val()});
+        });
+
+        $(document).on('change', 'input[id^=endDate]', function() {
+            var startDate = $('#' + $(this).prop('id').replace('end', 'start'));
+            if (startDate.val() == "" || $(this).val() < startDate.val()) {
+                startDate.val($(this).val());
+            }
+            startDate.datepicker('option', {'maxDate': $(this).val()});
+        });
+
+        $(document).on('changeTime', 'input[id^=startTime]', function() {
+            var endTime = $('#' + $(this).prop('id').replace('start', 'end'));
+            if (endTime.val() == "" || $(this).val() > endTime.val()) {
+                endTime.val($(this).val());
+            }
+            endTime.timepicker('option', {'minTime': $(this).val(), 'timeFormat': 'H:i', 'showDuration': true});
+        });
+
+        //Javascript to change risk assessment when template selector is changed.
+        <?php echo 'var templates = ' . json_encode($templates) . ';'; ?>
+        $("select[name=riskAssessmentTemplates]").on('change', function(){
+            var templateID = $(this).val();
+            if (templateID != '' && templateID >= 0) {
+                if(confirm('Are you sure you want to use this template. Warning: This will overwrite any thing currently written.')) {
+                    tinyMCE.get('riskAssessment').setContent(templates[templateID]);
                 }
             }
         });
+
+        //function to add a group to the students list.
+        function addGroup(mode) {
+            var data = $('#addStudentsByGroup').val();
+            if(data != 'None') {
+                $('#addGroupDiv').load("<?php print $gibbon->session->get('absoluteURL') . '/modules/' . rawurlencode($moduleName) . '/trips_submitRequestAddGroupAjax.php'?>", 'data=' + data + '&mode=' + mode);
+            }
+        }
     </script>
+
+    <div id="addGroupDiv"></div>
     <?php
-    }
 }
 ?>
