@@ -144,3 +144,8 @@ DROP TABLE tripPlannerRequestCover;end
 DELETE FROM gibbonSetting WHERE `name`='missedClassWarningThreshold' AND `scope`='Trip Planner';end
 DELETE FROM gibbonSetting WHERE `name`='requestEditing' AND `scope`='Trip Planner';end
 ";
+
+$sql[$count][0]="1.4.01";
+$sql[$count++][1]="
+ALTER TABLE tripPlannerRequestLog MODIFY COLUMN `timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;end
+";
