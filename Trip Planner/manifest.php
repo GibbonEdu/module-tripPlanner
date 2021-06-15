@@ -85,7 +85,7 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestLog` (
     `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
     `action` ENUM('Request', 'Cancellation', 'Approval - Partial', 'Approval - Final', 'Rejection', 'Comment', 'Edit') NOT NULL,
     `comment` text NULL,
-    `timestamp` timestamp NOT NULL DEFAULT NOW(),
+    `timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`tripPlannerRequestLogID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
