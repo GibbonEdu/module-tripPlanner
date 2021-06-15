@@ -4,6 +4,7 @@ use Gibbon\Domain\Departments\DepartmentGateway;
 use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Forms\Form;
 use Gibbon\Module\TripPlanner\Data\Setting;
+use Gibbon\Module\TripPlanner\Data\SettingFactory;
 use Gibbon\Module\TripPlanner\Domain\ApproverGateway;
 use Gibbon\Module\TripPlanner\Domain\RiskTemplateGateway;
 use Gibbon\Module\TripPlanner\Domain\TripCostGateway;
@@ -21,98 +22,106 @@ function getSettings(ContainerInterface $container, $guid) {
     $tripGateway = $container->get(TripGateway::class);
 
     $requestApprovalOptions = ['One Of', 'Two Of', 'Chain Of All'];
-    return [
-        (new Setting('requestApprovalType'))
-            ->setRenderer(function ($data, $row) use ($requestApprovalOptions) {
-                $row->addSelect($data['name'])
-                    ->fromArray($requestApprovalOptions)
-                    ->selected($data['value'])
-                    ->setRequired(true);
-            })
-            ->setProcessor(function ($data) use ($requestApprovalOptions) {
-                return in_array($data, $requestApprovalOptions) ? $data : false;
-            }),
-        (new Setting('riskAssessmentApproval'))
-            ->setRenderer(function ($data, $row) {
-                $row->addCheckBox($data['name'])
-                    ->checked(boolval($data['value']));
-            })
-            ->setProcessor(function ($data) use ($tripGateway) {
-                $enabled = $data !== null;
 
-                if (!$enabled) {
-                    //TODO: Get trips that will be changed, send notification once changed
+    $settingFactory = new SettingFactory();
 
-                    $success = $tripGateway->updateWhere(
-                        ['status' => 'Awaiting Final Approval'],
-                        ['status' => 'Approved']
-                    );
+    $settingFactory->addSetting('requestApprovalType')
+        ->setRenderer(function ($data, $row) use ($requestApprovalOptions) {
+            $row->addSelect($data['name'])
+                ->fromArray($requestApprovalOptions)
+                ->selected($data['value'])
+                ->setRequired(true);
+        })
+        ->setProcessor(function ($data) use ($requestApprovalOptions) {
+            return in_array($data, $requestApprovalOptions) ? $data : false;
+        });
 
-                    if (!$success) {
-                        return false;
-                    }
-                }
+    $settingFactory->addSetting('riskAssessmentApproval')
+        ->setRenderer(function ($data, $row) {
+            $row->addCheckBox($data['name'])
+                ->checked(boolval($data['value']));
+        })
+        ->setProcessor(function ($data) use ($tripGateway) {
+            $enabled = $data !== null;
 
-                return $enabled ? 1 : 0;
-            }),
-        (new Setting('defaultRiskTemplate'))
-            ->setRenderer(function ($data, $row) use ($riskTemplateGateway) {
-                $templates = array('-1' => 'None', '0' => 'Custom');
+            if (!$enabled) {
+                //TODO: Get trips that will be changed, send notification once changed
 
-                $criteria = $riskTemplateGateway->newQueryCriteria()
-                    ->sortBy(['name']);
+                $success = $tripGateway->updateWhere(
+                    ['status' => 'Awaiting Final Approval'],
+                    ['status' => 'Approved']
+                );
 
-                foreach ($riskTemplateGateway->queryTemplates($criteria) as $template) {
-                    $templates[$template['tripPlannerRiskTemplateID']] = $template['name'];
-                } 
-
-                $row->addSelect($data['name'])
-                    ->fromArray($templates)
-                    ->selected($data['value'])
-                    ->setRequired(true);
-            })
-            ->setProcessor(function ($data) use ($riskTemplateGateway) {
-                $data = intval($data);
-
-                if ($data > 0) {
-                    if (!$riskTemplateGateway->exists($data)) {
-                        return false;
-                    }
-                } else if ($data < -1) {
+                if (!$success) {
                     return false;
                 }
+            }
 
-                return $data;
-            }),
-        (new Setting('riskAssessmentTemplate'))
-            ->setRow(false)
-            ->setRenderer(function ($data, $col) use ($guid) {
-                $col->addEditor($data['name'], $guid)
-                    ->setValue($data['value'])
-                    ->setRows(15);
-            })
-            ->setProcessor(function ($data) {
-                return $data ?? '';
-            }),
-        (new Setting('expiredUnapprovedFilter'))
-            ->setRenderer(function ($data, $row) {
-                $row->addCheckBox($data['name'])
-                    ->checked(boolval($data['value']));
-            })
-            ->setProcessor(function ($data) {
-                return $data === null ? 0 : 1;
-            }),
-        (new Setting('letterToParentsTemplate'))
-            ->setRow(false)
-            ->setRenderer(function ($data, $col) use ($guid) {
-                $col->addEditor($data['name'], $guid)
-                    ->setValue($data['value'])
-                    ->setRows(15);
-            })
-            ->setProcessor(function ($data) {
-                return $data ?? '';
-            })
-    ];
+            return $enabled ? 1 : 0;
+        });
+
+    $settingFactory->addSetting('defaultRiskTemplate')
+        ->setRenderer(function ($data, $row) use ($riskTemplateGateway) {
+            $templates = array('-1' => 'None', '0' => 'Custom');
+
+            $criteria = $riskTemplateGateway->newQueryCriteria()
+                ->sortBy(['name']);
+
+            foreach ($riskTemplateGateway->queryTemplates($criteria) as $template) {
+                $templates[$template['tripPlannerRiskTemplateID']] = $template['name'];
+            } 
+
+            $row->addSelect($data['name'])
+                ->fromArray($templates)
+                ->selected($data['value'])
+                ->setRequired(true);
+        })
+        ->setProcessor(function ($data) use ($riskTemplateGateway) {
+            $data = intval($data);
+
+            if ($data > 0) {
+                if (!$riskTemplateGateway->exists($data)) {
+                    return false;
+                }
+            } else if ($data < -1) {
+                return false;
+            }
+
+            return $data;
+        });
+
+    $settingFactory->addSetting('riskAssessmentTemplate')
+        ->setRow(false)
+        ->setRenderer(function ($data, $col) use ($guid) {
+            $col->addEditor($data['name'], $guid)
+                ->setValue($data['value'])
+                ->setRows(15);
+        })
+        ->setProcessor(function ($data) {
+            return $data ?? '';
+        });
+
+    $settingFactory->addSetting('expiredUnapprovedFilter')
+        ->setRenderer(function ($data, $row) {
+            $row->addCheckBox($data['name'])
+                ->checked(boolval($data['value']));
+        })
+        ->setProcessor(function ($data) {
+            return $data === null ? 0 : 1;
+        });
+
+    $settingFactory->addSetting('letterToParentsTemplate')
+        ->setRow(false)
+        ->setRenderer(function ($data, $col) use ($guid) {
+            $col->addEditor($data['name'], $guid)
+                ->setValue($data['value'])
+                ->setRows(15);
+        })
+        ->setProcessor(function ($data) {
+            return $data ?? '';
+        });
+
+    return $settingFactory->getSettings();
 }
 
 function formatExpandableSection($title, $content) {
