@@ -137,7 +137,7 @@ $sql[$count][0]="1.4.00";
 $sql[$count++][1]="
 ALTER TABLE tripPlannerApprovers DROP COLUMN `gibbonPersonIDCreator`, DROP COLUMN `timestampCreator`, DROP COLUMN `gibbonpersonIDUpdate`, DROP COLUMN `timestampUpdate`;end
 ALTER TABLE tripPlannerRequests DROP COLUMN `teacherPersonIDs`, DROP COLUMN `studentPersonIDs`, DROP COLUMN `date`, DROP COLUMN `startTime`, DROP COLUMN `endTime`, DROP COLUMN `endDate`, DROP COLUMN `gibbonPersonIDUpdate`, DROP COLUMN `timestampUpdate`, DROP COLUMN `timestampCreation`;end
-ALTER TABLE tripPlannerRequestLog MODIFY COLUMN `timestamp` NOT NULL DEFAULT NOW();end
+ALTER TABLE tripPlannerRequestLog MODIFY COLUMN `timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;end
 INSERT INTO `gibbonNotificationEvent` (`event`, `moduleName`, `actionName`, `type`, `scopes`, `active`)
 VALUES ('New Trip Request', 'Trip Planner', 'Manage Trips_full', 'Additional', 'All', 'Y');end
 DROP TABLE tripPlannerRequestCover;end
