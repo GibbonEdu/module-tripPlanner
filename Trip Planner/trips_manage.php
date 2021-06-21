@@ -34,150 +34,156 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     $page->addError(__('You do not have access to this action.'));
 } else {
     $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
-    if ($highestAction != false) { 
-        $gibbonPersonID = $gibbon->session->get('gibbonPersonID');
+    if (empty($highestAction)) {
+        $page->addError(__('The highest grouped action cannot be determined.'));
+        return;   
+    }
+    $gibbonPersonID = $gibbon->session->get('gibbonPersonID');
 
-        //Settings
-        $settingGateway = $container->get(SettingGateway::class);
-        
-        $requestApprovalType = $settingGateway->getSettingByScope('Trip Planner', 'requestApprovalType');
-        $riskAssessmentApproval = $settingGateway->getSettingByScope('Trip Planner', 'riskAssessmentApproval');
-        $eutFilter = $settingGateway->getSettingByScope('Trip Planner', 'expiredUnapprovedFilter');
+    //Settings
+    $settingGateway = $container->get(SettingGateway::class);
+    
+    $requestApprovalType = $settingGateway->getSettingByScope('Trip Planner', 'requestApprovalType');
+    $riskAssessmentApproval = $settingGateway->getSettingByScope('Trip Planner', 'riskAssessmentApproval');
+    $expiredUnapproved = $settingGateway->getSettingByScope('Trip Planner', 'expiredUnapprovedFilter');
 
-        //Permissions
-        $approverGateway = $container->get(ApproverGateway::class);
-        
-        $approver = $approverGateway->selectApproverByPerson($gibbonPersonID);
-        $isApprover = !empty($approver);
-        $finalApprover = $isApprover ? boolval($approver['finalApprover']) : false;
+    //Permissions
+    $approverGateway = $container->get(ApproverGateway::class);
+    
+    $approver = $approverGateway->selectApproverByPerson($gibbonPersonID);
+    $isApprover = !empty($approver);
+    $finalApprover = $isApprover ? boolval($approver['finalApprover']) : false;
 
-        $ama = ($isApprover && $requestApprovalType == 'Chain Of All')
-            || ($riskAssessmentApproval && $finalApprover);
+    $checkAwaitingApproval = ($isApprover && $requestApprovalType == 'Chain Of All')
+        || ($riskAssessmentApproval && $finalApprover);
 
-        //Department Data
-        $departmentGateway = $container->get(DepartmentGateway::class);
-        $departments = $departmentGateway->selectDepartmentsByPerson($gibbonPersonID, 'Coordinator');
+    //Department Data
+    $departmentGateway = $container->get(DepartmentGateway::class);
+    $departmentsList = $departmentGateway->selectDepartmentsByPerson($gibbonPersonID, 'Coordinator');
+    
+    $departments = array_reduce($departmentsList->fetchAll(), function ($group, $department) {
+        $group[$department['gibbonDepartmentID']] = $department['name'];
+        return $group;
+    }, []);
 
-        //Relations Filter set up
-        $relations = [
-            'MR' => 'My Requests',
-            'I' => 'Involved',
-        ];
+    //Filters
+    $gibbonDepartmentID = $_POST['gibbonDepartmentID'] ?? []; 
+    $gibbonSchoolYearID = $_POST['gibbonSchoolYearID'] ?? $gibbon->session->get('gibbonSchoolYearID');
 
-        if ($highestAction == 'Manage Trips_full') {
-            $relations = ['' => 'All Requests'] + $relations;
-        } 
+    //Filter Form
+    $form = Form::create('tripFilters', $gibbon->session->get('absoluteURL') . '/index.php?q=' . $_GET['q']);
+    $form->setFactory(DatabaseFormFactory::create($pdo));
+    $form->setTitle(__('Filter'));
 
-        if ($ama) {
-            $relations['AMA'] = 'Awaiting My Approval';
-            $relationFilter = 'AMA';
-        }
-        
-        if ($departments->isNotEmpty()) {
-            $relations['Department Requests'] = array_reduce($departments->fetchAll(), function ($group, $department) {
-                $group['DR' . $department['gibbonDepartmentID']] = $department['name'];
-                return $group;
-            });
-        }
-
-        //Filters
-        $relationFilter = $_POST['relationFilter'] ?? $relationFilter ?? 'MR'; //'My Requests' is default, overrided by current value, overrided by post value (i.e. value from filter form).
-        $statusFilter = $_POST['statusFilter'] ?? 'Requested';
-        $year = $_POST['year'] ?? $gibbon->session->get('gibbonSchoolYearID');
-
-        //Filter Form
-        $form = Form::create('tripFilters', $gibbon->session->get('absoluteURL') . '/index.php?q=' . $_GET['q']);
-        $form->setFactory(DatabaseFormFactory::create($pdo));
-        $form->setTitle(__('Filter'));
-
+    if (!empty($departments)) {
         $row = $form->addRow();
-            $row->addLabel('relationFilter', 'Relation');
-            $row->addSelect('relationFilter')
-                ->fromArray($relations)
-                ->selected($relationFilter);
+            $row->addLabel('gibbonDepartmentID', 'Department');
+            $row->addSelect('gibbonDepartmentID')
+                ->fromArray($departments)
+                ->placeholder()
+                ->selected($gibbonDepartmentID);
+    }
 
-        $row = $form->addRow();
-            $row->addLabel('year', 'Year');
-            $row->addSelectSchoolYear('year')
-                ->selected($year);
+    $row = $form->addRow();
+        $row->addLabel('gibbonSchoolYearID', 'Year');
+        $row->addSelectSchoolYear('gibbonSchoolYearID')
+            ->selected($gibbonSchoolYearID);
 
-        $row = $form->addRow();
-            $row->addFooter();
-            $row->addSubmit();
+    $row = $form->addRow();
+        $row->addFooter();
+        $row->addSubmit();
 
-        print $form->getOutput(); 
+    print $form->getOutput(); 
 
-        //Trips Data
-        $tripGateway = $container->get(TripGateway::class);
-        $criteria = $tripGateway->newQueryCriteria(true)
-            ->filterBy('status', $statusFilter)
-            ->filterBy('year', $year)
-            ->fromPOST();
+    //Trips Data
+    $tripGateway = $container->get(TripGateway::class);
+    $criteria = $tripGateway->newQueryCriteria(true)
+        ->sortBy('firstDayOfTrip', 'DESC')
+        ->filterBy('showActive', 'Y')
+        ->fromPOST();
 
-        $trips = $tripGateway->queryTrips($criteria, $gibbonPersonID, $relationFilter, $eutFilter);
+    $gibbonPersonIDFilter = $highestAction == 'Manage Trips_full'
+        ? null
+        : $gibbonPersonID;
 
-        //Trips Table
-        $table = DataTable::createPaginated('trips', $criteria);
-        $table->setTitle(__('Requests'));
+    $trips = $tripGateway->queryTrips($criteria, $gibbonSchoolYearID, $gibbonPersonIDFilter, $gibbonDepartmentID, $expiredUnapproved);
+    $trips->transform(function (&$trip) use ($container, $gibbonPersonID, $checkAwaitingApproval) {
+        $trip['canApprove'] = 'N';
 
-        if ($relationFilter == 'AMA' && $ama) {
-            $table->modifyRows(function ($trip, $row) use ($container, $gibbonPersonID) {
-                //TODO: Migrate to gateway/SQL
-                return needsApproval($container, $gibbonPersonID, $trip['tripPlannerRequestID']) ? $row : null;
-            });
+        //TODO: Migrate to gateway/SQL
+        if ($checkAwaitingApproval) {
+            if (needsApproval($container, $gibbonPersonID, $trip['tripPlannerRequestID'])) {
+                $trip['canApprove'] = 'Y';
+            }
         }
+    });
 
-        $statusFilters = array_reduce(getStatuses(), function($filters, $status) {
-            $filters['status:' . $status] = __('Status') . ': ' . __($status);
-            return $filters;
+    //Trips Table
+    $table = DataTable::createPaginated('trips', $criteria);
+    $table->setTitle(__('Requests'));
+
+    $table->modifyRows(function (&$trip, $row) {
+        if ($trip['status'] == 'Approved') $row->addClass('success');
+        if ($trip['status'] == 'Awaiting Final Approval') $row->addClass('message');
+        if ($trip['status'] == 'Rejected' || $trip['status'] == 'Cancelled') $row->addClass('dull');
+
+        return $row;
+    });
+
+    $filters = array_reduce(getStatuses(), function($filters, $status) {
+        $filters['status:' . $status] = __('Status') . ': ' . __($status);
+        return $filters;
+    });
+
+    $filters['showActive:Y'] = __m('Upcoming / Approved Trips');
+    
+    $table->addMetaData('filterOptions', $filters);
+    
+    $table->addHeaderAction('add', __('Submit Request'))
+        ->displayLabel()
+        ->setURL('/modules/Trip Planner/trips_submitRequest.php');
+    
+    $table->addExpandableColumn('contents')
+        ->format(function ($trip) {
+            return formatExpandableSection(__('Description'), $trip['description']);
         });
-        $table->addMetaData('filterOptions', $statusFilters);
-      
-        $table->addHeaderAction('add', __('Submit Request'))
-          ->displayLabel()
-          ->setURL('/modules/Trip Planner/trips_submitRequest.php');
-      
-        $table->addExpandableColumn('contents')
-            ->format(function ($trip) {
-                $output = '';
 
-                $output .= formatExpandableSection(__('Description'), $trip['description']);
+    $table->addColumn('tripTitle', __('Title'));
 
-                return $output;
-            });
+    $table->addColumn('owner', __('Owner'))
+        ->format(Format::using('name', ['title', 'preferredName', 'surname', 'Staff', false, true]))
+        ->sortable('surname');
 
-        $table->addColumn('tripTitle', __('Title'));
+    $table->addColumn('firstDayOfTrip', __('First Day of Trip'))
+        ->format(Format::using('dateReadable', ['firstDayOfTrip']));
 
-        $table->addColumn('owner', __('Owner'))
-          ->format(Format::using('name', ['title', 'preferredName', 'surname', 'Staff', false, true]))
-          ->sortable('surname');
+    $table->addColumn('status', __('Status'))->format(function($trip) {
+        $output = $trip['status'];
+        $output .= $trip['canApprove'] == 'Y' && $trip['status'] == 'Requested' 
+            ? Format::tag(__m('Awaiting Approval'), 'message ml-2') 
+            : '';
 
-        $table->addColumn('firstDayOfTrip', __('First Day of Trip'))
-            ->format(Format::using('dateReadable', ['firstDayOfTrip']));
+        return $output;
+    });
+                
+    $table->addActionColumn()
+        ->addParam('tripPlannerRequestID')
+        ->format(function ($trip, $actions) use ($container, $gibbonPersonID, $highestAction)  {
+            $actions->addAction('view', __('View Details'))
+            ->setURL('/modules/Trip Planner/trips_requestView.php');
 
-        $table->addColumn('status', __('Status'));
-                   
-        $table->addActionColumn()
-          ->addParam('tripPlannerRequestID')
-          ->format(function ($trip, $actions) use ($container, $gibbonPersonID)  {
-              $actions->addAction('view', __('View Details'))
-                ->setURL('/modules/Trip Planner/trips_requestView.php');
-
-            if ($gibbonPersonID == $trip['creatorPersonID'] && !in_array($trip['status'], ['Cancelled', 'Rejected'])) {
-                $actions->addAction('edit', __('Edit'))
+        if (($highestAction == 'Manage Trips_full' || $gibbonPersonID == $trip['creatorPersonID']) && !in_array($trip['status'], ['Cancelled', 'Rejected'])) {
+            $actions->addAction('edit', __('Edit'))
                 ->addParam('mode', 'edit')
                 ->setURL('/modules/Trip Planner/trips_submitRequest.php');
-            }
-            
-            if (needsApproval($container, $gibbonPersonID, $trip['tripPlannerRequestID'])) {
-                $actions->addAction('approve', __('Approve/Reject'))
-                    ->setURL('/modules/Trip Planner/trips_requestApprove.php')
-                    ->setIcon('iconTick');
-            }
-          });
-          
-          echo $table->render($trips);
-    } else {
-        $page->addError(__('Highest grouped action could not be determined.'));
-    }
+        }
+        
+        if (needsApproval($container, $gibbonPersonID, $trip['tripPlannerRequestID'])) {
+            $actions->addAction('approve', __('Approve/Reject'))
+                ->setURL('/modules/Trip Planner/trips_requestApprove.php')
+                ->setIcon('iconTick');
+        }
+    });
+        
+    echo $table->render($trips);
 }

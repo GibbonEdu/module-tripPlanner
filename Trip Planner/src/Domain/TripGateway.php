@@ -17,7 +17,7 @@ class TripGateway extends QueryableGateway
     private static $primaryKey = 'tripPlannerRequestID';
     private static $searchableColumns = [];
 
-    public function queryTrips(QueryCriteria $criteria, $gibbonPersonID = null, $relation = null, $eutFilter = false) {
+    public function queryTrips(QueryCriteria $criteria, $gibbonSchoolYearID, $gibbonPersonID = null, $gibbonDepartmentID = null, $expiredUnapproved = null) {
         $query = $this
         ->newQuery()
         ->from('tripPlannerRequests')
@@ -34,46 +34,28 @@ class TripGateway extends QueryableGateway
         'gibbonPerson.preferredName',
         'gibbonPerson.surname',
         '(SELECT startDate FROM tripPlannerRequestDays WHERE tripPlannerRequestID = tripPlannerRequests.tripPlannerRequestID ORDER BY startDate ASC LIMIT 1) as firstDayOfTrip',
-        ]);
+        ])
+        ->leftJoin('tripPlannerRequestPerson', "tripPlannerRequestPerson.tripPlannerRequestID = tripPlannerRequests.tripPlannerRequestID AND tripPlannerRequestPerson.role='Teacher' AND tripPlannerRequestPerson.gibbonPersonID = :gibbonPersonID")
+        ->where('gibbonSchoolYearID=:gibbonSchoolYearID')
+        ->bindValue('gibbonSchoolYearID', $gibbonSchoolYearID)
+        ->bindValue('gibbonPersonID', $gibbonPersonID);
 
-        if ($eutFilter) {
-            $query->where('tripPlannerRequestDays.startDate IS NULL')
-                ->where("tripPlannerRequests.status != 'Approved'");
+        if ($expiredUnapproved) {
+            $query->where("NOT (
+                (SELECT MAX(endDate) FROM tripPlannerRequestDays WHERE tripPlannerRequestID = tripPlannerRequests.tripPlannerRequestID) < CURRENT_DATE 
+                AND (tripPlannerRequests.status = 'Requested' OR tripPlannerRequests.status = 'Awaiting Final Approval')
+                )");
         }
 
-        if (!empty($relation) && !empty($gibbonPersonID)) {
-            switch ($relation) {
-                //My Requests
-                case 'MR':
-                    $query->where('tripPlannerRequests.creatorPersonID = :personID')
-                        ->bindValue('personID', $gibbonPersonID);
-                    break;
+        // A user has been specified, so Filter only my requests and involved trips for this user
+        if (!empty($gibbonPersonID)) {
+            $query->where('(tripPlannerRequests.creatorPersonID = :gibbonPersonID OR tripPlannerRequestPerson.tripPlannerRequestPersonID IS NOT NULL)');
+        }
 
-                //Involved option
-                case 'I':
-                    $query->innerJoin('tripPlannerRequestPerson', 'tripPlannerRequestPerson.tripPlannerRequestID = tripPlannerRequests.tripPlannerRequestID')
-                        ->where('tripPlannerRequestPerson.role = :role')
-                        ->bindValue('role', 'Teacher')
-                        ->where('tripPlannerRequestPerson.gibbonPersonID = :personID')
-                        ->bindValue('personID', $gibbonPersonID);
-                    break;
-
-                //Awaiting my approval
-                case 'AMA':
-                    //TODO: Changed to match previous behavior. Until then reverted to checks in php
-                    //$query->where('EXISTS (SELECT tripPlannerApprovers.gibbonPersonID FROM tripPlannerApprovers WHERE tripPlannerApprovers.gibbonPersonID = :personID)')
-                    //    ->bindValue('personID', $gibbonPersonID);
-                    break;
-
-                default:
-                    //Department Requests
-                    if (substr($relation, 0, 2) == "DR") {
-                        $query->innerJoin('gibbonDepartmentStaff', 'gibbonDepartmentStaff.gibbonPersonID = tripPlannerRequests.creatorPersonID')
-                            ->where('gibbonDepartmentStaff.gibbonDepartmentID = :departmentID')
-                            ->bindValue('departmentID', substr($relation, 2));
-                    }
-                    break;
-            }
+        if (!empty($gibbonDepartmentID)) {
+            $query->innerJoin('gibbonDepartmentStaff', 'gibbonDepartmentStaff.gibbonPersonID = tripPlannerRequests.creatorPersonID')
+                ->where('gibbonDepartmentStaff.gibbonDepartmentID = :departmentID')
+                ->bindValue('departmentID', $gibbonDepartmentID);
         }
 
         $criteria->addFilterRules([
@@ -81,6 +63,16 @@ class TripGateway extends QueryableGateway
                 return $query->where('tripPlannerRequests.status = :status')
                     ->bindValue('status', $status);
             },
+            'showActive' => function($query, $expiredUnapproved) {
+                if ($expiredUnapproved == 'Y' ) {
+                    $query->where("NOT (
+                        (SELECT MAX(endDate) FROM tripPlannerRequestDays WHERE tripPlannerRequestID = tripPlannerRequests.tripPlannerRequestID) < CURRENT_DATE 
+                        AND (tripPlannerRequests.status = 'Cancelled' OR tripPlannerRequests.status = 'Rejected')
+                        )");
+                }
+                return $query;
+            },
+            
             'statuses' => function ($query, $statuses) {
                 //Whilst, according to https://github.com/auraphp/Aura.SqlQuery/blob/513747a1b399b910f6050e78bd64c3c125a81abf/docs/select.md 
                 //it should be possible to use ->where(<column> IN (:var), ['var' => ['1','2'...]) this caused issues when I tried
