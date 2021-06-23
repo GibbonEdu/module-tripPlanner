@@ -28,7 +28,7 @@ $page->breadcrumbs
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php')) {
     $page->addError(__('You do not have access to this action.'));
 } else {
-    
+
     $tripPlannerRequestID = $_GET['tripPlannerRequestID'];
 
     $tripGateway = $container->get(TripGateway::class);
@@ -36,7 +36,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     if (empty($tripPlannerRequestID) || !$tripGateway->exists($tripPlannerRequestID)) {
         $page->addError('No request selected.');
     } else {
-        $gibbonPersonID = $_SESSION[$guid]["gibbonPersonID"];
+        $gibbonPersonID = $session->get("gibbonPersonID");
         $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
 
         if (hasAccess($container, $tripPlannerRequestID, $gibbonPersonID, $highestAction)) {

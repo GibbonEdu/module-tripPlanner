@@ -30,7 +30,7 @@ $page->breadcrumbs->add(__('Manage Approvers'));
     //Acess denied
     $page->addError(__('You do not have access to this action.'));
 } else {
-    $moduleName = $gibbon->session->get('module');
+    $moduleName = $session->get('module');
     $settingGateway = $container->get(SettingGateway::class);
     $approverGateway = $container->get(ApproverGateway::class);
 
@@ -53,7 +53,7 @@ $page->breadcrumbs->add(__('Manage Approvers'));
 
         if ($addAllowed) {
             $description .= ' You may rearrange the approvers by dragging the rows up or down.';
-            $table->addDraggableColumn('tripPlannerApproverID', $gibbon->session->get('absoluteURL') . '/modules/' . $moduleName . '/trips_manageApproversEditOrderAjax.php');
+            $table->addDraggableColumn('tripPlannerApproverID', $session->get('absoluteURL') . '/modules/' . $moduleName . '/trips_manageApproversEditOrderAjax.php');
         }
 
         $table->setDescription(__($description));
@@ -61,7 +61,7 @@ $page->breadcrumbs->add(__('Manage Approvers'));
 
     if ($addAllowed) {
         $table->addHeaderAction('add', __('Add'))
-            ->setURL('/modules/' . $gibbon->session->get('module') . '/trips_addApprover.php')
+            ->setURL('/modules/' . $session->get('module') . '/trips_addApprover.php')
             ->displayLabel(); 
     }   
 

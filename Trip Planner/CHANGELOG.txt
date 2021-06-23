@@ -1,5 +1,9 @@
 CHANGELOG
 =========
+v1.4.02
+-------
+Refactoring session variables
+
 v1.4.01
 -------
 Fixed DB syntax error preventing proper install/update.

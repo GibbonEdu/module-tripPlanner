@@ -55,7 +55,7 @@ if (!empty($mode) && !empty($tripPlannerRequestID)) {
 
 $page->breadcrumbs->add(__($prefix . ' Trip Request'));
 
-$gibbonPersonID = $gibbon->session->get('gibbonPersonID');
+$gibbonPersonID = $session->get('gibbonPersonID');
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submitRequest.php') || ($edit && $trip['creatorPersonID'] != $gibbonPersonID)) {
 //If the action isn't accesible, or in edit mode and the current user isn't the owner, throw error.
@@ -64,15 +64,15 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     //If a trip is provided, but doesn't exit, Or the mode is set, but edit isn't enabled, throw error.
     $page->addError(__('Invalid Trip.'));
 } else {
-    $moduleName = $gibbon->session->get('module');
-    $gibbonSchoolYearID = $gibbon->session->get('gibbonSchoolYearID');
+    $moduleName = $session->get('module');
+    $gibbonSchoolYearID = $session->get('gibbonSchoolYearID');
 
     $settingGateway = $container->get(SettingGateway::class);
     $riskTemplateGateway = $container->get(RiskTemplateGateway::class);
 
     //Return Message
     if(!$edit && !empty($tripPlannerRequestID)) {
-        $page->return->setEditLink($gibbon->session->get('absoluteURL') . '/index.php?q=/modules/' . $moduleName . '/trips_requestView.php&tripPlannerRequestID=' . $tripPlannerRequestID);
+        $page->return->setEditLink($session->get('absoluteURL') . '/index.php?q=/modules/' . $moduleName . '/trips_requestView.php&tripPlannerRequestID=' . $tripPlannerRequestID);
     }
 
     //Templates
@@ -194,8 +194,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     });
 
     //Submit Request Form
-    $form = Form::create('requestForm', $gibbon->session->get('absoluteURL') . '/modules/' . $moduleName . '/trips_submitRequestProcess.php');
-    $form->addHiddenValue('address', $gibbon->session->get('address'));
+    $form = Form::create('requestForm', $session->get('absoluteURL') . '/modules/' . $moduleName . '/trips_submitRequestProcess.php');
+    $form->addHiddenValue('address', $session->get('address'));
     $form->setTitle(__('Request'));
 
     //Basic Information Section
@@ -260,7 +260,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     //TODO: Require atleast one entry
     //TODO: Date/Time overlap checking? Is that even possible???
     $row = $form->addRow();
-        $dateBlocks = $row->addCustomBlocks('dateTime', $gibbon->session)
+        $dateBlocks = $row->addCustomBlocks('dateTime', $session)
             ->fromTemplate($dateTimeBlock)
             ->settings([
                 'placeholder' => __('Date/Time Blocks will appear here...'),
@@ -301,7 +301,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
     //Custom Blocks
     $row = $form->addRow();
-        $costBlocks = $row->addCustomBlocks("cost", $gibbon->session)
+        $costBlocks = $row->addCustomBlocks("cost", $session)
             ->fromTemplate($costBlock)
             ->settings([
                 'placeholder' => __('Cost Blocks will appear here...'),
@@ -525,7 +525,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         function addGroup(mode) {
             var data = $('#addStudentsByGroup').val();
             if(data != 'None') {
-                $('#addGroupDiv').load("<?php print $gibbon->session->get('absoluteURL') . '/modules/' . rawurlencode($moduleName) . '/trips_submitRequestAddGroupAjax.php'?>", 'data=' + data + '&mode=' + mode);
+                $('#addGroupDiv').load("<?php print $session->get('absoluteURL') . '/modules/' . rawurlencode($moduleName) . '/trips_submitRequestAddGroupAjax.php'?>", 'data=' + data + '&mode=' + mode);
             }
         }
     </script>

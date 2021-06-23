@@ -31,10 +31,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     
     $settingGateway = $container->get(SettingGateway::class);
 
-    $moduleName = $gibbon->session->get('module'); 
+    $moduleName = $session->get('module'); 
 
-    $form = Form::create('tripPlannerSettings', $gibbon->session->get('absoluteURL') . '/modules/Trip Planner/trips_manageSettingsProcess.php');
-    $form->addHiddenValue('address', $gibbon->session->get('address'));
+    $form = Form::create('tripPlannerSettings', $session->get('absoluteURL') . '/modules/Trip Planner/trips_manageSettingsProcess.php');
+    $form->addHiddenValue('address', $session->get('address'));
     $form->setTitle(__('Trip Planner Settings'));
 
     foreach (getSettings($container, $guid) as $setting) {

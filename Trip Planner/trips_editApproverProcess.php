@@ -4,7 +4,7 @@ use Gibbon\Module\TripPlanner\Domain\ApproverGateway;
 
 require_once '../../gibbon.php';
 
-$URL = $gibbon->session->get('absoluteURL') . '/index.php?q=/modules/' . $gibbon->session->get('module') . '/trips_manageApprovers.php';
+$URL = $session->get('absoluteURL') . '/index.php?q=/modules/' . $session->get('module') . '/trips_manageApprovers.php';
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_editApprover.php')) {
     //Acess denied

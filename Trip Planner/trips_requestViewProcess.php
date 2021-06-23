@@ -8,9 +8,9 @@ use Gibbon\Module\TripPlanner\Domain\TripLogGateway;
 require_once '../../gibbon.php';
 require_once './moduleFunctions.php';
 
-$moduleName = $gibbon->session->get('module');
+$moduleName = $session->get('module');
 
-$URL = $gibbon->session->get('absoluteURL') . '/index.php?q=/modules/' . $moduleName;
+$URL = $session->get('absoluteURL') . '/index.php?q=/modules/' . $moduleName;
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php')) {
     //Acess denied
@@ -28,7 +28,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         exit();
     }
 
-    $gibbonPersonID = $gibbon->session->get('gibbonPersonID');
+    $gibbonPersonID = $session->get('gibbonPersonID');
     $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
 
     if (hasAccess($container, $tripPlannerRequestID, $gibbonPersonID, $highestAction)) {
@@ -58,7 +58,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         }
 
         $notificationGateway = $container->get(NotificationGateway::class);
-        $notificationSender = new NotificationSender($notificationGateway, $gibbon->session);
+        $notificationSender = new NotificationSender($notificationGateway, $session);
 
         tripCommentNotifications($tripPlannerRequestID, $gibbonPersonID, $tripLogGateway, $notificationSender);
 

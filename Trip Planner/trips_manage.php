@@ -35,7 +35,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
 } else {
     $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
     if ($highestAction != false) { 
-        $gibbonPersonID = $gibbon->session->get('gibbonPersonID');
+        $gibbonPersonID = $session->get('gibbonPersonID');
 
         //Settings
         $settingGateway = $container->get(SettingGateway::class);
@@ -83,10 +83,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         //Filters
         $relationFilter = $_POST['relationFilter'] ?? $relationFilter ?? 'MR'; //'My Requests' is default, overrided by current value, overrided by post value (i.e. value from filter form).
         $statusFilter = $_POST['statusFilter'] ?? 'Requested';
-        $year = $_POST['year'] ?? $gibbon->session->get('gibbonSchoolYearID');
+        $year = $_POST['year'] ?? $session->get('gibbonSchoolYearID');
 
         //Filter Form
-        $form = Form::create('tripFilters', $gibbon->session->get('absoluteURL') . '/index.php?q=' . $_GET['q']);
+        $form = Form::create('tripFilters', $session->get('absoluteURL') . '/index.php?q=' . $_GET['q']);
         $form->setFactory(DatabaseFormFactory::create($pdo));
         $form->setTitle(__('Filter'));
 

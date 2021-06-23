@@ -149,3 +149,6 @@ $sql[$count][0]="1.4.01";
 $sql[$count++][1]="
 ALTER TABLE tripPlannerRequestLog MODIFY COLUMN `timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;end
 ";
+
+$sql[$count][0]="1.4.02";
+$sql[$count++][1]="";
