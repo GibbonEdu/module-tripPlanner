@@ -29,7 +29,7 @@ $page->breadcrumbs->add(__('Today\'s Trips'));
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_reportToday.php')) {
     $page->addError(__('You do not have access to this action.'));
 } else {
-    $moduleName = $gibbon->session->get('module');
+    $moduleName = $session->get('module');
   
     $tripGateway = $container->get(TripGateway::class);
     $criteria = $tripGateway->newQueryCriteria(true)
@@ -41,7 +41,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_report
       ]))
       ->fromPOST();
 
-    $trips = $tripGateway->queryTrips($criteria);
+    $trips = $tripGateway->queryTrips($criteria, $session->get('gibbonSchoolYearID'));
 
     $table = DataTable::createPaginated('todaysTrips', $criteria);
     $table->setTitle(__("Today's Trips"));
