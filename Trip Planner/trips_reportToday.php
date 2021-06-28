@@ -41,7 +41,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_report
       ]))
       ->fromPOST();
 
-    $trips = $tripGateway->queryTrips($criteria);
+    $trips = $tripGateway->queryTrips($criteria, $session->get('gibbonSchoolYearID'));
 
     $table = DataTable::createPaginated('todaysTrips', $criteria);
     $table->setTitle(__("Today's Trips"));

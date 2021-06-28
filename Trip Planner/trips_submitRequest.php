@@ -37,8 +37,8 @@ require_once __DIR__ . '/moduleFunctions.php';
 $edit = false;
 $prefix = 'Submit';
 
-$mode = $_GET['mode'] ?? '';
-$tripPlannerRequestID = $_GET['tripPlannerRequestID'] ?? '';
+$mode = $_REQUEST['mode'] ?? '';
+$tripPlannerRequestID = $_REQUEST['tripPlannerRequestID'] ?? '';
 
 //Check if a mode and id are given
 if (!empty($mode) && !empty($tripPlannerRequestID)) {
@@ -56,8 +56,9 @@ if (!empty($mode) && !empty($tripPlannerRequestID)) {
 $page->breadcrumbs->add(__($prefix . ' Trip Request'));
 
 $gibbonPersonID = $session->get('gibbonPersonID');
+$highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
 
-if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submitRequest.php') || ($edit && $trip['creatorPersonID'] != $gibbonPersonID)) {
+if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submitRequest.php') || ($edit && $highestAction != 'Manage Trips_full' && $trip['creatorPersonID'] != $gibbonPersonID)) {
 //If the action isn't accesible, or in edit mode and the current user isn't the owner, throw error.
     $page->addError(__('You do not have access to this action.'));
 } else if ((isset($trip) && empty($trip)) || (!empty($mode) && !$edit)) {
@@ -428,7 +429,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                 $day['startTime'] = Format::time($day['startTime']);
                 $day['endTime'] = Format::time($day['endTime']);
             }
-
+            
             $dateBlocks->addBlock($day['tripPlannerRequestDaysID'], $day);
         }
     }
@@ -473,8 +474,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             //Ensure that loaded dates have correct max and min dates.
             $('input[id^=startDate]').each(function() {
                 var endDate = $('#' + $(this).prop('id').replace('start', 'end'));
-                $(this).datepicker('option', {'maxDate': endDate.val()});
-                endDate.datepicker('option', {'minDate': $(this).val()});
+                // $(this).datepicker('option', {'maxDate': endDate.val()});
+                // endDate.datepicker('option', {'minDate': $(this).val()});
             });
 
             //Ensure that loaded endTimes are properly chained.

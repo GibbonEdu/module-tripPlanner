@@ -21,8 +21,8 @@ $URL = $session->get('absoluteURL') . '/index.php?q=/modules/' . $session->get('
 //Checking if editing mode should be enabled
 $edit = false;
 
-$mode = $_POST['mode'] ?? '';
-$tripPlannerRequestID = $_POST['tripPlannerRequestID'] ?? '';
+$mode = $_REQUEST['mode'] ?? '';
+$tripPlannerRequestID = $_REQUEST['tripPlannerRequestID'] ?? '';
 
 $tripGateway = $container->get(TripGateway::class);
 
@@ -38,19 +38,20 @@ if (!empty($mode) && !empty($tripPlannerRequestID)) {
 }
 
 $gibbonPersonID = $session->get('gibbonPersonID');
+$highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
 
-if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submitRequest.php') || ($edit && $trip['creatorPersonID'] != $gibbonPersonID)) {
+if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submitRequest.php') || ($edit && $highestAction != 'Manage Trips_full' && $trip['creatorPersonID'] != $gibbonPersonID)) {
     //If the action isn't accesible, or in edit mode and the current user isn't the owner, throw error.
     $URL .= '/trips_manage.php&return=error0';
     header("Location: {$URL}");
     exit();
 } else if ((isset($trip) && empty($trip)) || (!empty($mode) && !$edit)) {
     //If a trip is provided, but doesn't exit, Or the mode is set, but edit isn't enabled, throw error.
-    $URL .= '/trips_submitRequest.php&return=error1';
+    $URL .= '/trips_submitRequest.php&return=error1&reason=a';
     header("Location: {$URL}");
     exit();
 } else {
-    $URL .= '/trips_submitRequest.php';
+    $URL .= '/trips_submitRequest.php&tripPlannerRequestID='.$tripPlannerRequestID.'&mode='.$mode;
 
     $gibbonSchoolYearID = $session->get('gibbonSchoolYearID');
 
@@ -72,14 +73,16 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         if (!empty($_POST[$key])) {
             $tripData[$key] = $_POST[$key];
         } else if ($required) {
-            $URL .= '&return=error1';
+            $URL .= '&return=error1&reason=b';
             header("Location: {$URL}");
             exit();
         }
     }
 
-    $tripData['creatorPersonID'] = $gibbonPersonID;
-    $tripData['gibbonSchoolYearID'] = $gibbonSchoolYearID;
+    if ($mode != 'edit') {
+        $tripData['creatorPersonID'] = $gibbonPersonID;
+        $tripData['gibbonSchoolYearID'] = $gibbonSchoolYearID;
+    }
     
     //Load Trip People
     $tripPeople = [];
@@ -91,7 +94,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
     //If no teachers have been added, throw an error.
     if (empty($tripPeople)) {
-        $URL .= '&return=error1';
+        $URL .= '&return=error1&reason=c';
         header("Location: {$URL}");
         exit();
     } 
@@ -114,7 +117,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         $endDate = Format::createDateTime($day['endDate'], $dateFormat);
 
         if (!$startDate || !$endDate || $endDate < $startDate) {
-            $URL .= '&return=error1';
+            $URL .= '&return=error1&reason=d';
             header("Location: {$URL}");
             exit();
         } 
@@ -129,9 +132,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             $endTime = DateTime::createFromFormat('H:i', $day['endTime']);
 
             if ($endTime <= $startTime) {
-                $URL .= '&return=error1';
-                header("Location: {$URL}");
-                exit();
+                $swapTime = $day['startTime'];
+                $day['startTime'] = $day['endTime'];
+                $day['endTime'] = $swapTime;
             }
 
         } else {
@@ -145,7 +148,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
     //If no days have been added, throw an error.
     if (empty($tripDays)) {
-        $URL .= '&return=error1';
+        $URL .= '&return=error1&reason=f';
         header("Location: {$URL}");
         exit();
     }
@@ -160,7 +163,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         $cost = $_POST['cost'][$order];
 
         if (empty($cost['title']) || empty($cost['cost']) || $cost['cost'] < 0) {
-            $URL .= '&return=error1';
+            $URL .= '&return=error1&reason=g';
             header("Location: {$URL}");
             exit();
         }

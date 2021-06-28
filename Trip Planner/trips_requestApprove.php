@@ -35,15 +35,15 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     $tripGateway = $container->get(TripGateway::class);
 
     $tripPlannerRequestID = $_GET['tripPlannerRequestID'] ?? '';
+    $trip = $tripGateway->getByID($tripPlannerRequestID);
 
-    if (empty($tripPlannerRequestID) || !$tripGateway->exists($tripPlannerRequestID)) {
+    if (empty($tripPlannerRequestID) || empty($trip)) {
         $page->addError(__('Invalid Trip Request Selected.'));
     } else {
         if (needsApproval($container, $gibbonPersonID, $tripPlannerRequestID)) {
             renderTrip($container, $tripPlannerRequestID, true);
-        } else {
+        } else if ($trip['status'] != 'Approved'){
             $page->addError(__('You do not have access to this action.'));
         }
     } 
 }   
-?>

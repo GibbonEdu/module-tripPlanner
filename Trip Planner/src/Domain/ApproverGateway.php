@@ -48,7 +48,7 @@ class ApproverGateway extends QueryableGateway
 
         $result = $this->runSelect($select);
         $users = array_reduce($result->fetchAll(), function ($group, $item) {
-            $group[$item['gibbonPersonID']] = Format::name($item['title'], $item['preferredName'], $item['surname'], 'Staff', false, true) . ' (' . $item['username'] . ')';
+            $group[$item['gibbonPersonID']] = Format::name($item['title'], $item['preferredName'], $item['surname'], 'Staff', true, true) . ' (' . $item['username'] . ')';
             return $group;
         }, array());
 

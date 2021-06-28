@@ -151,4 +151,5 @@ ALTER TABLE tripPlannerRequestLog MODIFY COLUMN `timestamp` TIMESTAMP NOT NULL D
 ";
 
 $sql[$count][0]="1.4.02";
-$sql[$count++][1]="";
+$sql[$count++][1]="
+";

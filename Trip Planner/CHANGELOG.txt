@@ -2,6 +2,10 @@ CHANGELOG
 =========
 v1.4.02
 -------
+Fixed Approved trips in the past not appearing in Manage Trips
+Added row colours to the Manage Trips table
+Fixed a bug with dates not filling in the form when editing trips
+Enabled users with Manage Trips_full to edit any trip
 Refactoring session variables
 
 v1.4.01
