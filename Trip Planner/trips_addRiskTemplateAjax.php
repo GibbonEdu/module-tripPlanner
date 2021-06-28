@@ -19,7 +19,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 require_once '../../gibbon.php';
 
-if (empty($gibbon->session->get('gibbonPersonID')) || empty($gibbon->session->get('gibbonRoleIDPrimary'))
+if (!$session->has('gibbonPersonID') || !$session->has('gibbonRoleIDPrimary')
     || !isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manageRiskTemplates.php')) {
     die(__('Your request failed because you do not have access to this action.'));
 } else {

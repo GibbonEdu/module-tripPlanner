@@ -28,11 +28,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     $page->addError(__('You do not have access to this action.'));
 } else {
     if(isset($_GET['tripPlannerRiskTemplateID'])) {
-        $page->return->setEditLink($gibbon->session->get('absoluteURL') . '/index.php?q=/modules/' . $gibbon->session->get('module') . '/trips_editRiskTemplate.php&tripPlannerRiskTemplateID=' . $_GET['tripPlannerRiskTemplateID']);
+        $page->return->setEditLink($session->get('absoluteURL') . '/index.php?q=/modules/' . $session->get('module') . '/trips_editRiskTemplate.php&tripPlannerRiskTemplateID=' . $_GET['tripPlannerRiskTemplateID']);
     }
 
-    $form = Form::create('addRiskTemplate', $gibbon->session->get('absoluteURL') . '/modules/' . $gibbon->session->get('module') . '/trips_addRiskTemplateProcess.php');
-    $form->addHiddenValue('address', $gibbon->session->get('address'));
+    $form = Form::create('addRiskTemplate', $session->get('absoluteURL') . '/modules/' . $session->get('module') . '/trips_addRiskTemplateProcess.php');
+    $form->addHiddenValue('address', $session->get('address'));
     $form->setTitle('Add Risk Assessment Template');
 
     $row = $form->addRow();
@@ -40,7 +40,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         $row->addTextfield('name')
             ->setRequired(true)
             ->maxLength(30)
-            ->uniqueField('./modules/' . $gibbon->session->get('module') . '/trips_addRiskTemplateAjax.php');
+            ->uniqueField('./modules/' . $session->get('module') . '/trips_addRiskTemplateAjax.php');
 
     $row = $form->addRow();
         $column = $row->addColumn();

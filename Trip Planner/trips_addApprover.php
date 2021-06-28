@@ -29,12 +29,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_addApp
     //Acess denied
     $page->addError(__('You do not have access to this action.'));
 } else {
-    $page->return->setEditLink($gibbon->session->get('absoluteURL') . '/index.php?q=/modules/' . $gibbon->session->get('module') . '/trips_manageApprovers.php');
+    $page->return->setEditLink($session->get('absoluteURL') . '/index.php?q=/modules/' . $session->get('module') . '/trips_manageApprovers.php');
 
     $approverGateway = $container->get(ApproverGateway::class);
 
-    $form = Form::create('addApprover', $gibbon->session->get('absoluteURL') . '/modules/' . $gibbon->session->get('module') . '/trips_addApproverProcess.php', 'post');
-    $form->addHiddenValue('address', $gibbon->session->get('address'));
+    $form = Form::create('addApprover', $session->get('absoluteURL') . '/modules/' . $session->get('module') . '/trips_addApproverProcess.php', 'post');
+    $form->addHiddenValue('address', $session->get('address'));
     $form->setFactory(DatabaseFormFactory::create($pdo));
     $form->setTitle('Add Approver');
 

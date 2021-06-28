@@ -36,8 +36,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     if (empty($riskTemplate)) {
         $page->addError(__('Invalid Risk Template.'));
     } else {
-        $form = Form::create('editRiskTemplate', $gibbon->session->get('absoluteURL') . '/modules/' . $gibbon->session->get('module') . '/trips_editRiskTemplateProcess.php');
-        $form->addHiddenValue('address', $gibbon->session->get('address'));
+        $form = Form::create('editRiskTemplate', $session->get('absoluteURL') . '/modules/' . $session->get('module') . '/trips_editRiskTemplateProcess.php');
+        $form->addHiddenValue('address', $session->get('address'));
         $form->addHiddenValue('tripPlannerRiskTemplateID', $tripPlannerRiskTemplateID);
         $form->setTitle('Edit Risk Assessment Template');
 
@@ -46,7 +46,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             $row->addTextfield('name')
                 ->setRequired(true)
                 ->maxLength(30)
-                ->uniqueField('./modules/' . $gibbon->session->get('module') . '/trips_addRiskTemplateAjax.php', ['currentTemplateName' => $riskTemplate['name']])
+                ->uniqueField('./modules/' . $session->get('module') . '/trips_addRiskTemplateAjax.php', ['currentTemplateName' => $riskTemplate['name']])
                 ->setValue($riskTemplate['name']);
 
         $row = $form->addRow();

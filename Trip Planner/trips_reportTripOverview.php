@@ -47,8 +47,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
 
     if (!empty($trip)) {
         $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
-        $gibbonPersonID = $gibbon->session->get('gibbonPersonID');
-        $gibbonSchoolYearID = $gibbon->session->get('gibbonSchoolYearID');
+        $gibbonPersonID = $session->get('gibbonPersonID');
+        $gibbonSchoolYearID = $session->get('gibbonSchoolYearID');
 
         if (hasAccess($container, $tripPlannerRequestID, $gibbonPersonID, $highestAction)) {
             $viewMode = $_REQUEST['format'] ?? '';
@@ -139,7 +139,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
            $students->joinColumn('gibbonPersonID', 'familyAdults', $familyAdults);
 
             // DATA TABLE
-            $table = ReportTable::createPaginated('studentEmergencySummary', $criteria)->setViewMode($viewMode, $gibbon->session);
+            $table = ReportTable::createPaginated('studentEmergencySummary', $criteria)->setViewMode($viewMode, $session);
             $table->setTitle(__('Participants'));
 
             $table->addMetaData('post', ['gibbonPersonID' => $students]);

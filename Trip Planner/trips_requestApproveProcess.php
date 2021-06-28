@@ -11,11 +11,11 @@ use Gibbon\Module\TripPlanner\Domain\TripLogGateway;
 require_once '../../gibbon.php';
 require_once "./moduleFunctions.php";
 
-$absoluteURL = $gibbon->session->get('absoluteURL');
-$moduleName = $gibbon->session->get('module');
+$absoluteURL = $session->get('absoluteURL');
+$moduleName = $session->get('module');
 $URL = $absoluteURL . '/index.php?q=/modules/' . $moduleName;
 
-$gibbonPersonID = $gibbon->session->get('gibbonPersonID');
+$gibbonPersonID = $session->get('gibbonPersonID');
 
 $approverGateway = $container->get(ApproverGateway::class);
 $approver = $approverGateway->selectApproverByPerson($gibbonPersonID);
@@ -55,7 +55,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             //TODO: Transaction?
 
             $notificationGateway = $container->get(NotificationGateway::class);
-            $notificationSender = new NotificationSender($notificationGateway, $gibbon->session);
+            $notificationSender = new NotificationSender($notificationGateway, $session);
 
             $notificationURL = $absoluteURL . '/index.php?q=/modules/' . $moduleName . '/trips_requestView.php&tripPlannerRequestID=' . $tripPlannerRequestID;
             
@@ -118,7 +118,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                             $event->setNotificationText($notificationText);
                             $event->setActionLink($notificationURL);
 
-                            $event->sendNotifications($pdo, $gibbon->session);
+                            $event->sendNotifications($pdo, $session);
 
                             $message = 'Your trip request has been fully approved.';
                         }

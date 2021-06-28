@@ -31,8 +31,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     if (empty($tripPlannerRiskTemplateID) || !$riskTemplateGateway->exists($tripPlannerRiskTemplateID)) {
         $page->addError(__('Invalid Template.'));
     } else {
-        $form = DeleteForm::createForm($gibbon->session->get('absoluteURL') . '/modules/' . $gibbon->session->get('module') . "/trips_deleteRiskTemplateProcess.php");
-        $form->addHiddenValue('address', $gibbon->session->get('address'));
+        $form = DeleteForm::createForm($session->get('absoluteURL') . '/modules/' . $session->get('module') . "/trips_deleteRiskTemplateProcess.php");
+        $form->addHiddenValue('address', $session->get('address'));
         $form->addHiddenValue('tripPlannerRiskTemplateID', $tripPlannerRiskTemplateID);
 
         echo $form->getOutput();

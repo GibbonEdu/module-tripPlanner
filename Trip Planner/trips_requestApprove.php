@@ -30,7 +30,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     $page->addError(__('You do not have access to this action.'));
 } else {
     
-    $gibbonPersonID = $gibbon->session->get('gibbonPersonID');
+    $gibbonPersonID = $session->get('gibbonPersonID');
 
     $tripGateway = $container->get(TripGateway::class);
 

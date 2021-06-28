@@ -31,8 +31,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_delete
     if (empty($tripPlannerApproverID) || !$approverGateway->exists($tripPlannerApproverID)) {
         $page->addError(__('Invalid Approver.'));
     } else {
-        $form = DeleteForm::createForm($gibbon->session->get('absoluteURL') . '/modules/' . $gibbon->session->get('module') . "/trips_deleteApproverProcess.php");
-        $form->addHiddenValue('address', $gibbon->session->get('address'));
+        $form = DeleteForm::createForm($session->get('absoluteURL') . '/modules/' . $session->get('module') . "/trips_deleteApproverProcess.php");
+        $form->addHiddenValue('address', $session->get('address'));
         $form->addHiddenValue('tripPlannerApproverID', $tripPlannerApproverID);
 
         echo $form->getOutput();

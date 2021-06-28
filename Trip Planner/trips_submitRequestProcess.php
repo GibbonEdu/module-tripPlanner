@@ -16,7 +16,7 @@ use Gibbon\Services\Format;
 require_once '../../gibbon.php';
 require_once './moduleFunctions.php';
 
-$URL = $gibbon->session->get('absoluteURL') . '/index.php?q=/modules/' . $gibbon->session->get('module');
+$URL = $session->get('absoluteURL') . '/index.php?q=/modules/' . $session->get('module');
 
 //Checking if editing mode should be enabled
 $edit = false;
@@ -37,7 +37,7 @@ if (!empty($mode) && !empty($tripPlannerRequestID)) {
     }
 }
 
-$gibbonPersonID = $gibbon->session->get('gibbonPersonID');
+$gibbonPersonID = $session->get('gibbonPersonID');
 $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submitRequest.php') || ($edit && $highestAction != 'Manage Trips_full' && $trip['creatorPersonID'] != $gibbonPersonID)) {
@@ -53,7 +53,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 } else {
     $URL .= '/trips_submitRequest.php&tripPlannerRequestID='.$tripPlannerRequestID.'&mode='.$mode;
 
-    $gibbonSchoolYearID = $gibbon->session->get('gibbonSchoolYearID');
+    $gibbonSchoolYearID = $session->get('gibbonSchoolYearID');
 
     $settingGateway = $container->get(SettingGateway::class);
 
@@ -247,7 +247,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
     if (!$edit) {
         $notificationGateway = $container->get(NotificationGateway::class);
-        $notificationSender = new NotificationSender($notificationGateway, $gibbon->session);
+        $notificationSender = new NotificationSender($notificationGateway, $session);
 
         $event = new NotificationEvent('Trip Planner', 'New Trip Request');
 

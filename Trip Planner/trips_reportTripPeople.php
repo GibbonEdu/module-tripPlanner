@@ -35,7 +35,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     $trip = $tripGateway->getByID($tripPlannerRequestID);
 
     if (!empty($trip)) {
-        $gibbonPersonID = $gibbon->session->get('gibbonPersonID');
+        $gibbonPersonID = $session->get('gibbonPersonID');
         $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
 
         if (hasAccess($container, $tripPlannerRequestID, $gibbonPersonID, $highestAction)) {

@@ -31,8 +31,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_editAp
     $approver = $approverGateway->getByID($tripPlannerApproverID);
 
     if (!empty($approver)) {
-        $form = Form::create('editApprover', $gibbon->session->get('absoluteURL') . '/modules/' . $gibbon->session->get('module') . '/trips_editApproverProcess.php', 'post');
-        $form->addHiddenValue('address', $gibbon->session->get('address'));
+        $form = Form::create('editApprover', $session->get('absoluteURL') . '/modules/' . $session->get('module') . '/trips_editApproverProcess.php', 'post');
+        $form->addHiddenValue('address', $session->get('address'));
         $form->addHiddenValue('tripPlannerApproverID', $tripPlannerApproverID);
         $form->setFactory(DatabaseFormFactory::create($pdo));
         $form->setTitle('Edit Approver');

@@ -34,11 +34,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     $page->addError(__('You do not have access to this action.'));
 } else {
     $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
+
     if (empty($highestAction)) {
         $page->addError(__('The highest grouped action cannot be determined.'));
         return;   
     }
-    $gibbonPersonID = $gibbon->session->get('gibbonPersonID');
+    $gibbonPersonID = $session->get('gibbonPersonID');
 
     //Settings
     $settingGateway = $container->get(SettingGateway::class);
@@ -68,7 +69,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
 
     //Filters
     $gibbonDepartmentID = $_POST['gibbonDepartmentID'] ?? []; 
-    $gibbonSchoolYearID = $_POST['gibbonSchoolYearID'] ?? $gibbon->session->get('gibbonSchoolYearID');
+    $gibbonSchoolYearID = $_POST['gibbonSchoolYearID'] ?? $session->get('gibbonSchoolYearID');
 
     //Filter Form
     $form = Form::create('tripFilters', $gibbon->session->get('absoluteURL') . '/index.php?q=' . $_GET['q']);

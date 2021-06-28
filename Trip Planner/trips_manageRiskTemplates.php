@@ -29,7 +29,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     //Acess denied
     $page->addError(__('You do not have access to this action.'));
 } else {
-    $moduleName = $gibbon->session->get('module');
+    $moduleName = $session->get('module');
 
     $riskTemplateGateway = $container->get(RiskTemplateGateway::class);
 
@@ -41,7 +41,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     $table->setTitle(__('Risk Assessment Templates'));
 
     $table->addHeaderAction('add', __('Add'))
-        ->setURL('/modules/' . $gibbon->session->get('module') . '/trips_addRiskTemplate.php')
+        ->setURL('/modules/' . $session->get('module') . '/trips_addRiskTemplate.php')
         ->displayLabel();
     
     $table->addExpandableColumn('body')
