@@ -86,7 +86,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                             'action' => 'Approval - Partial'
                         ]);
 
-                        $done = $approvalLog->rowCount() == 1;
+                        $done = $approvalLog->rowCount() >= 1;
                     } elseif ($requestApprovalType == 'Chain Of All') {
                         $nextApprover = $approverGateway->selectNextApprover($tripPlannerRequestID, $gibbonPersonID);
                         $done = $nextApprover->rowCount() == 0;
@@ -95,7 +95,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                     if ($done) {
                         if($riskAssessmentApproval) {
                             $status = 'Awaiting Final Approval';
-                            $action .= ' - Awaiting Final Approval';
+                            $action .= ' - Partial';
                         } else {
                             $action .= ' - Final';
                             $status = 'Approved';
@@ -127,11 +127,13 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                             $notificationSender->addNotification($owner, __($message), $moduleName, $notificationURL);
                         }
 
-                    } elseif ($nextApprover->isNotEmpty()) {
+                    } elseif (!empty($nextApprover) && $nextApprover->isNotEmpty()) {
                         $action .= ' - Partial';
                         $nextApprover = $nextApprover->fetch();
 
                         $notificationSender->addNotification($nextApprover['gibbonPersonID'], __('A trip request is awaiting your approval.'), $moduleName, $absoluteURL . '/index.php?q=/modules/' . $moduleName . '/trips_requestApprove.php&tripPlannerRequestID='. $tripPlannerRequestID);
+                    } else {
+                        $action .= ' - Partial';
                     }
                 }
             } elseif ($action == 'Rejection') {

@@ -1,5 +1,9 @@
 CHANGELOG
 =========
+v1.4.03
+-------
+Fixed error during approval process for "Two Of" approval setting
+
 v1.4.02
 -------
 Fixed Approved trips in the past not appearing in Manage Trips
