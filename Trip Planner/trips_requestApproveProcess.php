@@ -57,7 +57,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             $notificationGateway = $container->get(NotificationGateway::class);
             $notificationSender = new NotificationSender($notificationGateway, $session);
 
-            $notificationURL = $absoluteURL . '/index.php?q=/modules/' . $moduleName . '/trips_requestView.php&tripPlannerRequestID=' . $tripPlannerRequestID;
+            $notificationURL = '/index.php?q=/modules/' . $moduleName . '/trips_requestView.php&tripPlannerRequestID=' . $tripPlannerRequestID;
             
             $tripLogGateway = $container->get(TripLogGateway::class);
 

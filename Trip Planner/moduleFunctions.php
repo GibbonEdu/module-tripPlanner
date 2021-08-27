@@ -232,7 +232,7 @@ function tripCommentNotifications($tripPlannerRequestID, $gibbonPersonID, $tripL
 
     $text = __('Someone has commented on a trip request.');
     $moduleName = $gibbon->session->get('module');
-    $notificationURL = $gibbon->session->get('absoluteURL') . '/index.php?q=/modules/' . $moduleName . '/trips_requestView.php&tripPlannerRequestID=' . $tripPlannerRequestID;
+    $notificationURL = '/index.php?q=/modules/' . $moduleName . '/trips_requestView.php&tripPlannerRequestID=' . $tripPlannerRequestID;
 
     $people = $tripLogGateway->selectLoggedPeople($tripPlannerRequestID);
     while ($row = $people->fetch()) {

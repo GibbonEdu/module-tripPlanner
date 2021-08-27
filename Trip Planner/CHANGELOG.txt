@@ -1,5 +1,9 @@
 CHANGELOG
 =========
+v1.4.04
+-------
+Fixed links in email notifications
+
 v1.4.03
 -------
 Fixed error during approval process for "Two Of" approval setting
