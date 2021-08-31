@@ -161,3 +161,7 @@ $sql[$count++][1]="
 $sql[$count][0]="1.4.04";
 $sql[$count++][1]="
 ";
+
+$sql[$count][0]="1.4.05";
+$sql[$count++][1]="
+";

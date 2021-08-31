@@ -368,7 +368,8 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
             $peopleCriteria = $tripPersonGateway->newQueryCriteria()
                 ->filterBy('tripPlannerRequestID', $tripPlannerRequestID)
                 ->filterBy('role', 'Teacher')
-                ->sortBy(['surname', 'preferredName']);
+                ->sortBy(['surname', 'preferredName'])
+                ->pageSize(0);
 
             $gridRenderer = new GridView($container->get('twig'));
             $table = $container->get(DataTable::class)->setRenderer($gridRenderer);
@@ -381,7 +382,7 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
             
             $table->addColumn('name')
                 ->setClass('text-xs font-bold mt-1')
-                ->format(Format::using('name', ['title', 'preferredName', 'surname', 'Student', false, false]));
+                ->format(Format::using('name', ['title', 'preferredName', 'surname', 'Staff', false, false]));
 
             $col->addContent($table->render($tripPersonGateway->queryTripPeople($peopleCriteria)));
 
@@ -389,7 +390,23 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
         $col = $row->addColumn();
             $col->addLabel('students', Format::bold(__('Students')));
 
-            $peopleCriteria->filterBy('role', 'Student');
+            $peopleCriteria = $tripPersonGateway->newQueryCriteria()
+                ->filterBy('tripPlannerRequestID', $tripPlannerRequestID)
+                ->filterBy('role', 'Student')
+                ->sortBy(['surname', 'preferredName'])
+                ->pageSize(0);
+                
+            $table = $container->get(DataTable::class)->setRenderer($gridRenderer);
+
+            $table->addMetaData('gridClass', 'rounded-sm bg-blue-100 border py-2');
+            $table->addMetaData('gridItemClass', 'w-1/2 sm:w-1/4 md:w-1/5 my-2 text-center');
+            
+            $table->addColumn('image_240')
+                ->format(Format::using('userPhoto', ['image_240', 'sm', '']));
+            
+            $table->addColumn('name')
+                ->setClass('text-xs font-bold mt-1')
+                ->format(Format::using('name', ['title', 'preferredName', 'surname', 'Student', false, false]));
 
             $table->addHeaderAction('studentList', __('Student List'))
                 ->setIcon('print')

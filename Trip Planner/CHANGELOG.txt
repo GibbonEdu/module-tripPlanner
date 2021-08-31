@@ -1,5 +1,9 @@
 CHANGELOG
 =========
+v1.4.05
+-------
+Fixed students missing from student list on View Request page
+
 v1.4.04
 -------
 Fixed links in email notifications
