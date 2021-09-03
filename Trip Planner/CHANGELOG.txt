@@ -1,5 +1,10 @@
 CHANGELOG
 =========
+v1.4.06
+-------
+Fixed reversed start and end times for trips
+Added a date selector to the Today's Trips page
+
 v1.4.05
 -------
 Fixed students missing from student list on View Request page

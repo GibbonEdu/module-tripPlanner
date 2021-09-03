@@ -448,8 +448,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
         //Fix for datepicker in custom blocks
         $(document).on('click', '.addBlock', function () {
-            $(date).removeClass('hasDatepicker').datepicker({onSelect: function(){$(this).blur();}, onClose: function(){$(this).change();} });
-            $(time).removeClass('hasTimepicker').timepicker({onSelect: function(){$(this).blur();}, onClose: function(){$(this).change();} });
+            $(date).removeClass('hasDatepicker').datepicker({'timeFormat': 'H:i', onSelect: function(){$(this).blur();}, onClose: function(){$(this).change();} });
+            $(time).removeClass('hasTimepicker').timepicker({'timeFormat': 'H:i', onSelect: function(){$(this).blur();}, onClose: function(){$(this).change();} });
         });
 
         function setTimepicker(input) {

@@ -20,9 +20,9 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 require_once __DIR__ . '/moduleFunctions.php';
 
 use Gibbon\Forms\Form;
-use Gibbon\Module\TripPlanner\Domain\TripGateway;
 use Gibbon\Services\Format;
 use Gibbon\Tables\DataTable;
+use Gibbon\Module\TripPlanner\Domain\TripGateway;
 
 $page->breadcrumbs->add(__('Today\'s Trips'));
 
@@ -31,9 +31,29 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_report
 } else {
     $moduleName = $session->get('module');
   
+    $date = !empty($_GET['date'])? $_GET['date'] : Format::date(date('Y-m-d'));
+
+    // FILTER
+    $form = Form::create('filter', $session->get('absoluteURL').'/index.php', 'get');
+    $form->setTitle(__('Filter'));
+    $form->setClass('noIntBorder fullWidth');
+
+    $form->addHiddenValue('q', '/modules/Trip Planner/trips_reportToday.php');
+
+    $row = $form->addRow();
+        $row->addLabel('date', __('Date'));
+        $row->addDate('date')->setValue($date);
+
+    $row = $form->addRow();
+        $row->addFooter();
+        $row->addSearchSubmit($gibbon->session);
+
+    echo $form->getOutput();
+
+    // DATA TABLE
     $tripGateway = $container->get(TripGateway::class);
     $criteria = $tripGateway->newQueryCriteria(true)
-      ->filterBy('tripDay', date('Y-m-d'))
+      ->filterBy('tripDay', Format::dateConvert($date))
       ->filterBy('statuses', serialize([
         'Requested',
         'Approved',
