@@ -1,5 +1,11 @@
 CHANGELOG
 =========
+v1.4.07
+-------
+Added _blank to Student List and Trip Overview reports
+Added student mobile phone number to Trip Overview report
+Fixed bug preventing parent phone numbers from showing in Trip Overview report
+
 v1.4.06
 -------
 Fixed reversed start and end times for trips

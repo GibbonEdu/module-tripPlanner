@@ -146,14 +146,34 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
 
             $table->addColumn('student', __('Student'))
                 ->width('12%')
-                ->description(__('Last Personal Update'))
+                ->description(__('Last Personal Update')."<br/>".__('Phone Number'))
                 ->sortable(['gibbonPerson.surname', 'gibbonPerson.preferredName'])
-                ->format(function ($student) use ($cutoffDate) {
+                ->format(function ($student) use ($cutoffDate, $familyAdults) {
                     $output = Format::name('', $student['preferredName'], $student['surname'], 'Student', true, true).'<br/><br/>';
 
                     $output .= ($student['lastPersonalUpdate'] < $cutoffDate) ? '<span style="color: #ff0000; font-weight: bold"><i>' : '<span><i>';
                     $output .= !empty($student['lastPersonalUpdate']) ? Format::date($student['lastPersonalUpdate']) : __('N/A');
                     $output .= '</i></span>';
+
+                    //Produce list of parent phone numbers
+                    $adultPhones = [];
+                    foreach ($student['familyAdults'] as $adult){
+                        for ($i = 1; $i <= 4; $i++) {
+                            if (!empty($adult["phone".$i])) {
+                                $adultPhones[] = $adult["phone".$i];
+                            }
+                        }
+                    }
+
+                    //Output student phone numbers if they don't overlap with parent
+                    for ($i = 1; $i <= 4; $i++) {
+                        if (!in_array($student["phone".$i], $adultPhones)) {
+                            if ($student["phone".$i."Type"] == "Mobile") {
+                                $output .= "<br/><br/>";
+                                $output .= Format::phone($student["phone".$i], $student["phone".$i."CountryCode"]);
+                            }
+                        }
+                    }
 
                     return $output;
                 });
@@ -165,7 +185,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                 ->format(function ($student) use ($view) {
                     return $view->fetchFromTemplate(
                         'formats/familyContacts.twig.html',
-                        ['familyAdults' => $student['familyAdults']]
+                        ['familyAdults' => $student['familyAdults'], 'includePhoneNumbers' => true]
                     );
                 });
 

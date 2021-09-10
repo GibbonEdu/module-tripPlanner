@@ -69,7 +69,7 @@ function getSettings(ContainerInterface $container, $guid) {
 
             foreach ($riskTemplateGateway->queryTemplates($criteria) as $template) {
                 $templates[$template['tripPlannerRiskTemplateID']] = $template['name'];
-            } 
+            }
 
             $row->addSelect($data['name'])
                 ->fromArray($templates)
@@ -138,7 +138,7 @@ function getStatuses() {
         'Requested',
         'Approved',
         'Rejected',
-        'Cancelled', 
+        'Cancelled',
         'Awaiting Final Approval',
     ];
 }
@@ -190,7 +190,7 @@ function needsApproval(ContainerInterface $container, $gibbonPersonID, $tripPlan
 
     $approver = $approverGateway->selectApproverByPerson($gibbonPersonID);
     $isApprover = !empty($approver);
-    $finalApprover = $isApprover ? $approver['finalApprover'] : false; 
+    $finalApprover = $isApprover ? $approver['finalApprover'] : false;
 
     if ($trip['status'] == 'Requested' && $isApprover) {
         $settingGateway = $container->get(SettingGateway::class);
@@ -288,7 +288,7 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
     function toggleSection(&$row, $section, $icon) {
         $row->addWebLink(sprintf('<img title=%1$s src="%2$s" style="margin-right:4px;" />', __('Show/Hide'), $icon))
             ->setURL('#')
-            ->onClick('toggleSection($(this), "'.$section.'"); return false;'); 
+            ->onClick('toggleSection($(this), "'.$section.'"); return false;');
     }
 
     $row = $form->addRow();
@@ -320,7 +320,7 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
         toggleSection($row, 'dateTime', $on);
 
     $row = $form->addRow()->addClass('dateTime');
-            
+
         $tripDayGateway = $container->get(tripDayGateway::class);
         $dayCriteria = $tripDayGateway->newQueryCriteria()
             ->filterBy('tripPlannerRequestID', $tripPlannerRequestID);
@@ -341,7 +341,7 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
             });
 
         $row->addContent($table->render($tripDayGateway->queryTripDay($dayCriteria)));
-        
+
     $row = $form->addRow();
         $row->addHeading(__('Risk Assessment & Communication'));
         toggleSection($row, 'riskAssess', $on);
@@ -354,7 +354,7 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
     $row = $form->addRow()->addClass('riskAssess');
         $col = $row->addColumn();
             $col->addLabel('letterToParents', Format::bold(__('Letter To Parents')));
-            $col->addContent($trip['letterToParents']);   
+            $col->addContent($trip['letterToParents']);
 
     $row = $form->addRow();
         $row->addHeading(__('Participants'));
@@ -376,10 +376,10 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
 
             $table->addMetaData('gridClass', 'rounded-sm bg-blue-100 border py-2');
             $table->addMetaData('gridItemClass', 'w-1/2 sm:w-1/4 md:w-1/5 my-2 text-center');
-            
+
             $table->addColumn('image_240')
                 ->format(Format::using('userPhoto', ['image_240', 'sm', '']));
-            
+
             $table->addColumn('name')
                 ->setClass('text-xs font-bold mt-1')
                 ->format(Format::using('name', ['title', 'preferredName', 'surname', 'Staff', false, false]));
@@ -395,15 +395,15 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
                 ->filterBy('role', 'Student')
                 ->sortBy(['surname', 'preferredName'])
                 ->pageSize(0);
-                
+
             $table = $container->get(DataTable::class)->setRenderer($gridRenderer);
 
             $table->addMetaData('gridClass', 'rounded-sm bg-blue-100 border py-2');
             $table->addMetaData('gridItemClass', 'w-1/2 sm:w-1/4 md:w-1/5 my-2 text-center');
-            
+
             $table->addColumn('image_240')
                 ->format(Format::using('userPhoto', ['image_240', 'sm', '']));
-            
+
             $table->addColumn('name')
                 ->setClass('text-xs font-bold mt-1')
                 ->format(Format::using('name', ['title', 'preferredName', 'surname', 'Student', false, false]));
@@ -413,6 +413,7 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
                 ->displayLabel()
                 ->setURL('/report.php')
                 ->directLink()
+                ->setTarget('_blank')
                 ->addParam('q', '/modules/' . $moduleName . '/trips_reportTripPeople.php')
                 ->addParam('tripPlannerRequestID', $tripPlannerRequestID);
 
@@ -421,6 +422,7 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
                 ->displayLabel()
                 ->setURL('/report.php')
                 ->directLink()
+                ->setTarget('_blank')
                 ->addParam('q', '/modules/' . $moduleName . '/trips_reportTripOverview.php')
                 ->addParam('tripPlannerRequestID', $tripPlannerRequestID)
                 ->addParam('format', 'print')
@@ -523,7 +525,7 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
                 rows.addClass('showHide');
                 rows.hide();
             }
-        } 
+        }
     </script>
     <?php
 }
