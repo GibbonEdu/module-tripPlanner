@@ -30,8 +30,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
 
     $gibbonPersonID = $session->get('gibbonPersonID');
     $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
+    $readOnly = $highestAction == 'Manage Trips_view';
 
-    if (hasAccess($container, $tripPlannerRequestID, $gibbonPersonID, $highestAction)) {
+    if (hasAccess($container, $tripPlannerRequestID, $gibbonPersonID, $highestAction) && !$readOnly) {
         $URL .= '/trips_requestView.php&tripPlannerRequestID=' . $tripPlannerRequestID;
 
         $comment = $_POST['comment'] ?? '';

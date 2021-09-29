@@ -103,7 +103,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         ->filterBy('showActive', 'Y')
         ->fromPOST();
 
-    $gibbonPersonIDFilter = $highestAction == 'Manage Trips_full'
+    $gibbonPersonIDFilter = $highestAction == 'Manage Trips_full' || $highestAction == 'Manage Trips_view'
         ? null
         : $gibbonPersonID;
 

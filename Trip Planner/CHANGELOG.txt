@@ -1,5 +1,9 @@
 CHANGELOG
 =========
+v1.4.08
+-------
+Add a Manage Trips_view permission for read-only access to trip information
+
 v1.4.07
 -------
 Added _blank to Student List and Trip Overview reports

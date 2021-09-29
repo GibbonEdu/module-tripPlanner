@@ -150,6 +150,11 @@ function hasAccess(ContainerInterface $container, $tripPlannerRequestID, $gibbon
         return true;
     }
 
+    //Has read-only access?
+    if ($highestAction == 'Manage Trips_view') {
+        return true;
+    }
+
     //Is Owner?
     $tripGateway = $container->get(TripGateway::class);
     $trip = $tripGateway->getByID($gibbonPersonID);
@@ -244,7 +249,7 @@ function tripCommentNotifications($tripPlannerRequestID, $gibbonPersonID, $tripL
 
 /**
 */
-function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $approveMode) {
+function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $approveMode, $readOnly = false) {
     global $gibbon;
 
     $gibbonPersonID = $gibbon->session->get('gibbonPersonID');
@@ -501,13 +506,15 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
                 ->fromArray(['Approval', 'Rejection', 'Comment']);
     }
 
-    $row = $form->addRow();
-        $col = $row->addColumn();
-            $col->addLabel('comment', __('Comment'));
-            $col->addTextarea('comment');
+    if (!$readOnly) {
+        $row = $form->addRow();
+            $col = $row->addColumn();
+                $col->addLabel('comment', __('Comment'));
+                $col->addTextarea('comment');
 
-    $row = $form->addRow();
-        $row->addSubmit();
+        $row = $form->addRow();
+            $row->addSubmit();
+    }
 
     $form->loadAllValuesFrom($trip);
     echo $form->getOutput();
