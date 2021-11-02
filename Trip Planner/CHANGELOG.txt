@@ -1,5 +1,9 @@
 CHANGELOG
 =========
+v1.4.09
+-------
+Removed deprecated function calls
+
 v1.4.08
 -------
 Add a Manage Trips_view permission for read-only access to trip information
