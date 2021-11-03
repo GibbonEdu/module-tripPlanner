@@ -1,5 +1,9 @@
 CHANGELOG
 =========
+v1.4.10
+-------
+Fixed CHANGEDB syntax error
+
 v1.4.09
 -------
 Removed deprecated function calls

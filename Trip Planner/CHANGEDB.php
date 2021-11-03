@@ -179,6 +179,10 @@ $sql[$count++][1]="
 INSERT INTO gibbonAction SET name='Manage Trips_view', precedence=2, category='Trips', description='View-only access to trips on the Manage Trips page.', URLList='trips_manage.php', entryURL='trips_manage.php', defaultPermissionAdmin='N', defaultPermissionTeacher='N', defaultPermissionStudent='N', defaultPermissionParent='N', defaultPermissionSupport='N', categoryPermissionStaff='Y', categoryPermissionStudent='N', categoryPermissionParent='N', categoryPermissionOther='N', gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='Trip Planner');end
 ";
 
-$count++
+$count++;
 $sql[$count][0]="1.4.09";
+$sql[$count][1]="";
+
+$count++;
+$sql[$count][0]="1.4.10";
 $sql[$count][1]="";
