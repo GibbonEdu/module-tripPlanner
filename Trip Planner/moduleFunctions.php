@@ -157,7 +157,7 @@ function hasAccess(ContainerInterface $container, $tripPlannerRequestID, $gibbon
 
     //Is Owner?
     $tripGateway = $container->get(TripGateway::class);
-    $trip = $tripGateway->getByID($gibbonPersonID);
+    $trip = $tripGateway->getByID($tripPlannerRequestID);
 
     if (!empty($trip) && $trip['creatorPersonID'] == $gibbonPersonID) {
         return true;
@@ -178,7 +178,7 @@ function hasAccess(ContainerInterface $container, $tripPlannerRequestID, $gibbon
     //Is HOD?
     $departmentGateway = $container->get(DepartmentGateway::class);
     $headOfDepartments = array_column($departmentGateway->selectDepartmentsByPerson($gibbonPersonID, 'Coordinator')->fetchAll(), 'gibbonDepartmentID');
-    $tripOwnerDepartments = array_column($departmentGateway->selectDepartmentsByPerson($trip['creatorPersonID']), 'gibbonDepartmentID');
+    $tripOwnerDepartments = array_column($departmentGateway->selectDepartmentsByPerson($trip['creatorPersonID'])->fetchAll(), 'gibbonDepartmentID');
 
     return !empty(array_intersect($headOfDepartments, $tripOwnerDepartments));
 }

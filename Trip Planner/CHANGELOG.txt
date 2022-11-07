@@ -1,5 +1,13 @@
 CHANGELOG
 =========
+v1.4.11
+-------
+Fixed ID-related errors in trip approval
+Improved the approval page message for users who have already approved
+
+v1.4.10
+-------
+Fixed CHANGEDB syntax error
 v1.4.10
 -------
 Fixed CHANGEDB syntax error

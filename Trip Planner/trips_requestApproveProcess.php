@@ -8,6 +8,8 @@ use Gibbon\Module\TripPlanner\Domain\ApproverGateway;
 use Gibbon\Module\TripPlanner\Domain\TripGateway;
 use Gibbon\Module\TripPlanner\Domain\TripLogGateway;
 
+$_POST['address'] = '/modules/Trip Planner/trips_manage.php';
+
 require_once '../../gibbon.php';
 require_once "./moduleFunctions.php";
 

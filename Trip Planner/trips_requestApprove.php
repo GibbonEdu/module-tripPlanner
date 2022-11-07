@@ -18,6 +18,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 use Gibbon\Module\TripPlanner\Domain\TripGateway;
+use Gibbon\Module\TripPlanner\Domain\TripLogGateway;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
@@ -40,9 +41,19 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     if (empty($tripPlannerRequestID) || empty($trip)) {
         $page->addError(__('Invalid Trip Request Selected.'));
     } else {
+
+        $approval = $container->get(TripLogGateway::class)->selectBy([
+            'tripPlannerRequestID' => $trip['tripPlannerRequestID'],
+            'gibbonPersonID' => $gibbonPersonID,
+            'action' => 'Approval - Partial'
+        ]);
+
         if (needsApproval($container, $gibbonPersonID, $tripPlannerRequestID)) {
             renderTrip($container, $tripPlannerRequestID, true);
-        } else if ($trip['status'] != 'Approved'){
+        } elseif ($approval->isNotEmpty()) {
+            $page->addMessage(__('You have already approved this trip, it is currently pending additional approval from other users.'));
+            renderTrip($container, $tripPlannerRequestID, false);
+        } elseif ($trip['status'] != 'Approved'){
             $page->addError(__('You do not have access to this action.'));
         }
     } 
