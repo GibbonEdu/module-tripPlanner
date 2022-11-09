@@ -1,5 +1,9 @@
 CHANGELOG
 =========
+v1.4.12
+-------
+Added student birth date to Trip Overview page
+
 v1.4.11
 -------
 Fixed ID-related errors in trip approval

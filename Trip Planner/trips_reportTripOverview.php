@@ -221,11 +221,15 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
 
             $view = new View($container->get('twig'));
 
-            $table->addColumn('medicalForm', __('Medical Form?'))
+            $table->addColumn('medicalForm', __('Date of Birth'))
+                ->description(__('Medical Form?'))
                 ->width('16%')
                 ->sortable('gibbonPersonMedicalID')
                 ->format(function ($student) use ($view) {
-                    return $view->fetchFromTemplate('formats/medicalForm.twig.html', $student);
+                    $dob = !empty($student['dob'])
+                        ? Format::date($student['dob']).' ('.Format::small(Format::age($student['dob'], true)).')'
+                        : __('N/A');
+                    return $dob.'<br/><br/>'.$view->fetchFromTemplate('formats/medicalForm.twig.html', $student);
                 });
 
             $table->addColumn('conditions', __('Medical Conditions'))
