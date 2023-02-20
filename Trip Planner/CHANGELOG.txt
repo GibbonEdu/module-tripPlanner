@@ -1,5 +1,9 @@
 CHANGELOG
 =========
+v1.5.00
+-------
+Added the options to save trips as draft before submitting the request
+
 v1.4.12
 -------
 Added student birth date to Trip Overview page

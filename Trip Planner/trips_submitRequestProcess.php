@@ -22,6 +22,7 @@ $URL = $session->get('absoluteURL') . '/index.php?q=/modules/' . $session->get('
 $edit = false;
 
 $mode = $_REQUEST['mode'] ?? '';
+$saveMode = $_REQUEST['saveMode'] ?? 'Submit';
 $tripPlannerRequestID = $_REQUEST['tripPlannerRequestID'] ?? '';
 
 $tripGateway = $container->get(TripGateway::class);
@@ -36,6 +37,8 @@ if (!empty($mode) && !empty($tripPlannerRequestID)) {
         $edit = true;
     }
 }
+
+$isDraft = !empty($trip) && $trip['status'] == 'Draft';
 
 $gibbonPersonID = $session->get('gibbonPersonID');
 $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
@@ -82,6 +85,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     if ($mode != 'edit') {
         $tripData['creatorPersonID'] = $gibbonPersonID;
         $tripData['gibbonSchoolYearID'] = $gibbonSchoolYearID;
+    }
+
+    if ($saveMode == 'Draft' && (empty($trip) || $isDraft)) {
+        $tripData['status'] = 'Draft';
+    } elseif ($saveMode != 'Draft' && $isDraft) {
+        $tripData['status'] = 'Requested';
     }
     
     //Load Trip People
@@ -209,7 +218,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     $tripDayGateway->bulkInsert($tripPlannerRequestID, $tripDays);
 
     $groupGateway = $container->get(GroupGateway::class);
-    $createGroup = (isset($_POST['createGroup'])) ? $_POST['createGroup'] : 'N' ;
+    $createGroup = $_POST['createGroup'] ?? 'N' ;
 
     //Clear Group Data
     if ($edit) {
@@ -217,7 +226,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             $groupID = $trip['messengerGroupID'];
             $groupGateway->deletePeopleByGroupID($groupID);
         }
-    } else if ($createGroup == 'Y') {
+    }
+    
+    if (empty($trip['messengerGroupID']) && $createGroup == 'Y') {
         $groupID = $groupGateway->insertGroup([
                 'gibbonPersonIDOwner' => $gibbonPersonID,
                 'gibbonSchoolYearID' => $gibbonSchoolYearID,
@@ -236,16 +247,18 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         }
     }
 
-    $tripLogGateway = $container->get(TripLogGateway::class);
-    $tripLogGateway->insert([
-        'tripPlannerRequestID' => $tripPlannerRequestID,
-        'gibbonPersonID' => $gibbonPersonID,
-        'action' => $edit ? 'Edit' : 'Request'
-    ]);
+    if ($saveMode != 'Draft') {
+        $tripLogGateway = $container->get(TripLogGateway::class);
+        $tripLogGateway->insert([
+            'tripPlannerRequestID' => $tripPlannerRequestID,
+            'gibbonPersonID' => $gibbonPersonID,
+            'action' => $edit && !$isDraft ? 'Edit' : 'Request'
+        ]);
+    }
 
     $tripGateway->commit();
 
-    if (!$edit) {
+    if ($saveMode != 'Draft' && ($isDraft || !$edit)) {
         $notificationGateway = $container->get(NotificationGateway::class);
         $notificationSender = new NotificationSender($notificationGateway, $session);
 

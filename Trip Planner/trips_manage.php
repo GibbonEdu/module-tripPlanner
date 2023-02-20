@@ -125,6 +125,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
 
     $table->modifyRows(function (&$trip, $row) {
         if ($trip['status'] == 'Approved') $row->addClass('success');
+        if ($trip['status'] == 'Draft') $row->addClass('dull');
         if ($trip['status'] == 'Awaiting Final Approval') $row->addClass('message');
         if ($trip['status'] == 'Rejected' || $trip['status'] == 'Cancelled') $row->addClass('dull');
 
@@ -149,7 +150,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             return formatExpandableSection(__('Description'), $trip['description']);
         });
 
-    $table->addColumn('tripTitle', __('Title'));
+    $table->addColumn('tripTitle', __('Title'))
+        ->format(function ($trip) {
+            return $trip['tripTitle'].($trip['status'] == 'Draft' ? Format::tag(__('Draft'), 'message ml-2') : '');
+        });
 
     $table->addColumn('owner', __('Owner'))
         ->format(Format::using('name', ['title', 'preferredName', 'surname', 'Staff', false, true]))

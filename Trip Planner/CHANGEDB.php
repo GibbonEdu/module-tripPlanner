@@ -194,3 +194,8 @@ $sql[$count][1]="";
 $count++;
 $sql[$count][0]="1.4.12";
 $sql[$count][1]="";
+
+$count++;
+$sql[$count][0]="1.5.00";
+$sql[$count][1]="
+ALTER TABLE `tripPlannerRequests` CHANGE `status` `status` ENUM('Requested','Approved','Rejected','Cancelled','Awaiting Final Approval','Draft') CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT 'Requested';end";

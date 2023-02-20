@@ -43,6 +43,13 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         $status = $trip['status'];
         $owner = $trip['creatorPersonID'];
 
+        // Approver cannot approve their own trip
+        if ($owner == $session->get('gibbonPersonID')) {
+            $URL .= '/trips_manage.php&return=error1';
+            header("Location: {$URL}");
+            exit();
+        }
+
         if (needsApproval($container, $gibbonPersonID, $tripPlannerRequestID)) {
             $URL .= '/trips_requestApprove.php&tripPlannerRequestID=' . $tripPlannerRequestID;
 

@@ -23,7 +23,7 @@ $description = "A trip planner module for Gibbon.";
 $entryURL = "trips_manage.php";
 $type = "Additional";
 $category = "Learn";
-$version = "1.4.12";
+$version = "1.5.00";
 $author = "Ray Clark";
 $url = "https://github.com/GibbonEdu/module-tripPlanner";
 
@@ -44,7 +44,7 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequests` (
     `description` text NOT NULL,
     `location` text NOT NULL,
     `riskAssessment` text NULL,
-    `status` ENUM('Requested', 'Approved', 'Rejected', 'Cancelled', 'Awaiting Final Approval') DEFAULT 'Requested' NOT NULL,
+    `status` ENUM('Requested', 'Approved', 'Rejected', 'Cancelled', 'Awaiting Final Approval','Draft') DEFAULT 'Requested' NOT NULL,
     `gibbonSchoolYearID` int(3) unsigned zerofill NOT NULL,
     `letterToParents` text NOT NULL,
     `messengerGroupID` int(8) unsigned zerofill NULL,

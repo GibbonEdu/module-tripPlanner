@@ -53,6 +53,8 @@ if (!empty($mode) && !empty($tripPlannerRequestID)) {
     }
 }
 
+$isDraft = !empty($trip) && $trip['status'] == 'Draft';
+
 $page->breadcrumbs->add(__($prefix . ' Trip Request'));
 
 $gibbonPersonID = $session->get('gibbonPersonID');
@@ -197,6 +199,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     //Submit Request Form
     $form = Form::create('requestForm', $session->get('absoluteURL') . '/modules/' . $moduleName . '/trips_submitRequestProcess.php');
     $form->addHiddenValue('address', $session->get('address'));
+    $form->addHiddenValue('saveMode', 'Submit');
+
     $form->setTitle(__('Request'));
 
     //Basic Information Section
@@ -382,12 +386,14 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             $col->addButton(__('Remove'), 'addGroup("Remove")')
                 ->addClass('flex-1 w-full');
 
-    if (!$edit) {
+    if ((!$edit || $isDraft) && empty($trip['messengerGroupID'])) {
         $row = $form->addRow();
             $row->addLabel('createGroup', __('Create Messenger Group?'));
             $row->addYesNo('createGroup')
                 ->selected('N');
-    } else {
+    }
+    
+    if ($edit) {
         //Add parameters for editing
         $form->addHiddenValue('mode', 'edit');
         $form->addHiddenValue('tripPlannerRequestID', $tripPlannerRequestID);
@@ -434,9 +440,13 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         }
     }
 
-    $row = $form->addRow();
-        $row->addFooter();
-        $row->addSubmit();
+    $row = $form->addRow('stickySubmit');
+    if (!$edit || $isDraft) {
+        $col = $row->addColumn()->addClass('items-center');
+        $col->addButton(__('Save Draft'))->onClick('saveDraft()')->addClass('rounded-sm w-auto mr-2');
+    }
+    $col = $row->addColumn()->addClass('items-center');
+    $col->addSubmit();
 
     print $form->getOutput();
 
@@ -527,6 +537,24 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             var data = $('#addStudentsByGroup').val();
             if(data != 'None') {
                 $('#addGroupDiv').load("<?php print $session->get('absoluteURL') . '/modules/' . rawurlencode($moduleName) . '/trips_submitRequestAddGroupAjax.php'?>", 'data=' + data + '&mode=' + mode);
+            }
+        }
+        function saveDraft() {
+            $('option', '#teachers').each(function() {
+                $(this).prop('selected', true);
+            });
+            $('option', '#students').each(function() {
+                $(this).prop('selected', true);
+            });
+
+            var form = LiveValidationForm.getInstance(document.getElementById('requestForm'));
+            if (LiveValidation.massValidate(form.fields)) {
+                $('button[id="Save Draft"]').prop('disabled', true);
+                setTimeout(function() {
+                    $('button[id="Save Draft"]').wrap('<span class="submitted"></span>');
+                }, 500);
+                $('input[name="saveMode"]').val('Draft');
+                document.getElementById('requestForm').submit();
             }
         }
     </script>

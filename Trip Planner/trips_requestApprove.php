@@ -40,6 +40,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
 
     if (empty($tripPlannerRequestID) || empty($trip)) {
         $page->addError(__('Invalid Trip Request Selected.'));
+    } elseif ($trip['creatorPersonID'] == $session->get('gibbonPersonID')) {
+        $page->addError(__('A trip cannot be approved by the same person who created it.'));
     } else {
 
         $approval = $container->get(TripLogGateway::class)->selectBy([
