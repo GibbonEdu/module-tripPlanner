@@ -148,8 +148,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
         } else {
             $day['allDay'] = '1';
-            unset($day['startTime']);
-            unset($day['endTime']);
+            $day['startTime'] = '00:00:00';
+            $day['endTime'] = '00:00:00';
         }
 
         $tripDays[] = $day;

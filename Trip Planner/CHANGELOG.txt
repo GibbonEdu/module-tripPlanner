@@ -1,5 +1,10 @@
 CHANGELOG
 =========
+v1.5.01
+-------
+Add year group details and filter options to student multi-select
+Fix bug when creating multi-day trips with mixed all-day and partial dates
+
 v1.5.00
 -------
 Added the options to save trips as draft before submitting the request

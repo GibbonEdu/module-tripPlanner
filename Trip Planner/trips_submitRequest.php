@@ -191,8 +191,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
     $students = array_reduce($studentGateway->queryStudentsBySchoolYear($studentCriteria, $gibbonSchoolYearID)->toArray(), function ($array, $student) use ($tripPeople) {
         $list = in_array($student['gibbonPersonID'], $tripPeople) ? 'destination' : 'source';
-        $array['students'][$list][$student['gibbonPersonID']] = Format::name($student['title'], $student['preferredName'], $student['surname'], 'Student', true) . ' - ' . $student['formGroup']; 
+        $array['students'][$list][$student['gibbonPersonID']] = Format::name($student['title'], $student['preferredName'], $student['surname'], 'Student', true) . ' - ' . $student['formGroup'].' ('.$student['yearGroup'].')'; 
         $array['form'][$student['gibbonPersonID']] = $student['formGroup'];
+        $array['year'][$student['gibbonPersonID']] = $student['yearGroup'].'.'.$student['formGroup'];
         return $array;
     });
 
@@ -363,7 +364,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             $col->addLabel('students', __('Students'));
 
             $multiSelect = $col->addMultiSelect('students')
-                ->addSortableAttribute('Form', $students['form']);
+                ->addSortableAttribute('Form', $students['form'])
+                ->addSortableAttribute('Year', $students['year']);
 
             $multiSelect->source()->fromArray($students['students']['source'] ?? []);
             $multiSelect->destination()->fromArray($students['students']['destination'] ?? []);
