@@ -30,7 +30,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     //Acess denied
     $page->addError(__('You do not have access to this action.'));
 } else {
-    
+
     $gibbonPersonID = $session->get('gibbonPersonID');
 
     $tripGateway = $container->get(TripGateway::class);
@@ -55,6 +55,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         } elseif ($approval->isNotEmpty()) {
             $page->addMessage(__('You have already approved this trip, it is currently pending additional approval from other users.'));
             renderTrip($container, $tripPlannerRequestID, false);
+        } elseif ($trip['status'] == 'Rejected'){
+            $page->addMessage(__m('This trip has been rejected. No further edits or approval can be made to it.'));
         } elseif ($trip['status'] != 'Approved'){
             $page->addError(__('You do not have access to this action.'));
         }

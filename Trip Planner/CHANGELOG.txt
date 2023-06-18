@@ -1,5 +1,9 @@
 CHANGELOG
 =========
+v1.5.02
+-------
+Added a better status message when viewing a rejected trip
+
 v1.5.01
 -------
 Add year group details and filter options to student multi-select
