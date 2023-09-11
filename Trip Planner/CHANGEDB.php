@@ -209,3 +209,10 @@ $count++;
 $sql[$count][0]="1.5.02";
 $sql[$count][1]="
 ";
+
+$count++;
+$sql[$count][0]="1.5.03";
+$sql[$count][1]="
+INSERT INTO gibbonAction SET name='Trip Archive', precedence=0, category='Trips', description='Gives users read-only access to past trips.', URLList='trips_archive.php,trips_archiveView.php', entryURL='trips_archive.php', defaultPermissionAdmin='Y', defaultPermissionTeacher='N', defaultPermissionStudent='N', defaultPermissionParent='N', defaultPermissionSupport='N', categoryPermissionStaff='Y', categoryPermissionStudent='N', categoryPermissionParent='N', categoryPermissionOther='N', gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='Trip Planner');end
+INSERT INTO `gibbonPermission` (`permissionID` ,`gibbonRoleID` ,`gibbonActionID`) VALUES (NULL , '1', (SELECT gibbonActionID FROM gibbonAction JOIN gibbonModule ON (gibbonAction.gibbonModuleID=gibbonModule.gibbonModuleID) WHERE gibbonModule.name='Trip Planner' AND gibbonAction.name='Trip Archive'));end
+";

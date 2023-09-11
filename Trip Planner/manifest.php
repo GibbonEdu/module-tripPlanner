@@ -23,7 +23,7 @@ $description = "A trip planner module for Gibbon.";
 $entryURL = "trips_manage.php";
 $type = "Additional";
 $category = "Learn";
-$version = "1.5.02";
+$version = "1.5.03";
 $author = "Ray Clark";
 $url = "https://github.com/GibbonEdu/module-tripPlanner";
 
@@ -283,4 +283,19 @@ $actionRows[$actionCount]["categoryPermissionParent"] = "N";
 $actionRows[$actionCount]["categoryPermissionOther"] = "N";
 $actionCount++;
 
-?>
+$actionRows[$actionCount]["name"] = "Trip Archive";
+$actionRows[$actionCount]["precedence"] = "0";
+$actionRows[$actionCount]["category"] = "Trips";
+$actionRows[$actionCount]["description"] = "Gives users read-only access to past trips.";
+$actionRows[$actionCount]["URLList"] = "trips_archive.php,trips_archiveView.php";
+$actionRows[$actionCount]["entryURL"] = "trips_archive.php";
+$actionRows[$actionCount]["defaultPermissionAdmin"] = "Y";
+$actionRows[$actionCount]["defaultPermissionTeacher"] = "N";
+$actionRows[$actionCount]["defaultPermissionStudent"] = "N";
+$actionRows[$actionCount]["defaultPermissionParent"] = "N";
+$actionRows[$actionCount]["defaultPermissionSupport"] = "N";
+$actionRows[$actionCount]["categoryPermissionStaff"] = "Y";
+$actionRows[$actionCount]["categoryPermissionStudent"] = "N";
+$actionRows[$actionCount]["categoryPermissionParent"] = "N";
+$actionRows[$actionCount]["categoryPermissionOther"] = "N";
+$actionCount++;

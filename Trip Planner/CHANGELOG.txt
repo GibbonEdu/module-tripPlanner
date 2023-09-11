@@ -1,5 +1,9 @@
 CHANGELOG
 =========
+v1.5.03
+-------
+Added a Trip Archive page for accessing past trips
+
 v1.5.02
 -------
 Added a better status message when viewing a rejected trip

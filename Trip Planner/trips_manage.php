@@ -69,7 +69,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
 
     //Filters
     $gibbonDepartmentID = $_POST['gibbonDepartmentID'] ?? []; 
-    $gibbonSchoolYearID = $_POST['gibbonSchoolYearID'] ?? $session->get('gibbonSchoolYearID');
+    $gibbonSchoolYearID = $_REQUEST['gibbonSchoolYearID'] ?? $session->get('gibbonSchoolYearID');
 
     //Filter Form
     $form = Form::create('tripFilters', $gibbon->session->get('absoluteURL') . '/index.php?q=' . $_GET['q']);
@@ -139,6 +139,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
 
     $filters['showActive:Y'] = __m('Upcoming / Approved Trips');
     
+    $table->addMetaData('post', ['gibbonSchoolYearID' => $gibbonSchoolYearID]);
     $table->addMetaData('filterOptions', $filters);
     
     $table->addHeaderAction('add', __('Submit Request'))
@@ -173,6 +174,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                 
     $table->addActionColumn()
         ->addParam('tripPlannerRequestID')
+        ->addParam('gibbonSchoolYearID', $gibbonSchoolYearID)
         ->format(function ($trip, $actions) use ($container, $gibbonPersonID, $highestAction)  {
             $actions->addAction('view', __('View Details'))
             ->setURL('/modules/Trip Planner/trips_requestView.php');

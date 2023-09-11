@@ -249,7 +249,7 @@ function tripCommentNotifications($tripPlannerRequestID, $gibbonPersonID, $tripL
 
 /**
 */
-function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $approveMode, $readOnly = false) {
+function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $approveMode, $readOnly = false, $showLogs = true) {
     global $gibbon;
 
     $gibbonPersonID = $gibbon->session->get('gibbonPersonID');
@@ -465,11 +465,13 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
             ->setValue(Format::currency($totalCost))
             ->readOnly();
 
-    $row = $form->addRow();
-        $row->addHeading(__('Log'));
-        toggleSection($row, 'logs', $on);
+    if ($showLogs) {
 
-    $row = $form->addRow()->addClass('logs');
+        $row = $form->addRow();
+            $row->addHeading(__('Log'));
+            toggleSection($row, 'logs', $on);
+
+        $row = $form->addRow()->addClass('logs');
 
         $tripLogGateway = $container->get(TripLogGateway::class);
         $logCiteria = $tripLogGateway->newQueryCriteria()
@@ -498,6 +500,7 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
         $table->addColumn('action', __('Event'));
 
         $row->addContent($table->render($tripLogGateway->queryLogs($logCiteria)));
+    }
 
     if ($approveMode) {
         $row = $form->addRow();
