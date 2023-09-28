@@ -176,20 +176,21 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         ->addParam('tripPlannerRequestID')
         ->addParam('gibbonSchoolYearID', $gibbonSchoolYearID)
         ->format(function ($trip, $actions) use ($container, $gibbonPersonID, $highestAction)  {
-            $actions->addAction('view', __('View Details'))
-            ->setURL('/modules/Trip Planner/trips_requestView.php');
 
-        if (($highestAction == 'Manage Trips_full' || $gibbonPersonID == $trip['creatorPersonID']) && !in_array($trip['status'], ['Cancelled', 'Rejected'])) {
-            $actions->addAction('edit', __('Edit'))
-                ->addParam('mode', 'edit')
-                ->setURL('/modules/Trip Planner/trips_submitRequest.php');
-        }
-        
-        if (needsApproval($container, $gibbonPersonID, $trip['tripPlannerRequestID'])) {
-            $actions->addAction('approve', __('Approve/Reject'))
-                ->setURL('/modules/Trip Planner/trips_requestApprove.php')
-                ->setIcon('iconTick');
-        }
+            if (needsApproval($container, $gibbonPersonID, $trip['tripPlannerRequestID'])) {
+                $actions->addAction('approve', __('Approve/Reject'))
+                    ->setURL('/modules/Trip Planner/trips_requestApprove.php')
+                    ->setIcon('iconTick');
+            } else {
+                $actions->addAction('view', __('View Details'))
+                    ->setURL('/modules/Trip Planner/trips_requestView.php');
+            }
+
+            if (($highestAction == 'Manage Trips_full' || $gibbonPersonID == $trip['creatorPersonID']) && !in_array($trip['status'], ['Cancelled', 'Rejected'])) {
+                $actions->addAction('edit', __('Edit'))
+                    ->addParam('mode', 'edit')
+                    ->setURL('/modules/Trip Planner/trips_submitRequest.php');
+            }
     });
         
     echo $table->render($trips);

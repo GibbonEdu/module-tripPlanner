@@ -121,6 +121,25 @@ function getSettings(ContainerInterface $container, $guid) {
             return $data ?? '';
         });
 
+    $settingFactory->addSetting('contactAddress')
+        ->setRenderer(function ($data, $row) {
+            $row->addTextArea($data['name'])
+                ->setValue($data['value'])
+                ->setRows(3);
+        })
+        ->setProcessor(function ($data) {
+            return $data ?? '';
+        });
+
+    $settingFactory->addSetting('contactPhone')
+        ->setRenderer(function ($data, $row) {
+            $row->addTextField($data['name'])
+                ->setValue($data['value']);
+        })
+        ->setProcessor(function ($data) {
+            return $data ?? '';
+        });
+
     return $settingFactory->getSettings();
 }
 
@@ -420,7 +439,21 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
                 ->directLink()
                 ->setTarget('_blank')
                 ->addParam('q', '/modules/' . $moduleName . '/trips_reportTripPeople.php')
-                ->addParam('tripPlannerRequestID', $tripPlannerRequestID);
+                ->addParam('tripPlannerRequestID', $tripPlannerRequestID)
+                ->append('&nbsp; | &nbsp;');
+
+            $table->addHeaderAction('printableCards', __('Printable Contact Cards'))
+                ->setIcon('print')
+                ->displayLabel()
+                ->setURL('/report.php')
+                ->directLink()
+                ->setTarget('_blank')
+                ->addParam('q', '/modules/' . $moduleName . '/trips_reportPrintableCards.php')
+                ->addParam('tripPlannerRequestID', $tripPlannerRequestID)
+                ->addParam('format', 'print')
+                ->addParam('orientation', 'L')
+                ->addParam('hideHeader', true)
+                ->append('&nbsp; | &nbsp;');
 
             $table->addHeaderAction('tripOverview', __('Trip Overview'))
                 ->setIcon('print')

@@ -251,8 +251,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         $tripLogGateway = $container->get(TripLogGateway::class);
         $tripLogGateway->insert([
             'tripPlannerRequestID' => $tripPlannerRequestID,
-            'gibbonPersonID' => $gibbonPersonID,
-            'action' => $edit && !$isDraft ? 'Edit' : 'Request'
+            'gibbonPersonID'       => $gibbonPersonID,
+            'comment'              => $_POST['changeSummary'] ?? '',
+            'action'               => $edit && !$isDraft ? 'Edit' : 'Request'
         ]);
     }
 

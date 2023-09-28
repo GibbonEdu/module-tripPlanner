@@ -442,6 +442,13 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         }
     }
 
+    if ($edit && !$isDraft) {
+        $form->addRow()->addHeading(__m('Log'));
+        $col = $form->addRow()->addColumn();
+            $col->addLabel('changeSummary', __m('Change Summary'))->description(__m('Please briefly describe the changes you\'ve made to this trip. This summary will be added to the trip log.'));
+            $col->addTextarea('changeSummary')->setRows(2)->required();
+    }
+
     $row = $form->addRow('stickySubmit');
     if (!$edit || $isDraft) {
         $col = $row->addColumn()->addClass('items-center');

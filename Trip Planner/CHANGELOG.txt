@@ -1,5 +1,11 @@
 CHANGELOG
 =========
+v1.5.04
+-------
+Added a required change summary when editing a trip
+Added a printable contact card option
+Added configurable contact details in settings
+
 v1.5.03
 -------
 Added a Trip Archive page for accessing past trips

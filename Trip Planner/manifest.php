@@ -23,7 +23,7 @@ $description = "A trip planner module for Gibbon.";
 $entryURL = "trips_manage.php";
 $type = "Additional";
 $category = "Learn";
-$version = "1.5.03";
+$version = "1.5.04";
 $author = "Ray Clark";
 $url = "https://github.com/GibbonEdu/module-tripPlanner";
 
@@ -109,6 +109,9 @@ $moduleTables[$tables++] = "INSERT INTO `gibbonNotificationEvent` (`event`, `mod
 VALUES
 ('Trip Request Approval', 'Trip Planner', 'Manage Trips_full', 'Additional', 'All', 'Y'),
 ('New Trip Request', 'Trip Planner', 'Manage Trips_full', 'Additional', 'All', 'Y');";
+
+$gibbonSetting[] = "INSERT INTO gibbonSetting SET scope='Trip Planner', name='contactPhone', nameDisplay='Contact Phone Number', description='A school phone number to display on printable contact cards.', value='';";
+$gibbonSetting[] = "INSERT INTO gibbonSetting SET scope='Trip Planner', name='contactAddress', nameDisplay='Contact Address', description='A school address to display on printable contact cards.', value='';";
 
 //Actions
 $actionCount = 0;
