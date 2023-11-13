@@ -223,3 +223,8 @@ $sql[$count][1]="
 INSERT INTO gibbonSetting SET scope='Trip Planner', name='contactPhone', nameDisplay='Contact Phone Number', description='A school phone number to display on printable contact cards.', value='';end
 INSERT INTO gibbonSetting SET scope='Trip Planner', name='contactAddress', nameDisplay='Contact Address', description='A school address to display on printable contact cards.', value='';end
 ";
+
+$count++;
+$sql[$count][0]="1.5.05";
+$sql[$count][1]="
+";

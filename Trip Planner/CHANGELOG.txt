@@ -1,5 +1,10 @@
 CHANGELOG
 =========
+v1.5.05
+-------
+Fixed error messages in Submit Request causing loss of data
+Added warning messages when data isn't fully saved
+
 v1.5.04
 -------
 Added a required change summary when editing a trip

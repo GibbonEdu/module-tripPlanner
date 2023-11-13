@@ -69,6 +69,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             for ($n = 0; $n < count($students); $n++) {
                 $cards[] = [
                     'organisationName' => $session->get('organisationName'),
+                    'organisationLogo' => $session->get('organisationLogo'),
                     'contactPhone'     => $contactPhone,
                     'contactAddress'   => $contactAddress,
                     'event'            => $trip['title'],

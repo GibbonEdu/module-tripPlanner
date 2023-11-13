@@ -10,21 +10,22 @@ For info about editing, see: https://twig.symfony.com/doc/2.x/
 
 <!-- <div class="border rounded bg-gray-100 my-4 h-full"> -->
     <div class="px-3 py-4 flex items-start">
-        <div class="w-24 text-left leading-compact">
+        <div class="w-32 text-left leading-compact">
 
             <div class="w-24 overflow-hidden mb-4">
-                <img class="block w-64" alt="{{ organisationNameShort }}" src="{{ absoluteURL }}/{{ organisationLogo|default("/themes/Default/img/logo.png") }}" width="400"/>
+                <img class="block w-32" alt="{{ organisationNameShort }}" src="{{ absoluteURL }}/{{ organisationLogo|default("/themes/Default/img/logo.png") }}" width="400"/>
             </div>
 
             <p style="font-size: 5pt;">
+                <span class="font-bold">{{ organisationName }}</span><br/><br/>
                 {{ contactAddress|nl2br }}
             </p>
         </div>
 
         <div class="ml-4 text-left text-gray-700" style="font-size: 10pt;">
 
-            <span class="font-bold">{{ organisationName }}</span><br/>
-            Phone: {{ contactPhone }}<br/><br/>
+            <span class="font-bold">Emergency Contact Information</span><br/>
+            School Phone: {{ contactPhone }}<br/><br/>
 
             <span class="font-normal">{{ event }}</span><br/><br/>
 

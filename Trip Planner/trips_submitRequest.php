@@ -74,6 +74,13 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     $riskTemplateGateway = $container->get(RiskTemplateGateway::class);
 
     //Return Message
+    $page->return->addReturns([
+        'warning3' => __m('Your request was successful, but some required fields were missing. Please update your trip data.'),
+        'warning4' => __m('Your request was successful, but there are no dates set for this trip. Please add dates and update your trip request.'),
+        'warning5' => __m('Your request was successful, but there was a problem saving the cost details. Please check the costs and update your trip request.'),
+        'warning6' => __m('Your request was successful, but there no people have been added to the trip. Please check the teacher and student list and update your trip request.'),
+        'warning7' => __m('Your request was successful, but there was data missing in the dates for this trip. Please check the dates and update your trip request.'),
+    ]);
     if(!$edit && !empty($tripPlannerRequestID)) {
         $page->return->setEditLink($session->get('absoluteURL') . '/index.php?q=/modules/' . $moduleName . '/trips_requestView.php&tripPlannerRequestID=' . $tripPlannerRequestID);
     }

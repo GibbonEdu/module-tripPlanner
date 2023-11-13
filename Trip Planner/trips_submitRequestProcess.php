@@ -47,12 +47,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     //If the action isn't accesible, or in edit mode and the current user isn't the owner, throw error.
     $URL .= '/trips_manage.php&return=error0';
     header("Location: {$URL}");
-    exit();
+    exit;
 } else if ((isset($trip) && empty($trip)) || (!empty($mode) && !$edit)) {
     //If a trip is provided, but doesn't exit, Or the mode is set, but edit isn't enabled, throw error.
     $URL .= '/trips_submitRequest.php&return=error1&reason=a';
     header("Location: {$URL}");
-    exit();
+    exit;
 } else {
     $URL .= '/trips_submitRequest.php&tripPlannerRequestID='.$tripPlannerRequestID.'&mode='.$mode;
 
@@ -61,6 +61,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     $settingGateway = $container->get(SettingGateway::class);
 
     $riskAssessmentApproval = $settingGateway->getSettingByScope('Trip Planner', 'riskAssessmentApproval');
+
+    $partialFail = false;
+    $returnCode = '';
 
     //Load Trip Data
     //Format: Key => Required Flag
@@ -76,9 +79,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         if (!empty($_POST[$key])) {
             $tripData[$key] = $_POST[$key];
         } else if ($required) {
-            $URL .= '&return=error1&reason=b';
-            header("Location: {$URL}");
-            exit();
+            $partialFail = true;
+            $returnCode = 'warning3';
         }
     }
 
@@ -103,9 +105,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
     //If no teachers have been added, throw an error.
     if (empty($tripPeople)) {
-        $URL .= '&return=error1&reason=c';
-        header("Location: {$URL}");
-        exit();
+        $partialFail = true;
+        $returnCode = 'warning6';
     } 
 
     $students = $_POST['students'] ?? [];
@@ -125,10 +126,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         $startDate = Format::createDateTime($day['startDate'], $dateFormat);
         $endDate = Format::createDateTime($day['endDate'], $dateFormat);
 
-        if (!$startDate || !$endDate || $endDate < $startDate) {
-            $URL .= '&return=error1&reason=d';
-            header("Location: {$URL}");
-            exit();
+        if (!$startDate || !$endDate) {
+            $partialFail = true;
+            $returnCode = 'warning7';
+            continue;
         } 
 
         $day['startDate'] = $startDate->format('Y-m-d');
@@ -157,9 +158,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
     //If no days have been added, throw an error.
     if (empty($tripDays)) {
-        $URL .= '&return=error1&reason=f';
-        header("Location: {$URL}");
-        exit();
+        $partialFail = true;
+        $returnCode = 'warning4';
     }
 
     //TODO: DateTime overlap validation 
@@ -172,9 +172,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         $cost = $_POST['cost'][$order];
 
         if (empty($cost['title']) || empty($cost['cost']) || $cost['cost'] < 0) {
-            $URL .= '&return=error1&reason=g';
-            header("Location: {$URL}");
-            exit();
+            $partialFail = true;
+            $returnCode = 'warning5';
         }
 
         $tripCosts[] = $cost;
@@ -197,7 +196,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         $tripGateway->rollBack();
         $URL .= '&return=error2';
         header("Location: {$URL}");
-        exit();
+        exit;
     } 
 
     //TODO: Check if success, rollback if not
@@ -289,8 +288,13 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         $notificationSender->sendNotifications();
     }
 
+    if ($partialFail) {
+        $URL .= '&return='.$returnCode.'&tripPlannerRequestID=' . $tripPlannerRequestID . ($edit ? '&mode=edit' : '');
+        header("Location: {$URL}");
+        exit;
+    }
+
     $URL .= '&return=success0&tripPlannerRequestID=' . $tripPlannerRequestID . ($edit ? '&mode=edit' : '');
     header("Location: {$URL}");
-    exit();
+    exit;
 }
-?>
