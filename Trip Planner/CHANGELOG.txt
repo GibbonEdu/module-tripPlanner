@@ -1,5 +1,10 @@
 CHANGELOG
 =========
+
+v1.5.06
+-------
+Fixed the size and design of the filter table in the manage trips page
+
 v1.5.05
 -------
 Fixed error messages in Submit Request causing loss of data

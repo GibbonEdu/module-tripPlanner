@@ -23,7 +23,7 @@ $description = "A trip planner module for Gibbon.";
 $entryURL = "trips_manage.php";
 $type = "Additional";
 $category = "Learn";
-$version = "1.5.05";
+$version = "1.5.06";
 $author = "Ray Clark";
 $url = "https://github.com/GibbonEdu/module-tripPlanner";
 
