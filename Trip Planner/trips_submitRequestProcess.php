@@ -72,7 +72,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         'description'       => true,
         'location'          => true,
         'riskAssessment'    => !$riskAssessmentApproval,
-        'letterToParents'   => false
+        'letterToParents'   => false,
+        'deepLearningSync'   => false,
     ];
 
     foreach ($tripData as $key => $required) {

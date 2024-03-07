@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+v1.6.00
+-------
+Added the ability to attach trips to a Deep Learning experience
+
 v1.5.06
 -------
 Fixed the size and design of the filter table in the manage trips page

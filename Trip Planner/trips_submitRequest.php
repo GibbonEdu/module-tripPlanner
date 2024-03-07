@@ -30,6 +30,7 @@ use Gibbon\Module\TripPlanner\Domain\TripDayGateway;
 use Gibbon\Module\TripPlanner\Domain\TripGateway;
 use Gibbon\Module\TripPlanner\Domain\TripPersonGateway;
 use Gibbon\Services\Format;
+use Gibbon\Http\Url;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
@@ -80,6 +81,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         'warning5' => __m('Your request was successful, but there was a problem saving the cost details. Please check the costs and update your trip request.'),
         'warning6' => __m('Your request was successful, but there no people have been added to the trip. Please check the teacher and student list and update your trip request.'),
         'warning7' => __m('Your request was successful, but there was data missing in the dates for this trip. Please check the dates and update your trip request.'),
+        'success2' => __m('A trip plan for your Deep Learning experience has been created below. It has been added as a Draft, please review and update the details and submit your request for approval when ready.'),
     ]);
     if(!$edit && !empty($tripPlannerRequestID)) {
         $page->return->setEditLink($session->get('absoluteURL') . '/index.php?q=/modules/' . $moduleName . '/trips_requestView.php&tripPlannerRequestID=' . $tripPlannerRequestID);
@@ -356,6 +358,21 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     $row = $form->addRow();
         $row->addHeading(__('Participants'));
 
+    if (!empty($trip['deepLearningExperienceID'])) {
+        $form->toggleVisibilityByClass('deepLearningSyncY')->onCheckbox('deepLearningSync')->when('Y');
+        $form->toggleVisibilityByClass('deepLearningSyncN')->onCheckbox('deepLearningSync')->whenNot('Y');
+
+        $col = $form->addRow()->addColumn();
+            $col->addContent(Format::alert(__m('This trip is synced with a Deep Learning experience. All participants should be edited in the experience rather than the trip itself.'), 'message'))->addClass('deepLearningSyncY');
+            $col->addContent(Format::alert(__m('This trip will not be kept in sync with its Deep Learning experience. All participants should be managed manually below.'), 'warning'))->addClass('deepLearningSyncN');
+
+        $col->addCheckbox('deepLearningSync')
+            ->description(__m('Keep Deep Learning and Trip Planner participants in sync?'))
+            ->setValue('Y')
+            ->checked($trip['deepLearningSync'])
+            ->alignRight();
+    }
+
     $row = $form->addRow();
         $col = $row->addColumn();
             $col->addLabel('teachers', __('Teachers'));
@@ -395,9 +412,14 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             $col->addButton(__('Remove'), 'addGroup("Remove")')
                 ->addClass('flex-1 w-full');
 
-    if ((!$edit || $isDraft) && empty($trip['messengerGroupID'])) {
+    if (!empty($trip['messengerGroupID'])) {
+        $url = Url::fromModuleRoute('Messenger', 'groups_manage_edit')->withQueryParams(['gibbonGroupID' => $trip['messengerGroupID']]);
         $row = $form->addRow();
-            $row->addLabel('createGroup', __('Create Messenger Group?'));
+        $row->addLabel('messengerGroup', __m('Messenger Group'))->description(__m('This messenger group was created automatically when the Trip Request was created.'));
+        $row->addContent(Format::link($url, __m('View Group')));
+    } else {
+        $row = $form->addRow();
+            $row->addLabel('createGroup', __m('Create Messenger Group?'));
             $row->addYesNo('createGroup')
                 ->selected('N');
     }
@@ -410,7 +432,16 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         //Add view Header
         $form->addHeaderAction('view', __('View'))
             ->setURL('/modules/' . $moduleName . '/trips_requestView.php')
-            ->addParam('tripPlannerRequestID', $tripPlannerRequestID);
+            ->addParam('tripPlannerRequestID', $tripPlannerRequestID)
+            ->displayLabel();
+
+        if (!empty($trip['deepLearningExperienceID'])) {
+            $form->addHeaderAction('edit', __m('Edit DL Experience'))
+                ->setURL('/modules/Deep Learning/experience_manage_edit.php')
+                ->addParam('deepLearningExperienceID', $trip['deepLearningExperienceID'])
+                ->displayLabel()
+                ->prepend('&nbsp;&nbsp;|&nbsp;&nbsp;');
+        }
 
         //Load values into form
         $form->loadAllValuesFrom($trip);
@@ -511,6 +542,24 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                     $(this).timepicker('option', {'minTime': startTime.val(), 'timeFormat': 'H:i', 'showDuration': true});
                 }
             });
+
+            // Ensure that participants cannot get out of sync with the deep learning experience
+            <?php if (!empty($trip['deepLearningExperienceID']) && $trip['deepLearningSync'] == 'Y') { ?>
+                $('#teachers').attr('readonly', true);
+                $('#teachersSource').attr('readonly', true);
+                $('#students').attr('readonly', true);
+                $('#studentsSource').attr('readonly', true);
+                $('#addStudentsByGroup').attr('disabled', true);
+            <?php } ?>
+        });
+
+        $(document).on('change', '#deepLearningSync', function() {
+            var sync = $(this).is(':checked') ? true : false;
+            $('#teachers').attr('readonly', sync);
+            $('#teachersSource').attr('readonly', sync);
+            $('#students').attr('readonly', sync);
+            $('#studentsSource').attr('readonly', sync);
+            $('#addStudentsByGroup').attr('disabled', sync);
         });
 
         $(document).on('change', 'input[id^=startDate]', function() {

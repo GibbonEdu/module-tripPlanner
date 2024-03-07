@@ -182,10 +182,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                 $actions->addAction('approve', __('Approve/Reject'))
                     ->setURL('/modules/Trip Planner/trips_requestApprove.php')
                     ->setIcon('iconTick');
-            } else {
-                $actions->addAction('view', __('View Details'))
-                    ->setURL('/modules/Trip Planner/trips_requestView.php');
             }
+
+            $actions->addAction('view', __('View Details'))
+                ->setURL('/modules/Trip Planner/trips_requestView.php');
 
             if (($highestAction == 'Manage Trips_full' || $gibbonPersonID == $trip['creatorPersonID']) && !in_array($trip['status'], ['Cancelled', 'Rejected'])) {
                 $actions->addAction('edit', __('Edit'))

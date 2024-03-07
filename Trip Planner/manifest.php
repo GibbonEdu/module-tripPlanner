@@ -23,7 +23,7 @@ $description = "A trip planner module for Gibbon.";
 $entryURL = "trips_manage.php";
 $type = "Additional";
 $category = "Learn";
-$version = "1.5.06";
+$version = "1.6.00";
 $author = "Ray Clark";
 $url = "https://github.com/GibbonEdu/module-tripPlanner";
 
@@ -48,6 +48,8 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequests` (
     `gibbonSchoolYearID` int(3) unsigned zerofill NOT NULL,
     `letterToParents` text NOT NULL,
     `messengerGroupID` int(8) unsigned zerofill NULL,
+    `deepLearningExperienceID` INT(12) UNSIGNED ZEROFILL NOT NULL,
+    `deepLearningSync` ENUM('Y','N') NOT NULL DEFAULT 'N',
     PRIMARY KEY (`tripPlannerRequestID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
