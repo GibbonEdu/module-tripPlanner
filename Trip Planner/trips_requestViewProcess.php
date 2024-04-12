@@ -1,5 +1,6 @@
 <?php
 
+use Gibbon\Services\Format;
 use Gibbon\Comms\NotificationSender;
 use Gibbon\Domain\System\NotificationGateway;
 use Gibbon\Module\TripPlanner\Domain\TripGateway;
@@ -28,7 +29,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         exit();
     }
 
+    $trip = $tripGateway->getByID($tripPlannerRequestID);
     $gibbonPersonID = $session->get('gibbonPersonID');
+    $personName = Format::name('', $session->get('preferredName'), $session->get('surname'), 'Staff', false, true);
+    
     $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
     $readOnly = $highestAction == 'Manage Trips_view';
 
@@ -61,7 +65,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         $notificationGateway = $container->get(NotificationGateway::class);
         $notificationSender = new NotificationSender($notificationGateway, $session);
 
-        tripCommentNotifications($tripPlannerRequestID, $gibbonPersonID, $tripLogGateway, $notificationSender);
+        tripCommentNotifications($tripPlannerRequestID, $gibbonPersonID, $personName, $tripLogGateway, $trip, $comment, $notificationSender);
 
         $notificationSender->sendNotifications();
 

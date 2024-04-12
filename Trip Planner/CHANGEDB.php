@@ -239,3 +239,8 @@ $sql[$count][1]="
 ALTER TABLE `tripPlannerRequests` ADD `deepLearningExperienceID` INT(12) UNSIGNED ZEROFILL NULL AFTER `messengerGroupID`;end
 ALTER TABLE `tripPlannerRequests` ADD `deepLearningSync` ENUM('Y','N') NOT NULL DEFAULT 'Y' AFTER `deepLearningExperienceID`;end
 ";
+
+$count++;
+$sql[$count][0]="1.6.01";
+$sql[$count][1]="
+";

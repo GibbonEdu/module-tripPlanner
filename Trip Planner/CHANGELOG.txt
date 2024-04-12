@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+v1.6.01
+-------
+Improved the notifications sent during approval and commenting
+
 v1.6.00
 -------
 Added the ability to attach trips to a Deep Learning experience

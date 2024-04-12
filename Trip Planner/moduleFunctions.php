@@ -1,21 +1,21 @@
 <?php
 
-use Gibbon\Domain\Departments\DepartmentGateway;
-use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Forms\Form;
-use Gibbon\Module\TripPlanner\Data\Setting;
-use Gibbon\Module\TripPlanner\Data\SettingFactory;
-use Gibbon\Module\TripPlanner\Domain\ApproverGateway;
-use Gibbon\Module\TripPlanner\Domain\RiskTemplateGateway;
-use Gibbon\Module\TripPlanner\Domain\TripCostGateway;
-use Gibbon\Module\TripPlanner\Domain\TripDayGateway;
-use Gibbon\Module\TripPlanner\Domain\TripGateway;
-use Gibbon\Module\TripPlanner\Domain\TripLogGateway;
-use Gibbon\Module\TripPlanner\Domain\TripPersonGateway;
 use Gibbon\Services\Format;
 use Gibbon\Tables\DataTable;
 use Gibbon\Tables\View\GridView;
 use Psr\Container\ContainerInterface;
+use Gibbon\Domain\System\SettingGateway;
+use Gibbon\Module\TripPlanner\Data\Setting;
+use Gibbon\Domain\Departments\DepartmentGateway;
+use Gibbon\Module\TripPlanner\Domain\TripGateway;
+use Gibbon\Module\TripPlanner\Data\SettingFactory;
+use Gibbon\Module\TripPlanner\Domain\TripDayGateway;
+use Gibbon\Module\TripPlanner\Domain\TripLogGateway;
+use Gibbon\Module\TripPlanner\Domain\ApproverGateway;
+use Gibbon\Module\TripPlanner\Domain\TripCostGateway;
+use Gibbon\Module\TripPlanner\Domain\TripPersonGateway;
+use Gibbon\Module\TripPlanner\Domain\RiskTemplateGateway;
 
 function getSettings(ContainerInterface $container, $guid) {
     $riskTemplateGateway = $container->get(RiskTemplateGateway::class);
@@ -251,18 +251,15 @@ function needsApproval(ContainerInterface $container, $gibbonPersonID, $tripPlan
     return true;
 }
 
-function tripCommentNotifications($tripPlannerRequestID, $gibbonPersonID, $tripLogGateway, $notificationSender) {
-    global $gibbon;
-
-    $text = __('Someone has commented on a trip request.');
-    $moduleName = $gibbon->session->get('module');
-    $notificationURL = '/index.php?q=/modules/' . $moduleName . '/trips_requestView.php&tripPlannerRequestID=' . $tripPlannerRequestID;
+function tripCommentNotifications($tripPlannerRequestID, $gibbonPersonID, $personName, $tripLogGateway, $trip, $comment, $notificationSender) {
+    $text = __('{person} has commented on a trip request: {trip}', ['person' => $personName, 'trip' => $trip['title']]).'<br/><br/><b>'.__('Comment').':</b><br/>'.$comment;
+    $notificationURL = '/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID=' . $tripPlannerRequestID;
 
     $people = $tripLogGateway->selectLoggedPeople($tripPlannerRequestID);
     while ($row = $people->fetch()) {
         //Skip current user
         if ($row['gibbonPersonID'] == $gibbonPersonID) continue;
-        $notificationSender->addNotification($row['gibbonPersonID'], $text, $moduleName, $notificationURL);
+        $notificationSender->addNotification($row['gibbonPersonID'], $text, 'Trip Planner', $notificationURL);
     }
 }
 

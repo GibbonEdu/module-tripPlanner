@@ -41,6 +41,8 @@ if (!empty($mode) && !empty($tripPlannerRequestID)) {
 $isDraft = !empty($trip) && $trip['status'] == 'Draft';
 
 $gibbonPersonID = $session->get('gibbonPersonID');
+$personName = Format::name('', $session->get('preferredName'), $session->get('surname'), 'Staff', false, true);
+
 $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submitRequest.php') || ($edit && $highestAction != 'Manage Trips_full' && $trip['creatorPersonID'] != $gibbonPersonID)) {
@@ -265,7 +267,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
         $event = new NotificationEvent('Trip Planner', 'New Trip Request');
 
-        $event->setNotificationText(sprintf(__('A new Trip has been Requested (%1$s).'), $tripData['title']));
+        $event->setNotificationText(__('{person} has submitted a new Trip Request: {trip}', ['person' => $personName, 'trip' => $tripData['title']]));
         $event->setActionLink('/index.php?q=/modules/Trip Planner/trips_requestApprove.php&tripPlannerRequestID=' . $tripPlannerRequestID);
 
         $requestApprovalType = $settingGateway->getSettingByScope('Trip Planner', 'requestApprovalType');
@@ -286,6 +288,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
         //Send all notifications
         $event->pushNotifications($notificationGateway, $notificationSender);
+
+        // Add a notification for the trip owner
+        $notificationSender->addNotification($gibbonPersonID, __('You have submitted a new Trip Request (pending approval): {trip}', ['trip' => $tripData['title']]), 'Trip Planner', '/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID=' . $tripPlannerRequestID);
+
         $notificationSender->sendNotifications();
     }
 

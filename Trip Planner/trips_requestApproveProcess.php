@@ -1,5 +1,6 @@
 <?php
 
+use Gibbon\Services\Format;
 use Gibbon\Comms\NotificationEvent;
 use Gibbon\Comms\NotificationSender;
 use Gibbon\Domain\System\NotificationGateway;
@@ -18,6 +19,7 @@ $moduleName = $session->get('module');
 $URL = $absoluteURL . '/index.php?q=/modules/' . $moduleName;
 
 $gibbonPersonID = $session->get('gibbonPersonID');
+$personName = Format::name('', $session->get('preferredName'), $session->get('surname'), 'Staff', false, true);
 
 $approverGateway = $container->get(ApproverGateway::class);
 $approver = $approverGateway->selectApproverByPerson($gibbonPersonID);
@@ -67,7 +69,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             $notificationSender = new NotificationSender($notificationGateway, $session);
 
             $notificationURL = '/index.php?q=/modules/' . $moduleName . '/trips_requestView.php&tripPlannerRequestID=' . $tripPlannerRequestID;
-            
+            $commentText = !empty($comment) ? '<br/><br/><b>'.__('Comment').':</b><br/>'.$comment : '';
+
             $tripLogGateway = $container->get(TripLogGateway::class);
 
             if ($action == 'Approval') {
@@ -81,7 +84,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                     }
 
                     if ($owner != $gibbonPersonID) {
-                        $notificationSender->addNotification($owner, __('Your trip request has been fully approved.'), $moduleName, $notificationURL);
+                        $notificationSender->addNotification($owner, __('Your trip request has been fully approved by {person}.', ['person' => $personName]).$commentText, $moduleName, $notificationURL);
                     }
                 } else {
                     $done = false;
@@ -116,24 +119,24 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                             exit();
                         }
 
-                        $message = 'Your trip request is awaiting final approval.';
-
                         if ($status == 'Approved') {
                             //Custom notifications for final approval
                             $event = new NotificationEvent('Trip Planner', 'Trip Request Approval');
 
-                            $notificationText = sprintf(__('Trip %1$s has been approved.'), $title);
+                            $notificationText = __('A trip request has been approved by {person}: {trip}', ['person' => $personName, 'trip' => $trip['title']]);
 
                             $event->setNotificationText($notificationText);
                             $event->setActionLink($notificationURL);
 
                             $event->sendNotifications($pdo, $session);
 
-                            $message = 'Your trip request has been fully approved.';
+                            $message = __('Your trip request has been fully approved by {person}.', ['person' => $personName]).$commentText;
+                        } else {
+                            $message = __('Your trip request has been partially approved by {person} and is awaiting final approval.', ['person' => $personName]).$commentText;
                         }
 
                         if ($owner != $gibbonPersonID) {
-                            $notificationSender->addNotification($owner, __($message), $moduleName, $notificationURL);
+                            $notificationSender->addNotification($owner, $message, $moduleName, $notificationURL);
                         }
 
                     } elseif (!empty($nextApprover) && $nextApprover->isNotEmpty()) {
@@ -141,8 +144,16 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                         $nextApprover = $nextApprover->fetch();
 
                         $notificationSender->addNotification($nextApprover['gibbonPersonID'], __('A trip request is awaiting your approval.'), $moduleName, $absoluteURL . '/index.php?q=/modules/' . $moduleName . '/trips_requestApprove.php&tripPlannerRequestID='. $tripPlannerRequestID);
+
+                        if ($owner != $gibbonPersonID) {
+                            $notificationSender->addNotification($owner, __('Your trip request has been partially approved by {person} and is awaiting final approval.', ['person' => $personName]).$commentText, $moduleName, $notificationURL);
+                        }
                     } else {
                         $action .= ' - Partial';
+
+                        if ($owner != $gibbonPersonID) {
+                            $notificationSender->addNotification($owner, __('Your trip request has been partially approved by {person} and is awaiting final approval.', ['person' => $personName]).$commentText, $moduleName, $notificationURL);
+                        }
                     }
                 }
             } elseif ($action == 'Rejection') {
@@ -153,10 +164,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                 }
 
                 if ($owner != $gibbonPersonID) {
-                    $notificationSender->addNotification($owner, __('Your trip request has been rejected.'), $moduleName, $notificationURL);
+                    $notificationSender->addNotification($owner, __('Your trip request has been rejected by {person}. Please see their comments for more details.', ['person' => $personName]).$commentText, $moduleName, $notificationURL);
                 }
             } elseif ($action == 'Comment') {
-                tripCommentNotifications($tripPlannerRequestID, $gibbonPersonID, $tripLogGateway, $notificationSender);
+                tripCommentNotifications($tripPlannerRequestID, $gibbonPersonID, $personName, $tripLogGateway, $trip, $comment, $notificationSender);
             } else {
                 $URL .= '&return=error1';
                 header("Location: {$URL}");
