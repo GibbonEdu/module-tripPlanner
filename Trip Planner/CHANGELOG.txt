@@ -1,5 +1,9 @@
 CHANGELOG
 =========
+v1.7.01
+-------
+Fixed CSS bug introduced in last version
+
 v1.7.00
 -------
 Transferred ownership from Ross Parker to Gibbon Foundation
