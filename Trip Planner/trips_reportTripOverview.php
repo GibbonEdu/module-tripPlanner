@@ -19,22 +19,17 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-use Gibbon\Domain\Departments\DepartmentGateway;
+use Gibbon\View\View;
+use Gibbon\Services\Format;
+use Gibbon\Domain\User\UserGateway;
+use Gibbon\Domain\User\FamilyGateway;
+use Gibbon\Tables\Prefab\ReportTable;
+use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Domain\Students\MedicalGateway;
 use Gibbon\Domain\Students\StudentReportGateway;
-use Gibbon\Domain\System\SettingGateway;
-use Gibbon\Domain\User\FamilyGateway;
-use Gibbon\Domain\User\UserGateway;
-use Gibbon\Forms\DatabaseFormFactory;
-use Gibbon\Forms\Form;
-use Gibbon\Module\TripPlanner\Domain\ApproverGateway;
-use Gibbon\Module\TripPlanner\Domain\TripCostGateway;
-use Gibbon\Module\TripPlanner\Domain\TripDayGateway;
 use Gibbon\Module\TripPlanner\Domain\TripGateway;
+use Gibbon\Module\TripPlanner\Domain\TripDayGateway;
 use Gibbon\Module\TripPlanner\Domain\TripPersonGateway;
-use Gibbon\Services\Format;
-use Gibbon\Tables\Prefab\ReportTable;
-use Gibbon\View\View;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
@@ -156,6 +151,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                     $output .= ($student['lastPersonalUpdate'] < $cutoffDate) ? '<span style="color: #ff0000; font-weight: bold"><i>' : '<span><i>';
                     $output .= !empty($student['lastPersonalUpdate']) ? Format::date($student['lastPersonalUpdate']) : __('N/A');
                     $output .= '</i></span>';
+
+                    if (!empty($student['privacy'])) {
+                        $output .= '<br/>'.Format::tag(__('Privacy').': '.$student['privacy'], 'error mt-2').'<br/>';
+                    }
 
                     //Produce list of parent phone numbers
                     $adultPhones = [];

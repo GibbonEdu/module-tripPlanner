@@ -212,6 +212,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     $form = Form::create('requestForm', $session->get('absoluteURL') . '/modules/' . $moduleName . '/trips_submitRequestProcess.php');
     $form->addHiddenValue('address', $session->get('address'));
     $form->addHiddenValue('saveMode', 'Submit');
+    $form->addMeta()->addDefaultContent('editProcess');
 
     $form->setTitle(__('Request'));
 
@@ -308,7 +309,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             $col = $row->addColumn();
                 $col->addTextArea('description')
                     ->setRows(2)
-                    ->setClass('fullWidth floatNone')
+                    ->setClass('w-full floatNone')
                     ->placeholder(__('Cost Description'));
 
     //Tool Button
@@ -423,7 +424,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         $row = $form->addRow();
             $row->addLabel('createGroup', __m('Create Messenger Group?'));
             $row->addYesNo('createGroup')
-                ->selected('N');
+                ->selected($edit ? 'N' : 'Y');
     }
     
     if ($edit) {
@@ -467,8 +468,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
         $days = $tripDayGateway->queryTripDay($dayCriteria);
         foreach ($days as $day) {
-            $day['startDate'] = Format::date($day['startDate']);
-            $day['endDate'] = Format::date($day['endDate']);
 
             if (boolval($day['allDay']) || empty($day['startTime']) || empty($day['endTime'])) {
                 unset($day['startTime']);
@@ -491,23 +490,20 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
     $row = $form->addRow('stickySubmit');
     if (!$edit || $isDraft) {
-        $col = $row->addColumn()->addClass('items-center');
-        $col->addButton(__('Save Draft'))->onClick('saveDraft()')->addClass('rounded-sm w-auto mr-2');
+        $row->addButton(__('Save Draft'))
+            ->setAttribute('@click', 'checkDraft(); $validate.updateData("form"); if ($validate.isComplete("requestForm")) { saveDraft() } else { invalid = true; }');
     }
-    $col = $row->addColumn()->addClass('items-center');
-    $col->addSubmit();
+    $row->addSubmit();
 
     print $form->getOutput();
 
     ?>
     <script>
         //Once date and time chaining is fixed in the core, most of this can go.
-        var date = 'input[id*="Date"]';
         var time = 'input[id*="Time"]';
 
         //Fix for datepicker in custom blocks
         $(document).on('click', '.addBlock', function () {
-            $(date).removeClass('hasDatepicker').datepicker({'timeFormat': 'H:i', onSelect: function(){$(this).blur();}, onClose: function(){$(this).change();} });
             $(time).removeClass('hasTimepicker').timepicker({'timeFormat': 'H:i', onSelect: function(){$(this).blur();}, onClose: function(){$(this).change();} });
         });
 
@@ -523,26 +519,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
         }
 
         $(document).ready(function(){
-            $(date).removeClass('hasDatepicker').datepicker({onSelect: function(){$(this).blur();}, onClose: function(){$(this).change();} });
-
             //This is to ensure that loaded blocks have timepickers
             $(time).each(function() {
                 setTimepicker($(this));
-            });
-
-            //Ensure that loaded dates have correct max and min dates.
-            $('input[id^=startDate]').each(function() {
-                var endDate = $('#' + $(this).prop('id').replace('start', 'end'));
-                // $(this).datepicker('option', {'maxDate': endDate.val()});
-                // endDate.datepicker('option', {'minDate': $(this).val()});
-            });
-
-            //Ensure that loaded endTimes are properly chained.
-            $('input[id^=endTime]').each(function() {
-                var startTime = $('#' + $(this).prop('id').replace('end', 'start'));
-                if (startTime.val() != "") {
-                    $(this).timepicker('option', {'minTime': startTime.val(), 'timeFormat': 'H:i', 'showDuration': true});
-                }
             });
 
             // Ensure that participants cannot get out of sync with the deep learning experience
@@ -564,30 +543,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             $('#addStudentsByGroup').attr('disabled', sync);
         });
 
-        $(document).on('change', 'input[id^=startDate]', function() {
-            var endDate = $('#' + $(this).prop('id').replace('start', 'end'));
-            if (endDate.val() == "" || $(this).val() > endDate.val()) {
-                endDate.val($(this).val());
-            }
-            endDate.datepicker('option', {'minDate': $(this).val()});
-        });
-
-        $(document).on('change', 'input[id^=endDate]', function() {
-            var startDate = $('#' + $(this).prop('id').replace('end', 'start'));
-            if (startDate.val() == "" || $(this).val() < startDate.val()) {
-                startDate.val($(this).val());
-            }
-            startDate.datepicker('option', {'maxDate': $(this).val()});
-        });
-
-        $(document).on('changeTime', 'input[id^=startTime]', function() {
-            var endTime = $('#' + $(this).prop('id').replace('start', 'end'));
-            if (endTime.val() == "" || $(this).val() > endTime.val()) {
-                endTime.val($(this).val());
-            }
-            endTime.timepicker('option', {'minTime': $(this).val(), 'timeFormat': 'H:i', 'showDuration': true});
-        });
-
         //Javascript to change risk assessment when template selector is changed.
         <?php echo 'var templates = ' . json_encode($templates) . ';'; ?>
         $("select[name=riskAssessmentTemplates]").on('change', function(){
@@ -606,7 +561,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                 $('#addGroupDiv').load("<?php print $session->get('absoluteURL') . '/modules/' . rawurlencode($moduleName) . '/trips_submitRequestAddGroupAjax.php'?>", 'data=' + data + '&mode=' + mode);
             }
         }
-        function saveDraft() {
+
+        function checkDraft() {
             $('option', '#teachers').each(function() {
                 $(this).prop('selected', true);
             });
@@ -614,15 +570,17 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
                 $(this).prop('selected', true);
             });
 
-            var form = LiveValidationForm.getInstance(document.getElementById('requestForm'));
-            if (LiveValidation.massValidate(form.fields)) {
-                $('button[id="Save Draft"]').prop('disabled', true);
-                setTimeout(function() {
-                    $('button[id="Save Draft"]').wrap('<span class="submitted"></span>');
-                }, 500);
-                $('input[name="saveMode"]').val('Draft');
-                document.getElementById('requestForm').submit();
-            }
+            document.querySelectorAll('*[data-error-msg]').forEach(function (element) {
+                element.dispatchEvent(new Event('change'));
+                element.dispatchEvent(new Event('blur'));
+            });
+        }
+
+        function saveDraft() {
+            window.onbeforeunload = null;
+
+            $('input[name="saveMode"]').val('Draft');
+            document.getElementById('requestForm').submit();
         }
     </script>
 

@@ -38,7 +38,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_report
     // FILTER
     $form = Form::create('filter', $session->get('absoluteURL').'/index.php', 'get');
     $form->setTitle(__('Filter'));
-    $form->setClass('noIntBorder fullWidth');
+    $form->setClass('noIntBorder w-full');
 
     $form->addHiddenValue('q', '/modules/Trip Planner/trips_reportToday.php');
 
@@ -47,7 +47,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_report
         $row->addDate('date')->setValue($date);
 
     $row = $form->addRow();
-        $row->addFooter();
         $row->addSearchSubmit($gibbon->session);
 
     echo $form->getOutput();

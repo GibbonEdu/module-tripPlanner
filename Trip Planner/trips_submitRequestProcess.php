@@ -120,23 +120,16 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     //Load Trip Days
     $tripDays = [];
 
-    $dateFormat = 'd/m/Y';
-
     $dateTimeOrder = $_POST['dateTimeOrder'] ?? [];
     foreach ($dateTimeOrder as $order) {
         $day = $_POST['dateTime'][$order];
 
-        $startDate = Format::createDateTime($day['startDate'], $dateFormat);
-        $endDate = Format::createDateTime($day['endDate'], $dateFormat);
+        if ($day['startDate'] > $day['endDate']) {
+            $endDate = $day['endDate'];
+            $day['endDate'] = $day['startDate'];
+            $day['startDate'] = $endDate;
 
-        if (!$startDate || !$endDate) {
-            $partialFail = true;
-            $returnCode = 'warning7';
-            continue;
-        } 
-
-        $day['startDate'] = $startDate->format('Y-m-d');
-        $day['endDate'] = $endDate->format('Y-m-d');
+        }
 
         if (!empty($day['startTime']) && !empty($day['endTime'])) {
             $day['allDay'] = '0';
@@ -296,12 +289,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     }
 
     if ($partialFail) {
-        $URL .= '&return='.$returnCode.'&tripPlannerRequestID=' . $tripPlannerRequestID . ($edit ? '&mode=edit' : '');
+        $URL .= '&return='.$returnCode.'&tripPlannerRequestID=' . $tripPlannerRequestID . ($edit || $saveMode == 'Draft' ? '&mode=edit' : '');
         header("Location: {$URL}");
         exit;
     }
 
-    $URL .= '&return=success0&tripPlannerRequestID=' . $tripPlannerRequestID . ($edit ? '&mode=edit' : '');
+    $URL .= '&return=success0&tripPlannerRequestID=' . $tripPlannerRequestID . ($edit || $saveMode == 'Draft' ? '&mode=edit' : '');
     header("Location: {$URL}");
     exit;
 }

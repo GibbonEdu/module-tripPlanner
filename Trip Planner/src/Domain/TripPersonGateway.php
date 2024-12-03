@@ -23,7 +23,7 @@ class TripPersonGateway extends QueryableGateway
         ->from($this->getTableName())
         ->innerJoin('gibbonPerson', 'gibbonPerson.gibbonPersonID = tripPlannerRequestPerson.gibbonPersonID')
         ->cols([
-            'gibbonPerson.gibbonPersonID', 'gibbonPerson.title', 'gibbonPerson.preferredName', 'gibbonPerson.surname', 'gibbonPerson.image_240',
+            'gibbonPerson.gibbonPersonID', 'gibbonPerson.title', 'gibbonPerson.preferredName', 'gibbonPerson.surname', 'gibbonPerson.image_240', 'gibbonPerson.privacy',
             'tripPlannerRequestPerson.tripPlannerRequestID', 'tripPlannerRequestPerson.role'
         ]);
 

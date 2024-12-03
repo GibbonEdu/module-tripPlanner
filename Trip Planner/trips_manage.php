@@ -77,7 +77,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     $form = Form::create('tripFilters', $gibbon->session->get('absoluteURL') . '/index.php?q=' . $_GET['q']);
     $form->setFactory(DatabaseFormFactory::create($pdo));
     $form->setTitle(__('Filter'));
-    $form->setClass('noIntBorder fullWidth');
+    $form->setClass('noIntBorder w-full');
 
     if (!empty($departments)) {
         $row = $form->addRow();

@@ -1,5 +1,9 @@
 CHANGELOG
 =========
+v1.8.00
+-------
+Updated compatibility to Gibbon v28.0.00+
+
 v1.7.01
 -------
 Fixed CSS bug introduced in last version
