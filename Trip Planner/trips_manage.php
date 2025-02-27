@@ -167,7 +167,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         ->format(Format::using('dateReadable', ['firstDayOfTrip']));
 
     $table->addColumn('status', __('Status'))->format(function($trip) {
-        $output = $trip['status'] == 'Awaiting Final Approval' ? 'Approval - Partial' : $trip['status'];        
+        $output = $trip['status'];       
         $output .= $trip['canApprove'] == 'Y' && $trip['status'] == 'Requested' ? Format::tag(__m('Awaiting Approval'), 'message ml-2') : '';
         return $output;
     });
