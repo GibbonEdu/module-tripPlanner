@@ -105,6 +105,18 @@ class TripGateway extends QueryableGateway
                     ->bindValue('queryDate',$queryDate);
             },
         ]);
+
+        // Order the results by status
+        $query->orderBy([
+            "CASE tripPlannerRequests.status
+                WHEN 'Requested' THEN 1
+                WHEN 'Draft' THEN 2
+                WHEN 'Awaiting Final Approval' THEN 3
+                WHEN 'Approved' THEN 4
+                ELSE 5
+            END"
+        ]);
+        
         return $this->runQuery($query, $criteria);
     }
 
