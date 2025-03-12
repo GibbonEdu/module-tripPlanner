@@ -53,7 +53,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         ]);
 
         if (needsApproval($container, $gibbonPersonID, $tripPlannerRequestID)) {
-            renderTrip($container, $tripPlannerRequestID, true);
+            $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
+            renderTrip($container, $tripPlannerRequestID, true, false, true, $highestAction);
         } elseif ($approval->isNotEmpty()) {
             $page->addMessage(__('You have already approved this trip, it is currently pending additional approval from other users.'));
             renderTrip($container, $tripPlannerRequestID, false);

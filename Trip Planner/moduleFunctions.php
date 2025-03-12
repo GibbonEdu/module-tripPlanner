@@ -265,7 +265,7 @@ function tripCommentNotifications($tripPlannerRequestID, $gibbonPersonID, $perso
 
 /**
 */
-function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $approveMode, $readOnly = false, $showLogs = true) {
+function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $approveMode, $readOnly = false, $showLogs = true, $highestAction = null) {
     global $gibbon;
 
     $gibbonPersonID = $gibbon->session->get('gibbonPersonID');
@@ -279,7 +279,7 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
     $form->addHiddenValue('address', $gibbon->session->get('address'));
     $form->addHiddenValue('tripPlannerRequestID', $tripPlannerRequestID);
 
-    if ($gibbonPersonID == $trip['creatorPersonID']) {
+    if ($gibbonPersonID == $trip['creatorPersonID'] or $highestAction == 'Manage Trips_full') {
         //Edit
         $form->addHeaderAction('edit', __('Edit'))
             ->setURL('/modules/' . $moduleName . '/trips_submitRequest.php')
