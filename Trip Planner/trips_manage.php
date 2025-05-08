@@ -131,7 +131,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         if ($trip['status'] == 'Draft') $row->addClass('dull');
         if ($trip['status'] == 'Awaiting Final Approval') $row->addClass('message');
         if ($trip['status'] == 'Rejected' || $trip['status'] == 'Cancelled') $row->addClass('dull');
-
+        if ($trip['status'] == 'Pre-Approved') $row->addClass('bg-blue-200');
+        
         return $row;
     });
 
@@ -140,7 +141,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         return $filters;
     });
 
-    $filters['showActive:Y'] = __m('Upcoming / Approved Trips');
+    $filters['showActive:Y'] = __('Upcoming / Approved Trips');
     
     $table->addMetaData('post', ['gibbonSchoolYearID' => $gibbonSchoolYearID]);
     $table->addMetaData('filterOptions', $filters);
@@ -168,7 +169,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
 
     $table->addColumn('status', __('Status'))->format(function($trip) {
         $output = $trip['status'];       
-        $output .= $trip['canApprove'] == 'Y' && $trip['status'] == 'Requested' ? Format::tag(__m('Awaiting Approval'), 'message ml-2') : '';
+        $output .= $trip['canApprove'] == 'Y' && ($trip['status'] == 'Requested' || $trip['status'] == 'Pre-Approved') ? Format::tag(__('Awaiting Approval'), 'message ml-2') : '';
         return $output;
     });
                 

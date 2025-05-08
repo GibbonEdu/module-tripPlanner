@@ -271,3 +271,11 @@ $sql[$count][1] = "";
 ++$count;
 $sql[$count][0] = '1.8.02';
 $sql[$count][1] = "";
+
+//v1.8.03
+++$count;
+$sql[$count][0] = '1.8.03';
+$sql[$count][1] = "
+ALTER TABLE `tripPlannerRequests` CHANGE `status` `status` ENUM('Requested','Approved','Rejected','Cancelled','Awaiting Final Approval','Draft', 'Pre-Approved') CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT 'Requested';end
+ALTER TABLE `tripPlannerRequestLog` CHANGE `action` `action` ENUM('Request', 'Cancellation', 'Approval - Partial', 'Approval - Final', 'Rejection', 'Comment', 'Edit', 'Pre-Approval') NOT NULL;end
+";

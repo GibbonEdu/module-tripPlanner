@@ -58,7 +58,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_report
       ->filterBy('statuses', serialize([
         'Requested',
         'Approved',
-        'Awaiting Final Approval'
+        'Awaiting Final Approval',
+        'Pre-Approved',
       ]))
       ->fromPOST();
 

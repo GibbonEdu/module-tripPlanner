@@ -159,6 +159,7 @@ function getStatuses() {
         'Rejected',
         'Cancelled',
         'Awaiting Final Approval',
+        'Pre-Approved',
     ];
 }
 
@@ -216,7 +217,7 @@ function needsApproval(ContainerInterface $container, $gibbonPersonID, $tripPlan
     $isApprover = !empty($approver);
     $finalApprover = $isApprover ? $approver['finalApprover'] : false;
 
-    if ($trip['status'] == 'Requested' && $isApprover) {
+    if (($trip['status'] == 'Requested' || $trip['status'] == 'Pre-Approved') && $isApprover) {
         $settingGateway = $container->get(SettingGateway::class);
         $requestApprovalType = $settingGateway->getSettingByScope('Trip Planner', 'requestApprovalType');
 
@@ -536,7 +537,7 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
         $row = $form->addRow();
             $row->addLabel('action', __('Action'));
             $row->addSelect('action')
-                ->fromArray(['Approval', 'Rejection', 'Comment']);
+                ->fromArray(['Approval', 'Rejection', 'Comment', 'Pre-Approval']);
     }
 
     if (!$readOnly) {
