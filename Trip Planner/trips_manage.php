@@ -141,7 +141,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         return $filters;
     });
 
-    $filters['showActive:Y'] = __('Upcoming / Approved Trips');
+    $filters['showActive:Y'] = __m('Upcoming / Approved Trips');
     
     $table->addMetaData('post', ['gibbonSchoolYearID' => $gibbonSchoolYearID]);
     $table->addMetaData('filterOptions', $filters);
