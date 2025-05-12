@@ -46,7 +46,7 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequests` (
     `description` text NOT NULL,
     `location` text NOT NULL,
     `riskAssessment` text NULL,
-    `status` ENUM('Requested', 'Approved', 'Rejected', 'Cancelled', 'Awaiting Final Approval','Draft') DEFAULT 'Requested' NOT NULL,
+    `status` ENUM('Requested', 'Approved', 'Rejected', 'Cancelled', 'Awaiting Final Approval','Draft', 'Pre-Approved') DEFAULT 'Requested' NOT NULL,
     `gibbonSchoolYearID` int(3) unsigned zerofill NOT NULL,
     `letterToParents` text NOT NULL,
     `messengerGroupID` int(8) unsigned zerofill NULL,
@@ -87,7 +87,7 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerRequestLog` (
     `tripPlannerRequestLogID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
     `tripPlannerRequestID` int(7) unsigned zerofill NOT NULL,
     `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
-    `action` ENUM('Request', 'Cancellation', 'Approval - Partial', 'Approval - Final', 'Rejection', 'Comment', 'Edit') NOT NULL,
+    `action` ENUM('Request', 'Cancellation', 'Approval - Partial', 'Approval - Final', 'Rejection', 'Comment', 'Edit', 'Pre-Approval') NOT NULL,
     `comment` text NULL,
     `timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`tripPlannerRequestLogID`)
