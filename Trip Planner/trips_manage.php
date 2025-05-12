@@ -169,7 +169,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
 
     $table->addColumn('status', __('Status'))->format(function($trip) {
         $output = $trip['status'];       
-        $output .= $trip['canApprove'] == 'Y' && ($trip['status'] == 'Requested' || $trip['status'] == 'Pre-Approved') ? Format::tag(__('Awaiting Approval'), 'message ml-2') : '';
+        $output .= $trip['canApprove'] == 'Y' && ($trip['status'] == 'Requested' || $trip['status'] == 'Pre-Approved') ? Format::tag(__m('Awaiting Approval'), 'message ml-2') : '';
         return $output;
     });
                 
