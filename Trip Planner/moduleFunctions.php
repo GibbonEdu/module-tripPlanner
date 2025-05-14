@@ -523,12 +523,15 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
             });
 
         $table->addColumn('person', __('Person'))
+            ->context('primary')
             ->format(Format::using('name', ['title', 'preferredName', 'surname', 'Staff', false, true]));
 
         $table->addColumn('timestamp', __('Date & Time'))
+            ->context('primary')
             ->format(Format::using('dateTime', ['timestamp']));
 
-        $table->addColumn('action', __('Event'));
+        $table->addColumn('action', __('Event'))
+            ->context('primary');
 
         $row->addContent($table->render($tripLogGateway->queryLogs($logCiteria)));
     }
