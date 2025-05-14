@@ -1,5 +1,10 @@
 CHANGELOG
 =========
+
+v1.8.03
+-------
+Added the option to pre-approve a trip before final approval
+
 v1.8.02
 -------
 Added Edit link from Approve view, for users with Manage Trips_full

@@ -43,7 +43,7 @@ class TripGateway extends QueryableGateway
         if ($expiredUnapproved) {
             $query->where("NOT (
                 (SELECT IFNULL(MAX(endDate),CURRENT_DATE) FROM tripPlannerRequestDays WHERE tripPlannerRequestID = tripPlannerRequests.tripPlannerRequestID) < CURRENT_DATE 
-                AND (tripPlannerRequests.status = 'Requested' OR tripPlannerRequests.status = 'Awaiting Final Approval')
+                AND (tripPlannerRequests.status = 'Requested' OR tripPlannerRequests.status = 'Pre-Approved' OR tripPlannerRequests.status = 'Awaiting Final Approval')
                 )");
         }
 
@@ -112,8 +112,9 @@ class TripGateway extends QueryableGateway
                 WHEN 'Requested' THEN 1
                 WHEN 'Draft' THEN 2
                 WHEN 'Awaiting Final Approval' THEN 3
-                WHEN 'Approved' THEN 4
-                ELSE 5
+                WHEN 'Pre-Approved' THEN 4
+                WHEN 'Approved' THEN 5
+                ELSE 6
             END"
         ]);
         

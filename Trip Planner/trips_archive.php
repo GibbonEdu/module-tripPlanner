@@ -65,6 +65,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_archiv
         if ($trip['status'] == 'Draft') $row->addClass('dull');
         if ($trip['status'] == 'Awaiting Final Approval') $row->addClass('message');
         if ($trip['status'] == 'Rejected' || $trip['status'] == 'Cancelled') $row->addClass('dull');
+        if ($trip['status'] == 'Pre-Approved') $row->addClass('bg-blue-200');
 
         return $row;
     });
