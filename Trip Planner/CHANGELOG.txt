@@ -1,5 +1,8 @@
 CHANGELOG
 =========
+v1.8.04
+-------
+"$gibbon->session" is now deprecated. Replaced $gibbon->session to $session.
 
 v1.8.03
 -------

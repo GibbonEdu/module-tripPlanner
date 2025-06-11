@@ -267,17 +267,17 @@ function tripCommentNotifications($tripPlannerRequestID, $gibbonPersonID, $perso
 /**
 */
 function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $approveMode, $readOnly = false, $showLogs = true, $highestAction = null) {
-    global $gibbon;
+    global $session;
 
-    $gibbonPersonID = $gibbon->session->get('gibbonPersonID');
-    $moduleName = $gibbon->session->get('module');
+    $gibbonPersonID = $session->get('gibbonPersonID');
+    $moduleName = $session->get('module');
 
     $tripGateway = $container->get(TripGateway::class);
     $trip = $tripGateway->getByID($tripPlannerRequestID);
 
-    $link = $gibbon->session->get('absoluteURL') . '/modules/' . $moduleName . '/trips_request' . ($approveMode ? "Approve" : "View") . 'Process.php';
+    $link = $session->get('absoluteURL') . '/modules/' . $moduleName . '/trips_request' . ($approveMode ? "Approve" : "View") . 'Process.php';
     $form = Form::create('tripForm', $link);
-    $form->addHiddenValue('address', $gibbon->session->get('address'));
+    $form->addHiddenValue('address', $session->get('address'));
     $form->addHiddenValue('tripPlannerRequestID', $tripPlannerRequestID);
 
     if ($gibbonPersonID == $trip['creatorPersonID'] or $highestAction == 'Manage Trips_full') {
@@ -304,8 +304,8 @@ function renderTrip(ContainerInterface $container, $tripPlannerRequestID, $appro
             ->displayLabel();
     }
 
-    $on = './themes/'.$gibbon->session->get("gibbonThemeName").'/img/minus.png';
-    $off = './themes/'.$gibbon->session->get("gibbonThemeName").'/img/plus.png';
+    $on = './themes/'.$session->get("gibbonThemeName").'/img/minus.png';
+    $off = './themes/'.$session->get("gibbonThemeName").'/img/plus.png';
 
     function toggleSection(&$row, $section, $icon) {
         $row->addWebLink(sprintf('<img title=%1$s src="%2$s" style="margin-right:4px;" />', __('Show/Hide'), $icon))

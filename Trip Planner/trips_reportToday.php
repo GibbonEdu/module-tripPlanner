@@ -47,7 +47,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_report
         $row->addDate('date')->setValue($date);
 
     $row = $form->addRow();
-        $row->addSearchSubmit($gibbon->session);
+        $row->addSearchSubmit($session);
 
     echo $form->getOutput();
 
