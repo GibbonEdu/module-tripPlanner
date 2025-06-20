@@ -74,7 +74,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     $gibbonSchoolYearID = $_REQUEST['gibbonSchoolYearID'] ?? $session->get('gibbonSchoolYearID');
 
     //Filter Form
-    $form = Form::create('tripFilters', $gibbon->session->get('absoluteURL') . '/index.php?q=' . $_GET['q']);
+    $form = Form::create('tripFilters', $session->get('absoluteURL') . '/index.php?q=' . $_GET['q']);
     $form->setFactory(DatabaseFormFactory::create($pdo));
     $form->setTitle(__('Filter'));
     $form->setClass('noIntBorder w-full');
