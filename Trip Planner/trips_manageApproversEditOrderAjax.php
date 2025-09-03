@@ -21,8 +21,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 use Gibbon\Module\TripPlanner\Domain\ApproverGateway;
 
-$_POST['address'] = '/modules/Trip Planner/trips_manageApprovers.php';
-
 require_once '../../gibbon.php';
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manageApprovers.php')) {

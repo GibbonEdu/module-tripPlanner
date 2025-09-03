@@ -137,7 +137,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     });
 
     $filters = array_reduce(getStatuses(), function($filters, $status) {
-        $filters['status:' . $status] = __('Status') . ': ' . __($status);
+        $filters['status::' . $status] = __('Status') . ': ' . __($status);
         return $filters;
     });
 
