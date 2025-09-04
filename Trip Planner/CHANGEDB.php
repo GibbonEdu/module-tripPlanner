@@ -284,3 +284,8 @@ ALTER TABLE `tripPlannerRequestLog` CHANGE `action` `action` ENUM('Request', 'Ca
 ++$count;
 $sql[$count][0] = '1.8.04';
 $sql[$count][1] = "";
+
+//v1.8.05
+++$count;
+$sql[$count][0] = '1.8.05';
+$sql[$count][1] = "";
