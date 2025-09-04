@@ -132,4 +132,16 @@ class TripGateway extends QueryableGateway
     public function rollBack() {
         $this->db()->rollBack();
     }
+
+    public function selectApprovalPending($gibbonSchoolYearID, $daysBeforeStart)
+    {
+        $endDate = date('Y-m-d', strtotime("+{$daysBeforeStart} days"));
+        $data = ['today' => date('Y-m-d'), 'gibbonSchoolYearID' => $gibbonSchoolYearID, 'endDate' => $endDate];
+        $sql = "SELECT tripPlannerRequests.tripPlannerRequestID, tripPlannerRequests.creatorPersonID, tripPlannerRequests.title, tripPlannerRequests.status, tripPlannerRequests.gibbonSchoolYearID, tripPlannerRequestDays.startDate, DATEDIFF(tripPlannerRequestDays.startDate, :today) as daysUntilStart 
+        FROM tripPlannerRequests 
+        JOIN tripPlannerRequestDays ON tripPlannerRequests.tripPlannerRequestID = tripPlannerRequestDays.tripPlannerRequestID 
+        WHERE tripPlannerRequests.gibbonSchoolYearID = :gibbonSchoolYearID AND tripPlannerRequests.status IN ('Requested', 'Awaiting Final Approval', 'Pre-Approved') AND tripPlannerRequestDays.startDate >= :today AND tripPlannerRequestDays.startDate <= :endDate ORDER BY tripPlannerRequestDays.startDate ASC";
+       
+        return $this->db()->select($sql, $data);
+    }
 }

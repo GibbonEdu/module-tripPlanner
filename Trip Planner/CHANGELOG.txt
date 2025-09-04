@@ -1,5 +1,10 @@
 CHANGELOG
 =========
+
+v1.8.05
+-------
+Added a new cli script to inform approvers if a trip request is pending
+
 v1.8.04
 -------
 "$gibbon->session" is now deprecated. Replaced $gibbon->session to $session.
