@@ -3,6 +3,10 @@ CHANGELOG
 
 v1.8.05
 -------
+Fixed the error while running the cli script
+
+v1.8.05
+-------
 Added a new cli script to inform approvers if a trip request is pending
 
 v1.8.04

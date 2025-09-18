@@ -25,7 +25,8 @@ use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Module\TripPlanner\Domain\TripGateway;
 use Gibbon\Module\TripPlanner\Domain\ApproverGateway;
 
-require getcwd().'/../gibbon.php';
+//require getcwd().'/../gibbon.php';
+require __DIR__.'/../../../gibbon.php';
 
 // Setup some of the globals
 getSystemSettings($guid, $connection2);
@@ -46,11 +47,11 @@ ini_set('max_execution_time', 1800);
 set_time_limit(1800);
 
 // Initialize the notification sender & gateway objects
-$notificationSender = $container->get(NotificationSender::class);
 $gibbonSchoolYearID = $session->get('gibbonSchoolYearID');
+$notificationSender = $container->get(NotificationSender::class);
 $daysBeforeStart = 3;
 
-// SCAN THROUGH ALL UNAPPROVED TRIPS THAT 
+// SCAN THROUGH ALL UNAPPROVED TRIPS
 $unapprovedTrips = $container->get(TripGateway::class)->selectApprovalPending($gibbonSchoolYearID, $daysBeforeStart)->fetchAll();
 $count = count($unapprovedTrips);
 
@@ -60,7 +61,8 @@ $approvers = $container->get(ApproverGateway::class)->queryApprovers($approverCr
 
 // Loop over each approver and add a notification to send
 foreach ($approvers as $approver) {
-    $actionText = __m('There are {count} pending trip request(s) whose start date are within the next {daysBeforeStart} days. Please click below or visit the Manage Trips page to approve and manage trip requests:{trips}', ['count' => $count, 'daysBeforeStart' => $daysBeforeStart, 'trips' => Format::list(array_column($unapprovedTrips, 'title'))]);
+    $tripTitles = implode(', ', array_column($unapprovedTrips, 'title'));
+    $actionText = __m('There are {count} pending trip request(s) whose start date are within the next {daysBeforeStart} days. Please click below or visit the Manage Trips page to approve and manage trip requests: {trips}.', ['count' => $count, 'daysBeforeStart' => $daysBeforeStart, 'trips' => $tripTitles]);
     $actionLink = '/index.php?q=/modules/Trip Planner/trips_manage.php';
     $notificationSender->addNotification($approver['gibbonPersonID'], $actionText, 'Trip Planner', $actionLink);
 }
