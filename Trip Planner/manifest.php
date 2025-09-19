@@ -25,7 +25,7 @@ $description = "A trip planner module for Gibbon.";
 $entryURL = "trips_manage.php";
 $type = "Additional";
 $category = "Learn";
-$version = "1.8.05";
+$version = "1.8.06";
 $author = "Gibbon Foundation";
 $url = "https://gibbonedu.org";
 
