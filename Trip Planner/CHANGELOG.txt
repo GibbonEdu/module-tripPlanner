@@ -1,7 +1,11 @@
 CHANGELOG
 =========
 
-v1.8.05
+v1.8.07
+-------
+Improved the cli script to only send emails if there are unapproved trips
+
+v1.8.06
 -------
 Fixed the error while running the cli script
 
