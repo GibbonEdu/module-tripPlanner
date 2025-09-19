@@ -60,14 +60,16 @@ $approverCriteria = $container->get(ApproverGateway::class)->newQueryCriteria()-
 $approvers = $container->get(ApproverGateway::class)->queryApprovers($approverCriteria)->toArray();
 
 // Loop over each approver and add a notification to send
-foreach ($approvers as $approver) {
-    $tripTitles = implode(', ', array_column($unapprovedTrips, 'title'));
-    $actionText = __m('There are {count} pending trip request(s) whose start date are within the next {daysBeforeStart} days. Please click below or visit the Manage Trips page to approve and manage trip requests: {trips}.', ['count' => $count, 'daysBeforeStart' => $daysBeforeStart, 'trips' => $tripTitles]);
-    $actionLink = '/index.php?q=/modules/Trip Planner/trips_manage.php';
-    $notificationSender->addNotification($approver['gibbonPersonID'], $actionText, 'Trip Planner', $actionLink);
+if ($count > 0) {
+    foreach ($approvers as $approver) {
+        $tripTitles = implode(', ', array_column($unapprovedTrips, 'title'));
+        $actionText = __m('There are {count} pending trip request(s) whose start date are within the next {daysBeforeStart} days. Please click below or visit the Manage Trips page to approve and manage trip requests: {trips}.', ['count' => $count, 'daysBeforeStart' => $daysBeforeStart, 'trips' => $tripTitles]);
+        $actionLink = '/index.php?q=/modules/Trip Planner/trips_manage.php';
+        $notificationSender->addNotification($approver['gibbonPersonID'], $actionText, 'Trip Planner', $actionLink);
+    }
 }
 
-// Send out the notifications
+// Send out the notifications to approvers
 $sendReport = $notificationSender->sendNotifications();
 
 // Notify admin
