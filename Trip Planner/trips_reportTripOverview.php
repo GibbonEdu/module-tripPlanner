@@ -110,10 +110,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             // Emergency query
             $criteria = $reportGateway->newQueryCriteria(true)
                 ->sortBy(['gibbonPerson.surname', 'gibbonPerson.preferredName'])
-                ->filterBy('gibbonSchoolYearID', $gibbonSchoolYearID)
                 ->pageSize(!empty($viewMode) ? 0 : 50)
                 ->fromPOST();
-            $students = $reportGateway->queryStudentDetails($criteria, $students);
+            $students = $reportGateway->queryStudentDetails($criteria, $gibbonSchoolYearID, $students);
 
             // Medical criteria
             $criteria = $reportGateway->newQueryCriteria(true)
