@@ -34,7 +34,7 @@ use Gibbon\Module\TripPlanner\Domain\TripPersonGateway;
 require_once __DIR__ . '/moduleFunctions.php';
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php')) {
-    //Acess denied
+    // Access denied
     echo Format::alert(__('You do not have access to this action.'));
 } else {
     $tripPlannerRequestID = $_GET['tripPlannerRequestID'] ?? '';
@@ -62,8 +62,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
             $cutoffDate = $settingGateway->getSettingByScope('Data Updater', 'cutoffDate');
             if (empty($cutoffDate)) $cutoffDate = Format::dateFromTimestamp(time() - (604800 * 26));
 
-            //EVENT DATA
-            //Prep dates
+            // EVENT DATA
+            // Prep dates
             $tripDayGateway = $container->get(TripDayGateway::class);
             $dayCriteria = $tripDayGateway->newQueryCriteria()
                 ->filterBy('tripPlannerRequestID', $tripPlannerRequestID)
@@ -83,7 +83,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                 return $group;
             });
 
-            //Prep lead teacher
+            // Prep lead teacher
             $lead = '';
             $userGateway = $container->get(UserGateway::class);
             $leadResult = $userGateway->getByID($trip['creatorPersonID']);
@@ -102,19 +102,19 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
                 'lead' => $lead,
             ]);
 
-            //Gateways
+            // Gateways
             $reportGateway = $container->get(StudentReportGateway::class);
             $familyGateway = $container->get(FamilyGateway::class);
             $medicalGateway = $container->get(MedicalGateway::class);
 
-            //Emergency query
+            // Emergency query
             $criteria = $reportGateway->newQueryCriteria(true)
                 ->sortBy(['gibbonPerson.surname', 'gibbonPerson.preferredName'])
                 ->pageSize(!empty($viewMode) ? 0 : 50)
                 ->fromPOST();
-            $students = $reportGateway->queryStudentDetails($criteria, $students);
+            $students = $reportGateway->queryStudentDetails($criteria, $gibbonSchoolYearID, $students);
 
-            //Medial criteria
+            // Medical criteria
             $criteria = $reportGateway->newQueryCriteria(true)
                 ->sortBy(['gibbonPerson.surname', 'gibbonPerson.preferredName'])
                 ->pageSize(!empty($viewMode) ? 0 : 50)
