@@ -25,7 +25,7 @@ $description = "A trip planner module for Gibbon.";
 $entryURL = "trips_manage.php";
 $type = "Additional";
 $category = "Learn";
-$version = "1.8.08";
+$version = "1.8.09";
 $author = "Gibbon Foundation";
 $url = "https://gibbonedu.org";
 
@@ -36,6 +36,7 @@ $moduleTables[$tables++] = "CREATE TABLE `tripPlannerApprovers` (
     `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
     `sequenceNumber` int(4) NULL,
     `finalApprover` boolean DEFAULT 0 NULL,
+    `notifyAllComments` ENUM('Y','N') NOT NULL DEFAULT 'N',
     PRIMARY KEY (`tripPlannerApproverID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 

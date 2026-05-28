@@ -80,6 +80,12 @@ $page->breadcrumbs->add(__('Manage Approvers'));
             ->sortable(!$chainOfAll);
     }
 
+    $table->addColumn('notifyAllComments', __('Notify All Comments?'))
+        ->format(function ($approver) {
+            return __($approver['notifyAllComments'] == 'Y' ? 'Yes' : 'No');
+        })
+        ->sortable(!$chainOfAll);
+
     if ($addAllowed) {
         $table->addActionColumn()
             ->addParam('tripPlannerApproverID')
