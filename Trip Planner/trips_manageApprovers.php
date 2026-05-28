@@ -89,12 +89,11 @@ $page->breadcrumbs->add(__('Manage Approvers'));
     if ($addAllowed) {
         $table->addActionColumn()
             ->addParam('tripPlannerApproverID')
-            ->format(function ($approver, $actions) use ($riskAssessmentApproval, $deleteAllowed, $moduleName) {
-                if ($riskAssessmentApproval) {
-                    $actions->addAction('edit', __('Edit'))
-                            ->setURL('/modules/' . $moduleName . '/trips_editApprover.php')
-                            ->modalWindow();
-                }
+            ->format(function ($approver, $actions) use ($deleteAllowed, $moduleName) {
+                $actions->addAction('edit', __('Edit'))
+                        ->setURL('/modules/' . $moduleName . '/trips_editApprover.php')
+                        ->modalWindow();
+                
                 if ($deleteAllowed) {
                     $actions->addAction('delete', __('Delete'))
                             ->setURL('/modules/' . $moduleName . '/trips_deleteApprover.php');
