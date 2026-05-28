@@ -1,5 +1,9 @@
 CHANGELOG
 =========
+v1.8.09
+-------
+Added an option for an approver to get notified about all trip comments
+
 v1.8.08
 -------
 Fixed the bug to display the correct list of students in Trip Overview

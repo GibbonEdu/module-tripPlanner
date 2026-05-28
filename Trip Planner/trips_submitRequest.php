@@ -64,7 +64,7 @@ $gibbonPersonID = $session->get('gibbonPersonID');
 $highestAction = getHighestGroupedAction($guid, '/modules/Trip Planner/trips_manage.php', $connection2);
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submitRequest.php') || ($edit && $highestAction != 'Manage Trips_full' && $trip['creatorPersonID'] != $gibbonPersonID)) {
-//If the action isn't accesible, or in edit mode and the current user isn't the owner, throw error.
+//If the action isn't accessible, or in edit mode and the current user isn't the owner, throw error.
     $page->addError(__('You do not have access to this action.'));
 } else if ((isset($trip) && empty($trip)) || (!empty($mode) && !$edit)) {
     //If a trip is provided, but doesn't exit, Or the mode is set, but edit isn't enabled, throw error.

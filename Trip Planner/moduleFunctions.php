@@ -253,14 +253,19 @@ function needsApproval(ContainerInterface $container, $gibbonPersonID, $tripPlan
 }
 
 function tripCommentNotifications($tripPlannerRequestID, $gibbonPersonID, $personName, $tripLogGateway, $trip, $comment, $notificationSender) {
+    global $container;
+    $approverGateway = $container->get(ApproverGateway::class);
+
     $text = __('{person} has commented on a trip request: {trip}', ['person' => $personName, 'trip' => $trip['title']]).'<br/><br/><b>'.__('Comment').':</b><br/>'.$comment;
     $notificationURL = '/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID=' . $tripPlannerRequestID;
 
-    $people = $tripLogGateway->selectLoggedPeople($tripPlannerRequestID);
-    while ($row = $people->fetch()) {
-        //Skip current user
-        if ($row['gibbonPersonID'] == $gibbonPersonID) continue;
-        $notificationSender->addNotification($row['gibbonPersonID'], $text, 'Trip Planner', $notificationURL);
+    $loggedPeople  = array_column($tripLogGateway->selectLoggedPeople($tripPlannerRequestID)->fetchAll(), 'gibbonPersonID');
+    $notifyApprovers = array_column($approverGateway->selectBy(['notifyAllComments' => 'Y'], ['gibbonPersonID'])->fetchAll(), 'gibbonPersonID');
+
+    $gibbonPersonIDrecipients = array_diff(array_unique(array_merge($loggedPeople, $notifyApprovers)), [$gibbonPersonID]);
+
+    foreach ($gibbonPersonIDrecipients as $gibbonPersonIDrecipient) {
+        $notificationSender->addNotification($gibbonPersonIDrecipient, $text, 'Trip Planner', $notificationURL);
     }
 }
 

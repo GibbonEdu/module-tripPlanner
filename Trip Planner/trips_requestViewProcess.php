@@ -14,7 +14,7 @@ $moduleName = $session->get('module');
 $URL = $session->get('absoluteURL') . '/index.php?q=/modules/' . $moduleName;
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage.php')) {
-    //Acess denied
+    // Access denied
     $URL .= '/trips_manage.php&return=error0';
     header("Location: {$URL}");
     exit();

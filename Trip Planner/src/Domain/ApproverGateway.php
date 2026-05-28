@@ -22,7 +22,7 @@ class ApproverGateway extends QueryableGateway
             ->newQuery()
             ->from($this->getTableName())
             ->cols([
-                'tripPlannerApproverID', 'gibbonPerson.gibbonPersonID', 'title', 'preferredName', 'surname', 'sequenceNumber', 'finalApprover'
+                'tripPlannerApproverID', 'gibbonPerson.gibbonPersonID', 'title', 'preferredName', 'surname', 'sequenceNumber', 'finalApprover', 'notifyAllComments'
             ])
             ->leftJoin('gibbonPerson', 'tripPlannerApprovers.gibbonPersonID=gibbonPerson.gibbonPersonID');
 
@@ -55,21 +55,12 @@ class ApproverGateway extends QueryableGateway
         return $users;
     }
 
-    public function insertApprover($gibbonPersonID, $finalApprover) {
-        $select = $this
-            ->newSelect()
+    public function getNextSequenceNumber() {
+        $query = $this->newSelect()
             ->from($this->getTableName())
-            ->cols(['MAX(sequenceNumber) + 1 as sequenceNumber']);
-        $result = $this->runSelect($select);
-
-        if ($result->rowCount() > 0) {
-            $sequenceNumber = $result->fetch()['sequenceNumber'];
-        } else {
-            return false;
-        }
-
-        $this->insert(['gibbonPersonID' => $gibbonPersonID, 'sequenceNumber' => $sequenceNumber, 'finalApprover' => $finalApprover]);
-        return true;
+            ->cols(['COALESCE(MAX(sequenceNumber) + 1, 0) AS sequenceNumber']);
+        $result = $this->runSelect($query);
+        return $result->isNotEmpty() ? intval($result->fetch()['sequenceNumber']) : 0;
     }
 
     public function updateSequence($order) {

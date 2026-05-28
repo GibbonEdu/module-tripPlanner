@@ -24,8 +24,17 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_addApp
         exit();
     } else {
         $finalApprover = isset($_POST['finalApprover']) ? 1 : 0;
+        $notifyAllComments = $_POST['notifyAllComments'] ?? 'N';
+        $sequenceNumber = $approverGateway->getNextSequenceNumber();
 
-        if ($approverGateway->insertApprover($gibbonPersonID, $finalApprover)) {
+        $tripPlannerApproverID = $approverGateway->insert([
+            'gibbonPersonID'    => $gibbonPersonID,
+            'sequenceNumber'    => $sequenceNumber,
+            'finalApprover'     => $finalApprover,
+            'notifyAllComments' => $notifyAllComments,
+        ]);
+
+        if ($tripPlannerApproverID) {
             $URL .= '&return=success0';
         } else {
             $URL .= '&return=error2';

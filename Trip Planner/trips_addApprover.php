@@ -56,6 +56,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_addApp
     }
 
     $row = $form->addRow();
+        $row->addLabel('notifyAllComments', __('Notify All Comments'))
+            ->description(__('Notify this approver when a comment is added to any trip.'));
+        $row->addYesNo('notifyAllComments')->selected('N');
+
+    $row = $form->addRow();
         $row->addFooter();
         $row->addSubmit();
 

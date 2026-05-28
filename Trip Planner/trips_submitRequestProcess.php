@@ -254,10 +254,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
     $tripGateway->commit();
 
-    if ($saveMode != 'Draft' && ($isDraft || !$edit)) {
-        $notificationGateway = $container->get(NotificationGateway::class);
-        $notificationSender = new NotificationSender($notificationGateway, $session);
+    $notificationGateway = $container->get(NotificationGateway::class);
+    $notificationSender = new NotificationSender($notificationGateway, $session);
 
+    if ($saveMode != 'Draft' && ($isDraft || !$edit)) {
         $event = new NotificationEvent('Trip Planner', 'New Trip Request');
 
         $event->setNotificationText(__('{person} has submitted a new Trip Request: {trip}', ['person' => $personName, 'trip' => $tripData['title']]));
@@ -284,6 +284,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
         // Add a notification for the trip owner
         $notificationSender->addNotification($gibbonPersonID, __('You have submitted a new Trip Request (pending approval): {trip}', ['trip' => $tripData['title']]), 'Trip Planner', '/index.php?q=/modules/Trip Planner/trips_requestView.php&tripPlannerRequestID=' . $tripPlannerRequestID);
+
+        $notificationSender->sendNotifications();
+    }
+
+    if ($saveMode != 'Draft' && $edit && !$isDraft && !empty($_POST['changeSummary'])) {
+        tripCommentNotifications($tripPlannerRequestID, $gibbonPersonID, $personName, $tripLogGateway, $tripData, $_POST['changeSummary'], $notificationSender);
 
         $notificationSender->sendNotifications();
     }

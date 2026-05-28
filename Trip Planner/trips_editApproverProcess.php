@@ -7,7 +7,7 @@ require_once '../../gibbon.php';
 $URL = $session->get('absoluteURL') . '/index.php?q=/modules/' . $session->get('module') . '/trips_manageApprovers.php';
 
 if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_editApprover.php')) {
-    //Acess denied
+    // Access denied
     $URL .= '&return=error0';
     header("Location: {$URL}");
     exit();
@@ -22,8 +22,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_editAp
         exit();
     } else {
         $finalApprover = isset($_POST['finalApprover']) ? 1 : 0;
+        $notifyAllComments = $_POST['notifyAllComments'] ?? 'N';
 
-        if ($approverGateway->update($tripPlannerApproverID, ['finalApprover' => $finalApprover])) {
+        if ($approverGateway->update($tripPlannerApproverID, ['finalApprover' => $finalApprover, 'notifyAllComments' => $notifyAllComments])) {
             $URL .= '&return=success0';
         } else {
             $URL .= '&return=error2';
