@@ -34,4 +34,14 @@ class TripDayGateway extends QueryableGateway
 
         return $this->runQuery($query, $criteria);
     }
+
+    public function deleteDatesNotInList($tripPlannerRequestID, $dateIDList)
+    {
+        $dateIDList = is_array($dateIDList) ? implode(',', $dateIDList) : $dateIDList;
+
+        $data = ['tripPlannerRequestID' => $tripPlannerRequestID, 'dateIDList' => $dateIDList];
+        $sql = "DELETE FROM tripPlannerRequestDays WHERE tripPlannerRequestID=:tripPlannerRequestID AND NOT FIND_IN_SET(tripPlannerRequestDaysID, :dateIDList)";
+
+        return $this->db()->delete($sql, $data);
+    }
 }

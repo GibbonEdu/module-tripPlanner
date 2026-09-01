@@ -119,41 +119,60 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
     //Load Trip Days
     $tripDays = [];
-
+    $dateIDs = [];
     $dateTimeOrder = $_POST['dateTimeOrder'] ?? [];
+
     foreach ($dateTimeOrder as $order) {
-        $day = $_POST['dateTime'][$order];
+        $day = $_POST['dateTime'][$order] ?? [];
+        if (!is_array($day)) {
+            continue;
+        }
+
+        $tripPlannerRequestDaysID = $day['tripPlannerRequestDaysID'] ?? '';
+        if (!empty($tripPlannerRequestDaysID)) {
+            $dateIDs[] = str_pad($tripPlannerRequestDaysID, 10, '0', STR_PAD_LEFT);
+        }
+
+        if (empty($day['startDate']) || empty($day['endDate'])) {
+            $partialFail = true;
+            $returnCode = 'warning7';
+            continue;
+        }
 
         if ($day['startDate'] > $day['endDate']) {
             $endDate = $day['endDate'];
             $day['endDate'] = $day['startDate'];
             $day['startDate'] = $endDate;
-
         }
 
         if (!empty($day['startTime']) && !empty($day['endTime'])) {
             $day['allDay'] = '0';
 
-            $startTime = DateTime::createFromFormat('H:i', $day['startTime']);
-            $endTime = DateTime::createFromFormat('H:i', $day['endTime']);
+            $startTime = DateTime::createFromFormat('H:i', $day['startTime']) ?: DateTime::createFromFormat('H:i:s', $day['startTime']);
+            $endTime = DateTime::createFromFormat('H:i', $day['endTime']) ?: DateTime::createFromFormat('H:i:s', $day['endTime']);
 
-            if ($endTime <= $startTime) {
+            if ($startTime && $endTime && $endTime <= $startTime) {
                 $swapTime = $day['startTime'];
                 $day['startTime'] = $day['endTime'];
                 $day['endTime'] = $swapTime;
             }
-
         } else {
             $day['allDay'] = '1';
             $day['startTime'] = '00:00:00';
             $day['endTime'] = '00:00:00';
         }
 
-        $tripDays[] = $day;
+        $tripDays[] = [
+            'tripPlannerRequestDaysID' => $tripPlannerRequestDaysID,
+            'startDate'                => $day['startDate'],
+            'endDate'                  => $day['endDate'],
+            'allDay'                   => $day['allDay'],
+            'startTime'                => $day['startTime'],
+            'endTime'                  => $day['endTime'],
+        ];
     }
 
-    //If no days have been added, throw an error.
-    if (empty($tripDays)) {
+    if (empty($tripDays) && empty($dateIDs)) {
         $partialFail = true;
         $returnCode = 'warning4';
     }
@@ -162,17 +181,32 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
     //Load Trip Costs
     $tripCosts = [];
-
+    $costIDs = [];
     $costOrder = $_POST['costOrder'] ?? [];
+
     foreach ($costOrder as $order) {
-        $cost = $_POST['cost'][$order];
+        $cost = $_POST['cost'][$order] ?? [];
+        if (!is_array($cost)) {
+            continue;
+        }
+
+        $tripPlannerCostBreakdownID = $cost['tripPlannerCostBreakdownID'] ?? '';
+        if (!empty($tripPlannerCostBreakdownID)) {
+            $costIDs[] = str_pad($tripPlannerCostBreakdownID, 10, '0', STR_PAD_LEFT);
+        }
 
         if (empty($cost['title']) || empty($cost['cost']) || $cost['cost'] < 0) {
             $partialFail = true;
             $returnCode = 'warning5';
+            continue;
         }
 
-        $tripCosts[] = $cost;
+        $tripCosts[] = [
+            'tripPlannerCostBreakdownID' => $tripPlannerCostBreakdownID,
+            'title'                      => $cost['title'],
+            'description'                => $cost['description'] ?? '',
+            'cost'                       => $cost['cost'],
+        ];
     }
 
     //Begin Transaction
@@ -202,15 +236,63 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
     $tripPersonGateway->deleteWhere(['tripPlannerRequestID' => $tripPlannerRequestID]);
     $tripPersonGateway->bulkInsert($tripPlannerRequestID, $tripPeople);
 
-    //Insert new Trip Cost data and remove old data (if exists).
+    // Add or edit costs by ID; only remove blocks the user deleted
     $tripCostGateway = $container->get(TripCostGateway::class);
-    $tripCostGateway->deleteWhere(['tripPlannerRequestID' => $tripPlannerRequestID]);
-    $tripCostGateway->bulkInsert($tripPlannerRequestID, $tripCosts);
+    if (!empty($costOrder) || ($_POST['costCount'] ?? '') === '0') {
+        foreach ($tripCosts as $cost) {
+            $data = [
+                'tripPlannerRequestID' => $tripPlannerRequestID,
+                'title'                => $cost['title'],
+                'description'          => $cost['description'],
+                'cost'                 => $cost['cost'],
+            ];
 
-    //Insert new Trip Day data and remove old data (if exists).
+            $tripPlannerCostBreakdownID = $cost['tripPlannerCostBreakdownID'] ?? '';
+            if (!empty($tripPlannerCostBreakdownID)) {
+                $tripCostGateway->update($tripPlannerCostBreakdownID, $data);
+            } else {
+                $tripPlannerCostBreakdownID = $tripCostGateway->insert($data);
+                if (!empty($tripPlannerCostBreakdownID)) {
+                    $costIDs[] = str_pad($tripPlannerCostBreakdownID, 10, '0', STR_PAD_LEFT);
+                } else {
+                    $partialFail = true;
+                    $returnCode = 'warning5';
+                }
+            }
+        }
+
+        $tripCostGateway->deleteCostsNotInList($tripPlannerRequestID, $costIDs);
+    }
+
+    // Add or edit days by ID; only remove blocks the user deleted
     $tripDayGateway = $container->get(TripDayGateway::class);
-    $tripDayGateway->deleteWhere(['tripPlannerRequestID' => $tripPlannerRequestID]);
-    $tripDayGateway->bulkInsert($tripPlannerRequestID, $tripDays);
+    if (!empty($dateTimeOrder) || ($_POST['dateTimeCount'] ?? '') === '0') {
+        foreach ($tripDays as $day) {
+            $data = [
+                'tripPlannerRequestID' => $tripPlannerRequestID,
+                'startDate'            => $day['startDate'],
+                'endDate'              => $day['endDate'],
+                'allDay'               => $day['allDay'],
+                'startTime'            => $day['startTime'],
+                'endTime'              => $day['endTime'],
+            ];
+
+            $tripPlannerRequestDaysID = $day['tripPlannerRequestDaysID'] ?? '';
+            if (!empty($tripPlannerRequestDaysID)) {
+                $tripDayGateway->update($tripPlannerRequestDaysID, $data);
+            } else {
+                $tripPlannerRequestDaysID = $tripDayGateway->insert($data);
+                if (!empty($tripPlannerRequestDaysID)) {
+                    $dateIDs[] = str_pad($tripPlannerRequestDaysID, 10, '0', STR_PAD_LEFT);
+                } else {
+                    $partialFail = true;
+                    $returnCode = 'warning4';
+                }
+            }
+        }
+
+        $tripDayGateway->deleteDatesNotInList($tripPlannerRequestID, $dateIDs);
+    }
 
     $groupGateway = $container->get(GroupGateway::class);
     $createGroup = $_POST['createGroup'] ?? 'N' ;
