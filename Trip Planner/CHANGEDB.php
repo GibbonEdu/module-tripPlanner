@@ -311,3 +311,8 @@ $sql[$count][0] = '1.8.09';
 $sql[$count][1] = "
 ALTER TABLE `tripPlannerApprovers` ADD COLUMN `notifyAllComments` ENUM('Y','N') NOT NULL DEFAULT 'N';end
 ";
+
+//v1.8.11
+++$count;
+$sql[$count][0] = '1.8.11';
+$sql[$count][1] = "";

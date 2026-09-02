@@ -1,5 +1,9 @@
 CHANGELOG
 =========
+v1.8.11
+-------
+Added search form in Manage Trips and Archived Trips Page for quick search by title
+
 v1.8.09
 -------
 Added an option for an approver to get notified about all trip comments

@@ -46,9 +46,28 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_archiv
     $gibbonSchoolYearID = $_REQUEST['gibbonSchoolYearID'] ?? $session->get('gibbonSchoolYearID');
     $page->navigator->addSchoolYearNavigation($gibbonSchoolYearID);
 
+    $search = $_POST['search'] ?? '';
+
+    // SEARCH
+    $form = Form::create('tripFilters', $session->get('absoluteURL') . '/index.php?q=' . $_GET['q'] . '&gibbonSchoolYearID=' . $gibbonSchoolYearID);
+    $form->setTitle(__('Search'));
+    $form->setClass('noIntBorder w-full');
+
+    $form->addHiddenValue('gibbonSchoolYearID', $gibbonSchoolYearID);
+
+    $row = $form->addRow();
+        $row->addLabel('search', __('Search For'))->description(__('Title, owner'));
+        $row->addTextField('search')->setValue($search);
+
+    $row = $form->addRow();
+        $row->addSearchSubmit($session, __('Clear Search'), ['gibbonSchoolYearID']);
+
+    echo $form->getOutput();
+
     //Trips Data
     $tripGateway = $container->get(TripGateway::class);
     $criteria = $tripGateway->newQueryCriteria(true)
+        ->searchBy($tripGateway->getSearchableColumns(), $search)
         ->sortBy('firstDayOfTrip', 'DESC')
         ->filterBy('showActive', 'Y')
         ->filterBy('status', 'Approved')
