@@ -43,6 +43,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     }
     $gibbonPersonID = $session->get('gibbonPersonID');
 
+    $gibbonSchoolYearID = $_REQUEST['gibbonSchoolYearID'] ?? $session->get('gibbonSchoolYearID');
+    $page->navigator->addSchoolYearNavigation($gibbonSchoolYearID);
+
+    $gibbonDepartmentID = $_POST['gibbonDepartmentID'] ?? [];
+    $search = $_POST['search'] ?? '';
+
     //Settings
     $settingGateway = $container->get(SettingGateway::class);
     
@@ -69,15 +75,17 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
         return $group;
     }, []);
 
-    //Filters
-    $gibbonDepartmentID = $_POST['gibbonDepartmentID'] ?? []; 
-    $gibbonSchoolYearID = $_REQUEST['gibbonSchoolYearID'] ?? $session->get('gibbonSchoolYearID');
-
-    //Filter Form
-    $form = Form::create('tripFilters', $session->get('absoluteURL') . '/index.php?q=' . $_GET['q']);
+    // SEARCH
+    $form = Form::create('tripFilters', $session->get('absoluteURL') . '/index.php?q=' . $_GET['q'] . '&gibbonSchoolYearID=' . $gibbonSchoolYearID);
     $form->setFactory(DatabaseFormFactory::create($pdo));
-    $form->setTitle(__('Filter'));
+    $form->setTitle(__('Search'));
     $form->setClass('noIntBorder w-full');
+
+    $form->addHiddenValue('gibbonSchoolYearID', $gibbonSchoolYearID);
+
+    $row = $form->addRow();
+        $row->addLabel('search', __('Search For'))->description(__('Title, owner'));
+        $row->addTextField('search')->setValue($search);
 
     if (!empty($departments)) {
         $row = $form->addRow();
@@ -89,19 +97,14 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_manage
     }
 
     $row = $form->addRow();
-        $row->addLabel('gibbonSchoolYearID', 'Year');
-        $row->addSelectSchoolYear('gibbonSchoolYearID')
-            ->selected($gibbonSchoolYearID);
-
-    $row = $form->addRow();
-        $row->addFooter();
-        $row->addSubmit();
+        $row->addSearchSubmit($session, __('Clear Search'), ['gibbonSchoolYearID']);
         
-    print $form->getOutput(); 
+    echo $form->getOutput(); 
 
     //Trips Data
     $tripGateway = $container->get(TripGateway::class);
     $criteria = $tripGateway->newQueryCriteria(true)
+        ->searchBy($tripGateway->getSearchableColumns(), $search)
         ->sortBy('firstDayOfTrip', 'DESC')
         ->filterBy('showActive', 'Y')
         ->fromPOST();
