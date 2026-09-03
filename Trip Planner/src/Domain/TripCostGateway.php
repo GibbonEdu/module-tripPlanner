@@ -34,4 +34,14 @@ class TripCostGateway extends QueryableGateway
 
         return $this->runQuery($query, $criteria);
     }
+
+    public function deleteCostsNotInList($tripPlannerRequestID, $costIDList)
+    {
+        $costIDList = is_array($costIDList) ? implode(',', $costIDList) : $costIDList;
+
+        $data = ['tripPlannerRequestID' => $tripPlannerRequestID, 'costIDList' => $costIDList];
+        $sql = "DELETE FROM tripPlannerCostBreakdown WHERE tripPlannerRequestID=:tripPlannerRequestID AND NOT FIND_IN_SET(tripPlannerCostBreakdownID, :costIDList)";
+
+        return $this->db()->delete($sql, $data);
+    }
 }

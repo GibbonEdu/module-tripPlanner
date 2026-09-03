@@ -283,7 +283,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             ->settings([
                 'placeholder' => __('Date/Time Blocks will appear here...'),
                 'sortable' => true,
-                'orderName' => 'dateTimeOrder'
+                'orderName' => 'dateTimeOrder',
+                'uniqueID' => 'tripPlannerRequestDaysID',
             ])
             ->addToolInput($addDateTimeBlockButton);
 
@@ -324,7 +325,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
             ->settings([
                 'placeholder' => __('Cost Blocks will appear here...'),
                 'sortable' => true,
-                'orderName' => 'costOrder'
+                'orderName' => 'costOrder',
+                'uniqueID' => 'tripPlannerCostBreakdownID',
             ])
             ->addBlockButton('showHide', 'Show/Hide', 'plus.png')
             ->addToolInput($addBlockButton);
@@ -499,31 +501,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Trip Planner/trips_submit
 
     ?>
     <script>
-        //Once date and time chaining is fixed in the core, most of this can go.
-        var time = 'input[id*="Time"]';
-
-        //Fix for datepicker in custom blocks
-        $(document).on('click', '.addBlock', function () {
-            $(time).removeClass('hasTimepicker').timepicker({'timeFormat': 'H:i', onSelect: function(){$(this).blur();}, onClose: function(){$(this).change();} });
-        });
-
-        function setTimepicker(input) {
-            input.removeClass('hasTimepicker').timepicker({
-                    'scrollDefault': 'now',
-                    'timeFormat': 'H:i',
-                    'minTime': '00:00',
-                    'maxTime': '23:59',
-                    onSelect: function(){$(this).blur();},
-                    onClose: function(){$(this).change();}
-                });
-        }
-
         $(document).ready(function(){
-            //This is to ensure that loaded blocks have timepickers
-            $(time).each(function() {
-                setTimepicker($(this));
-            });
-
             // Ensure that participants cannot get out of sync with the deep learning experience
             <?php if (!empty($trip['deepLearningExperienceID']) && $trip['deepLearningSync'] == 'Y') { ?>
                 $('#teachers').attr('readonly', true);
