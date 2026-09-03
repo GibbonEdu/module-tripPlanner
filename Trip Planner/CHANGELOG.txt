@@ -1,5 +1,9 @@
 CHANGELOG
 =========
+v1.8.10
+-------
+Fixed the issue of date and cost custom blocks getting deleted from a trip request
+
 v1.8.09
 -------
 Added an option for an approver to get notified about all trip comments
